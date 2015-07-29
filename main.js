@@ -38,7 +38,7 @@ bd.gerarPacoteVersao(fullpath, function(oac)
 })*/
 
 //Servidor do mongodb
-var mongo = new mongodb.Server('localhost', mongodb.Connection.DEFAULT_PORT);
+var mongo = new mongodb.Server('localhost', 27017);
 //Conector do banco de dados.
 var connector = new mongodb.Db("oac", mongo, {w:0})
 

@@ -1,0 +1,32 @@
+
+{
+  "name": "clo-repository-web-platform",
+  "version": "0.1.0",
+  "description": "Plataforma Web para interfaciar com o CLORepository (Repositório de Objetos de Aprendizagem Customizáveis)",
+  "author": "Wallison Félix <wallison.felix@gmail.com>",
+  "contributors": [{
+  "name": "Ruriel Santos",
+  "email": "ruriel.santos@gmail.com"
+}],
+  "main": "main.js",
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/wallisonfelix"
+},
+  "keywords": [
+  "CLO",
+  "Customizable Learning Objects",
+  "CLORepository",
+  "Web Platform"
+],
+  "dependencies": {
+    "adm-zip": "~0.4.7",
+    "express": "~4.13.1",
+    "socket.io": "~1.3.5",
+    "mongodb": "~2.0.36",
+    "multer": "~0.1.8",
+    "body-parser": "~1.13.2"
+  },
+  "private": true,
+  "subdomain": "CLORepositoryWebPlatform"
+}
