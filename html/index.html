@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<title>CLORepository Web Plataform</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+	<script type="text/javascript">
+	    $(function(){
+	    	$("#pageHeader").load("/page_header.html");
+	    	$("#header").load("/header.html"); 
+	    	$("#menu").load("/menu.html"); 
+	    	$("#pageFooter").load("/page_footer.html"); 
+	    });
+    </script>
+
+</head>
+
+<body style="background-color: #fffffa;">
+	<span id="pageHeader"></span>
+
+	<div class="container">
+	  <span id="header"></span>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+			<ol class="breadcrumb">
+			  <li class="active">Home</a></li>
+			</ol>
+
+	    	<h2>Seja bem-vindo!</h2>
+	    	<p>Você está na Plataforma Web de interação com o <em>CLORepository</em>, repositório em que 
+	    		Objetos de Aprendizagem Customizáveis (OAC's) podem ser obtidos, armazenados e gerenciados.</p>
+	    	<br/>  
+	    	<p><strong>Você poderá realizar as seguintes operações:</strong></p>  
+	    	<ul>
+	    		<li>Pesquisar OAC</li>
+	    		<li>Incluir OAC</li>
+	    		<li>Incluir Versão Customizada</li>
+	    	</ul>
+	    	<br/>
+	    </div>
+	  </div>
+
+	</div>
+
+	<span id="pageFooter"></span>
+</body>
+
+</html>

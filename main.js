@@ -11,11 +11,6 @@ var io = require('socket.io')(server);
 var mongodb = require('mongodb');
 var multer = require('multer')
 var parser = require('body-parser')
-var oacName = "teste.swf"
-var fullpath = "./"+oacName+".zip"
-var zip = new admzip(fullpath)
-var manifestData = {}
-var lista = []
 
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
@@ -66,50 +61,75 @@ app.use(multer({dest:"./sent"}))
 //app.use(parser.json())
 
 app.get('/', function (req, res) {
-	res.sendFile(__dirname + '/index.html');
+	res.sendFile(__dirname + '/html/index.html');
 });
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.sendFile(__dirname + '/pesquisar_oac.html');
+	res.sendFile(__dirname + '/html/pesquisar_oac.html');
 });
 
 app.get('/incluir_oac', function (req, res) {
-	res.sendFile(__dirname + '/incluir_oac.html');
+	res.sendFile(__dirname + '/html/incluir_oac.html');
 });
 
 app.get('/incluir_versao_customizada', function (req, res) {
-	res.sendFile(__dirname + '/incluir_versao_customizada.html');
+	res.sendFile(__dirname + '/html/incluir_versao_customizada.html');
 });
 
 app.get("/OAC", function(res, req)
-				{
-					//Lê a identificação de executável contida na query string enviada 
-					//pelo usuário ao clicar no link desejado.
-					var id = req.req.query.id
-					//Lê o diretório contido na query string.
-					var filepath = req.req.query.filePath
-					connector.open(function(err, db)
-					{
-						if(err)
-						{
-							console.log("Erro: Fechando conexão")
-							db.close()
-						}
-						//Chama a função de geração de arquivo.
-						bd.gerarOACFromDb(db, id, filepath, function(oac)
-						{
-							//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
-							res.res.set('Content-Type', 'application/zip')
-							//Informa o nome do arquivo ao navegador.
-							res.res.set('Content-Disposition', 'attachment; filename='+path.basename(filepath)+'.zip')
-							//Informa o tamanho do arquivo ao navegador para que apareça o tamanho total na hora de baixar o arquivo.
-							res.res.set('Content-Length', oac.toBuffer().length)
-							//Envia o arquivo em forma de bytes.
-							res.res.send(oac.toBuffer())
-							db.close()
-						})
-					})
-				})
+{
+	//Lê a identificação de executável contida na query string enviada 
+	//pelo usuário ao clicar no link desejado.
+	var id = req.req.query.id
+	//Lê o diretório contido na query string.
+	var filepath = req.req.query.filePath
+	connector.open(function(err, db)
+	{
+		if(err)
+		{
+			console.log("Erro: Fechando conexão")
+			db.close()
+		}
+		//Chama a função de geração de arquivo.
+		bd.gerarOACFromDb(db, id, filepath, function(oac)
+		{
+			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
+			res.res.set('Content-Type', 'application/zip')
+			//Informa o nome do arquivo ao navegador.
+			res.res.set('Content-Disposition', 'attachment; filename='+path.basename(filepath)+'.zip')
+			//Informa o tamanho do arquivo ao navegador para que apareça o tamanho total na hora de baixar o arquivo.
+			res.res.set('Content-Length', oac.toBuffer().length)
+			//Envia o arquivo em forma de bytes.
+			res.res.send(oac.toBuffer())
+			db.close()
+		})
+	})
+})
+				
+app.post("/oacfiles", function(req, res)
+{
+	var clo = new admzip(req.files.fileInput.path)
+	var manifestData = oacRead.readManifest(clo)
+	console.log("Versao do MANIFEST.MF: " + manifestData.version)
+	console.log(JSON.stringify(manifestData.fileNames))
+	connector.open(function(err, db)
+	{
+		if(err)
+		{
+			console.log(err)
+			connector.close()
+		}
+		bd.criarEntrada(db, clo, manifestData.fileNames, function()
+		{
+			fs.unlink(req.files.fileInput.path, function(err)
+			{
+				if(err) throw err
+				console.log("Arquivo removido")
+			})
+			connector.close()
+		})
+	})
+})
 app.post("/sent", function(req, res)
 {
 	var title = req.body.title
@@ -133,12 +153,10 @@ app.post("/sent", function(req, res)
 			db.close()
 		})
 	})
-	
-	
 })
 
-app.use(express.static(__dirname + '/includes'));
-app.use(express.static(__dirname + '/images'));
+app.use(express.static(__dirname + '/html/includes'));
+app.use(express.static(__dirname + '/html/images'));
 
 server.listen(80);
 
@@ -160,18 +178,16 @@ io.on('connection', function(socket)
 				{
 					bd.buscarArquivos(db, new mongodb.ObjectID(list[index]._id), function(fileEntries)
 					{
-						var title = list[index].title.value
+						var qualified_name = list[index].qualified_name
 						var pos = parseInt(index) + 1
-						var toHtml = pos +". "+title
+						var toHtml = pos +". "+list[index].title.value
 						var link
 						for(j in fileEntries)
 						{
 							for(i in fileEntries[j].locations)
 							{
 								var ext = path.extname(fileEntries[j].locations[i]).replace('.', '')
-								var filePath = title + "/" + ext + "/" + fileEntries[j].locations[i].replace('.', '')
-								//console.log(filePath)
-								
+								var filePath = qualified_name + "/" + ext + "/" + fileEntries[j].locations[i].replace('.', '')
 								link = "<a href='/OAC?id="+encodeURIComponent(fileEntries[j]._id)+"&filePath="+encodeURIComponent(filePath)+"'>("+ext+")</a>"
 								toHtml += link
 								io.sockets.connected[socket.id].emit("resultOac", toHtml)

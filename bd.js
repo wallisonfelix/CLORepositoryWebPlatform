@@ -18,31 +18,33 @@ var criarEntrada = function(db, zip, fileNames, callback)
       //Cria e insere descritor raíz.
      criaEntradaMetadados(db, lomFile, function()
 	 {
-	 for(var i = 0; i < fileNames.length; i++)
-	 {
-			//Extensão do executável a partir do caminho completo.
-			ext = (path.extname(fileNames[i])).substr(1);
-			//Nome do executável a partir do caminho completo.
-			fileName = path.basename(fileNames[i]);
-			//Recebe o nome original do arquivo e substitui 
-			//sua extensão por json para que fique no formato NomeDoOAC.json
-			newFileName = fileName.replace(ext, "json");
-			//Caminho completo do arquivo NomeDoOAC_extensão.json
-			dae = fileNames[i].replace(".", "_") + ".json";
-			//Caminho completo do arquivo NomeDoOAC.json
-			lista_componentes = fileNames[i].replace(fileName, newFileName);
-			console.log(zip.readAsText(dae))
-			jsonExec = JSON.parse(zip.readAsText(dae))
-			console.log(JSON.stringify(jsonExec))
-			jsonExec.clo_id = lomFile._id
-			jsonComp = JSON.parse(zip.readAsText(lista_componentes))
-			criaEntradasExec(db, jsonExec, jsonComp)
-			//Extrae o arquivo para a pasta dir colocando na subspasta indicada pelo título do LOM.
-			zip.extractEntryTo(fileNames[i], DIR+'/'+lomFile.title.value+'/'+ext, false)
-			//Extrae os componentes para uma subspasta components localizada na mesma pasta acima.
-			zip.extractEntryTo(path.dirname(fileNames[i])+"/components/", DIR+'/'+lomFile.title.value+"/components/", false)
-		}
-		callback()
+		 for(var i = 0; i < fileNames.length; i++)
+		 {
+				//Extensão do executável a partir do caminho completo.
+				ext = (path.extname(fileNames[i])).substr(1);
+				//Nome do executável a partir do caminho completo.
+				fileName = path.basename(fileNames[i]);
+				//Recebe o nome original do arquivo e substitui 
+				//sua extensão por json para que fique no formato NomeDoOAC.json
+				newFileName = fileName.replace(ext, "json");
+				//Caminho completo do arquivo NomeDoOAC_extensão.json
+				dae = fileNames[i].replace(".", "_") + ".json";
+				//Caminho completo do arquivo NomeDoOAC.json
+				lista_componentes = fileNames[i].replace(fileName, newFileName);
+				console.log(zip.readAsText(dae))
+				jsonExec = JSON.parse(zip.readAsText(dae))
+				console.log(JSON.stringify(jsonExec))
+				jsonExec.clo_id = lomFile._id
+				jsonComp = JSON.parse(zip.readAsText(lista_componentes))
+				criaEntradasExec(db, jsonExec, jsonComp, function()
+				{
+					//Extrae o arquivo para a pasta dir colocando na subspasta indicada pelo título do LOM.
+					zip.extractEntryTo(fileNames[i], DIR+'/'+lomFile.qualified_name+'/'+ext, false)
+					//Extrae os componentes para uma subspasta components localizada na mesma pasta acima.
+					zip.extractEntryTo(path.dirname(fileNames[i])+"/components/", DIR+'/'+lomFile.qualified_name+"/components/", false)
+				})
+			}
+			callback()
 	})
     
 }
@@ -51,8 +53,7 @@ var criarEntrada = function(db, zip, fileNames, callback)
 function criaEntradaMetadados(db, lom, callback)
   {
     lom._id = new mongodb.ObjectID()
-    lom.qualified_name = lom.title.value.replace(" ", "_")
-	lom.user = Math.floor(100000000*Math.random())
+    lom.user = Math.floor(100000000*Math.random())
 	lom.date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
     db.collection('DescritorDeMetadados').insert(lom, function(err, data)
     {
@@ -64,25 +65,30 @@ function criaEntradaMetadados(db, lom, callback)
   }
   
 //Cria entradas de arquivos executáveis e seus componentes.
-function criaEntradasExec(db, jsonExec, jsonComp)
+function criaEntradasExec(db, jsonExec, jsonComp, callback)
 {
+  var count = 0;
   jsonExec._id = new mongodb.ObjectID()
   jsonComp._id = new mongodb.ObjectID()
   jsonExec._id_components = jsonComp._id
-  
   
   db.collection('Componentes').insert(jsonComp, function(err, data)
   {
     if(err)
       console.error(err);
     console.log("Inserindo componentes de "+path.basename(jsonExec.locations[0])+ " na coleção de Componentes");
+	count++
+	if(count == 2)
+		callback()
   })
-  
   db.collection('DescritorDeArquivoExecutavel').insert(jsonExec, function(err, data)
   {
     if(err)
       console.error(err);
 	console.log("Inserindo " +path.basename(jsonExec.locations[0])+ " na coleção de Descritor de Arquivo Executável");
+	count++
+	if(count == 2)
+		callback()
   })
 }
 
@@ -207,26 +213,6 @@ var getVersion = function(db, id, callback)
 	})
 }
 
-var getNewComponents = function(version, components, delta)
-{
-	var ret
-	ret.sourceNames = []
-	ret.dirNames = '/'
-	for(var i = 1; i <= version.length; i+=2)
-		ret.dirNames = ret.dirNames.concat(version.substr(0, i)+'/')
-	delta.components.forEach(function(deltaElement, deltaIndex)
-	{
-		var match = false
-		components.forEach(function(element, index)
-		{
-			if(element.source == deltaElement.source)
-				match = true
-		})
-		if(!match)
-			ret.sourceNames.push(deltaElement.source)
-	})
-	return ret
-}
 var persistirCustomizacoes = function(db, oac, language, title, description, callback)
 {
 	var jsonDescritor = []
