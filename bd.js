@@ -11,42 +11,45 @@ var criarEntrada = function(db, zip, fileNames, callback)
   //Variáveis que receberão os jsons de arquivos executáveis e seus componentes.
   var jsonExec = {}
   var jsonComp = {}
+  var count = 0
   //Variáveis para formatação de nome do json de cara arquivo executável e componente.
   var lista_componentes, dae, ext, dir
-  var lomFile = JSON.parse(zip.readAsText("LOM.json"))
+  var lomFile = JSON.parse(zip.readAsText("LOM.json").trim())
   //Diretório principal para onde os arquivos serão extraídos.
       //Cria e insere descritor raíz.
-     criaEntradaMetadados(db, lomFile, function()
-	 {
-		 for(var i = 0; i < fileNames.length; i++)
-		 {
-				//Extensão do executável a partir do caminho completo.
-				ext = (path.extname(fileNames[i])).substr(1);
-				//Nome do executável a partir do caminho completo.
-				fileName = path.basename(fileNames[i]);
-				//Recebe o nome original do arquivo e substitui 
-				//sua extensão por json para que fique no formato NomeDoOAC.json
-				newFileName = fileName.replace(ext, "json");
-				//Caminho completo do arquivo NomeDoOAC_extensão.json
-				dae = fileNames[i].replace(".", "_") + ".json";
-				//Caminho completo do arquivo NomeDoOAC.json
-				lista_componentes = fileNames[i].replace(fileName, newFileName);
-				console.log(zip.readAsText(dae))
-				jsonExec = JSON.parse(zip.readAsText(dae))
-				console.log(JSON.stringify(jsonExec))
-				jsonExec.clo_id = lomFile._id
-				jsonComp = JSON.parse(zip.readAsText(lista_componentes))
-				criaEntradasExec(db, jsonExec, jsonComp, function()
-				{
-					//Extrae o arquivo para a pasta dir colocando na subspasta indicada pelo título do LOM.
-					zip.extractEntryTo(fileNames[i], DIR+'/'+lomFile.qualified_name+'/'+ext, false)
-					//Extrae os componentes para uma subspasta components localizada na mesma pasta acima.
-					zip.extractEntryTo(path.dirname(fileNames[i])+"/components/", DIR+'/'+lomFile.qualified_name+"/components/", false)
-				})
-			}
+  criaEntradaMetadados(db, lomFile, function()
+   {
+		for(var i = 0; i < fileNames.length; i++)
+		{
+			//Extensão do executável a partir do caminho completo.
+			ext = (path.extname(fileNames[i])).substr(1);
+			//Nome do executável a partir do caminho completo.
+			fileName = path.basename(fileNames[i]);
+			//Recebe o nome original do arquivo e substitui 
+			//sua extensão por json para que fique no formato NomeDoOAC.json
+			newFileName = fileName.replace(ext, "json");
+			//Caminho completo do arquivo NomeDoOAC_extensão.json
+			dae = fileNames[i].replace(".", "_") + ".json";
+			//Caminho completo do arquivo NomeDoOAC.json
+			lista_componentes = fileNames[i].replace(fileName, newFileName);
+			jsonExec = JSON.parse(zip.readAsText(dae).trim())
+			jsonExec.clo_id = lomFile._id
+			jsonComp = JSON.parse(zip.readAsText(lista_componentes).trim())
+			console.log(JSON.stringify(jsonExec))
+			criaEntradasExec(db, jsonExec, jsonComp, fileNames[i], function(file)
+			{
+				console.log("Extraindo "+file)
+				//Extrae o arquivo para a pasta dir colocando na subspasta indicada pelo título do LOM.
+				zip.extractEntryTo(file, DIR+'/'+lomFile.qualified_name+'/'+ext, false, true)
+				console.log("Extraindo "+path.dirname(file)+"/components/")
+				//Extrae os componentes para uma subspasta components localizada na mesma pasta acima.
+				zip.extractEntryTo(path.dirname(file)+"/components/", DIR+'/'+lomFile.qualified_name+"/components/", false, true)
+				count++
+			})
+		}
+		if(count == fileNames.length)
 			callback()
 	})
-    
 }
 
 //Cria a entrada de metadados e atualiza o campo lom_id do descritor raíz utilizando o clo_id como critério de busca.
@@ -65,7 +68,7 @@ function criaEntradaMetadados(db, lom, callback)
   }
   
 //Cria entradas de arquivos executáveis e seus componentes.
-function criaEntradasExec(db, jsonExec, jsonComp, callback)
+function criaEntradasExec(db, jsonExec, jsonComp, fileName, callback)
 {
   var count = 0;
   jsonExec._id = new mongodb.ObjectID()
@@ -79,7 +82,7 @@ function criaEntradasExec(db, jsonExec, jsonComp, callback)
     console.log("Inserindo componentes de "+path.basename(jsonExec.locations[0])+ " na coleção de Componentes");
 	count++
 	if(count == 2)
-		callback()
+		callback(fileName)
   })
   db.collection('DescritorDeArquivoExecutavel').insert(jsonExec, function(err, data)
   {
@@ -88,7 +91,7 @@ function criaEntradasExec(db, jsonExec, jsonComp, callback)
 	console.log("Inserindo " +path.basename(jsonExec.locations[0])+ " na coleção de Descritor de Arquivo Executável");
 	count++
 	if(count == 2)
-		callback()
+		callback(fileName)
   })
 }
 
@@ -131,7 +134,6 @@ var gerarOACFromDb = function(db, fileId, filePath, callback)
 				console.log(err)
 			oacRead.gerarArquivoOAC(fileId, filePath, component, userId, permission, function(oac)
 			{
-				//console.log(JSON.stringify(components, null, 1))
 				callback(oac);
 			})
 		})

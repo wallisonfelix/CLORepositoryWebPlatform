@@ -111,7 +111,6 @@ app.post("/oacfiles", function(req, res)
 	var clo = new admzip(req.files.fileInput.path)
 	var manifestData = oacRead.readManifest(clo)
 	console.log("Versao do MANIFEST.MF: " + manifestData.version)
-	console.log(JSON.stringify(manifestData.fileNames))
 	connector.open(function(err, db)
 	{
 		if(err)
