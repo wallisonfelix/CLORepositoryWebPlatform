@@ -60,20 +60,22 @@ connector.open(function(err, db)
 app.use(multer({dest:"./sent"}))
 //app.use(parser.json())
 
-app.get('/', function (req, res) {
-	res.sendFile(__dirname + '/html/index.html');
+app.set('view engine', 'ejs');
+
+app.get('/', function(req, res) {  
+  res.render('pages/index');
 });
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.sendFile(__dirname + '/html/pesquisar_oac.html');
+	res.render('pages/pesquisar_oac');
 });
 
 app.get('/incluir_oac', function (req, res) {
-	res.sendFile(__dirname + '/html/incluir_oac.html');
+	res.render('pages/incluir_oac');
 });
 
 app.get('/incluir_versao_customizada', function (req, res) {
-	res.sendFile(__dirname + '/html/incluir_versao_customizada.html');
+	res.render('pages/incluir_versao_customizada');
 });
 
 app.get("/OAC", function(res, req)
@@ -154,8 +156,7 @@ app.post("/sent", function(req, res)
 	})
 })
 
-app.use(express.static(__dirname + '/html/includes'));
-app.use(express.static(__dirname + '/html/images'));
+app.use(express.static(__dirname + '/views/images'));
 
 server.listen(80);
 

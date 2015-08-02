@@ -1,32 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-	<title>CLORepository Web Plataform</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-
-	<script type="text/javascript">
-	    $(function(){
-	    	$("#pageHeader").load("/page_header.html");
-	    	$("#header").load("/header.html"); 
-	    	$("#menu").load("/menu.html"); 
-	    	$("#pageFooter").load("/page_footer.html"); 
-	    });
-    </script> 
+	<% include ../partials/head %>
 </head>
 
 <body style="background-color: #fffffa;">
-	<span id="pageHeader"></span>
+	<% include ../partials/page_header %>
 
 	<div class="container">
-	  <span id="header"></span>
+	  <% include ../partials/header %>
 
 	  <div class="row">
 	    <div id="menu" class="col-sm-3">
-	    </div>	 
+	    	<% include ../partials/menu %>
+	    </div>	    	
 
 	    <!-- Page Content -->
 	    <div class="col-sm-9">
@@ -54,7 +41,7 @@
 
 	</div>
 
-	<span id="pageFooter"></span>
+	<% include ../partials/page_footer %>
 </body>
 
 </html>
