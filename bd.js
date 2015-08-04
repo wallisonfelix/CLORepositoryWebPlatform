@@ -123,12 +123,12 @@ var buscarOAC = function(db, title, callback)
 var buscarArquivos = function(db, lom_id, callback)
 {
 	var filesJSON = []
-	var locations = []
 	db.collection("DescritorDeArquivoExecutavel").find({"clo_id" : lom_id}).toArray(function(err, fileDes)
 	{
-		filesJSON = JSON.parse(JSON.stringify(fileDes))
+		filesJSON = fileDes
 		callback(filesJSON)
 	})
+	
 }
 
 var gerarOACFromDb = function(db, fileId, filePath, callback)
@@ -149,7 +149,6 @@ var gerarOACFromDb = function(db, fileId, filePath, callback)
 			})
 		})
 	})
-	
 }
 
 var getVersion = function(db, id, callback)

@@ -2,31 +2,6 @@
 <html lang="pt-BR">
 <head>
 	<% include ../partials/head %>
-
-	<script>
-		function sendMessage()
-		{
-			var text = document.getElementById("message_input").value
-			if(text != "")
-				socket.emit('oacSearch', text)
-		}
-			  
-		function enterKeyPressed(event) {
-			var keyCode = (event.keyCode ? event.keyCode : event.which)
-			if(keyCode === 13)
-			{
-				sendMessage()
-			}
-		}
-		  
-		//Conecta ao servidor local.
-		var socket = io();
-
-		socket.on("resultOac", function(result)
-		{
-			document.getElementById("divResultados").innerHTML = result
-		})
-	</script>
 </head>
 
 <body style="background-color: #fffffa;">
@@ -46,27 +21,29 @@
 			  <li>Home</a></li>
 			  <li class="active">Pesquisar OAC</li>
 			</ol>
-	    	
-	    	<label for="fileInput" class="control-label col-sm-2">Pesquisar:</label>
-		  	<input type="text" style="resize:none; width: 20%" id="message_input" onkeypress="return enterKeyPressed(event)"></input>
-			
+			<label for="fileInput" class="control-label col-sm-2">Pesquisar:</label>
+			<form action="/iniciar_busca" role="form" class="form-horizontal" accept-charset="UTF-8">
+			<input type="text" style="resize:none; width: 20%" id="message_input" class="form-control"></input>
 			<br><br>
-
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-10">
-					<input type="submit" name="btnBuscar" class="btn btn-info" onclick = "sendMessage()" value="Buscar">
+						<input type="submit" name="btnBuscar" class="btn btn-info" value="Buscar" class="form-control">
 				</div>
 			</div>
-
+			</form>
 			<br>
-			
-			<div id="divResultados" align = "center">
-			</div>
-			
+			<% if(files) {%>
+				<% for(var i = 0; i < files.length; i++){ %>
+					<p><%= files[i].title %></p>
+					<ul>
+						<% for(var j = 0; i < files.exec.length; i++){ %>
+							<li><a href="/OAC?<%= files[i].exec[j]._id%>&filePath<%= files[i].exec[j].path%>"><%= files[i].exec[j].ext%></a></li>
+						<% } %>
+				<% } %>
+			<% } %>
+				</ul>
 			<br><br>
-			
 	    </div>
-	  </div>
 
 	</div>
 

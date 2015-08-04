@@ -10,7 +10,6 @@ var server = http.Server(app);
 var io = require('socket.io')(server);
 var mongodb = require('mongodb');
 var multer = require('multer')
-var parser = require('body-parser')
 
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
@@ -58,8 +57,8 @@ connector.open(function(err, db)
 	
 //Servidor fica ouvindo a porta 80.
 app.use(multer({dest:"./sent"}))
-//app.use(parser.json())
 
+app.set('views', './views')
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {  
@@ -67,7 +66,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.render('pages/pesquisar_oac');
+	res.render('pages/pesquisar_oac', {'files' : null});
 });
 
 app.get('/incluir_oac', function (req, res) {
@@ -77,6 +76,45 @@ app.get('/incluir_oac', function (req, res) {
 app.get('/incluir_versao_customizada', function (req, res) {
 	res.render('pages/incluir_versao_customizada');
 });
+
+app.get('/iniciar_busca', function (req, res)
+{
+	connector.open(function(err, db)
+	{
+		if(err)
+		{
+			console.log("Erro: Fechando conexão")
+			connector.close()
+		}
+		bd.buscarOAC(db, input, function(list)
+		{
+			for(index in list)
+			{
+				bd.buscarArquivos(db, new mongodb.ObjectID(list[index]._id), function(fileEntries)
+				{
+					/*
+					var qualified_name = list[index].qualified_name
+					var pos = parseInt(index) + 1
+					var toHtml = pos +". "+list[index].title.value
+					var link
+					for(j in fileEntries)
+					{
+						for(i in fileEntries[j].locations)
+						{
+							var ext = path.extname(fileEntries[j].locations[i]).replace('.', '')
+							var filePath = qualified_name + "/" + ext + "/" + fileEntries[j].locations[i].replace('.', '')
+							link = "<a href='/OAC?id="+encodeURIComponent(fileEntries[j]._id)+"&filePath="+encodeURIComponent(filePath)+"'>("+ext+")</a>"
+							toHtml += link
+							io.sockets.connected[socket.id].emit("resultOac", toHtml)
+						}	
+					}
+					io.sockets.connected[socket.id].emit("resultOac", toHtml)*/
+					connector.close()
+				})
+			}
+		})
+	})
+})
 
 app.get("/OAC", function(res, req)
 {
@@ -157,9 +195,8 @@ app.post("/sent", function(req, res)
 })
 
 app.use(express.static(__dirname + '/views/images'));
-
 server.listen(80);
-
+/*
 io.on('connection', function(socket)
 {
 	socket.on('oacSearch', function(input)
@@ -173,7 +210,6 @@ io.on('connection', function(socket)
 			}
 			bd.buscarOAC(db, input, function(list)
 			{
-				//console.log(list)
 				for(index in list)
 				{
 					bd.buscarArquivos(db, new mongodb.ObjectID(list[index]._id), function(fileEntries)
@@ -200,4 +236,4 @@ io.on('connection', function(socket)
 			})
 		})
 	})
-})
+})*/
