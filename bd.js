@@ -9,8 +9,7 @@ var criarEntrada = function(db, zip, fileNames, callback)
 {
  
   //Variáveis que receberão os jsons de arquivos executáveis e seus componentes.
-  var jsonExec = {}
-  var jsonComp = {}
+  var toCollection = []
   var count = 0
   //Variáveis para formatação de nome do json de cara arquivo executável e componente.
   var lista_componentes, dae, ext, dir
@@ -19,36 +18,39 @@ var criarEntrada = function(db, zip, fileNames, callback)
       //Cria e insere descritor raíz.
   criaEntradaMetadados(db, lomFile, function()
    {
-		for(var i = 0; i < fileNames.length; i++)
+	   fileNames.forEach(function(element)
+	   {
+		   var obj = {}
+		   //Nome do executável a partir do caminho completo.
+		   fileName = path.basename(element);
+		   //Recebe o nome original do arquivo e substitui 
+		   //sua extensão por json para que fique no formato NomeDoOAC.json
+		   ext = (path.extname(element)).substr(1);
+		   newFileName = fileName.replace(ext, "json");
+		   //Caminho completo do arquivo NomeDoOAC_extensão.json
+		   dae = element.replace(".", "_") + ".json";
+		   //Caminho completo do arquivo NomeDoOAC.json
+		   lista_componentes = element.replace(fileName, newFileName);
+		   obj.exec = JSON.parse(zip.readAsText(dae).trim())
+		   obj.exec.clo_id = lomFile._id
+		   obj.comp = JSON.parse(zip.readAsText(lista_componentes).trim())
+		   obj.fileName = element
+		   toCollection.push(obj)
+		})
+		toCollection.forEach(function(item)
 		{
-			//Extensão do executável a partir do caminho completo.
-			ext = (path.extname(fileNames[i])).substr(1);
-			//Nome do executável a partir do caminho completo.
-			fileName = path.basename(fileNames[i]);
-			//Recebe o nome original do arquivo e substitui 
-			//sua extensão por json para que fique no formato NomeDoOAC.json
-			newFileName = fileName.replace(ext, "json");
-			//Caminho completo do arquivo NomeDoOAC_extensão.json
-			dae = fileNames[i].replace(".", "_") + ".json";
-			//Caminho completo do arquivo NomeDoOAC.json
-			lista_componentes = fileNames[i].replace(fileName, newFileName);
-			jsonExec = JSON.parse(zip.readAsText(dae).trim())
-			jsonExec.clo_id = lomFile._id
-			jsonComp = JSON.parse(zip.readAsText(lista_componentes).trim())
-			console.log(JSON.stringify(jsonExec))
-			criaEntradasExec(db, jsonExec, jsonComp, fileNames[i], function(file)
+			criaEntradasExec(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
 			{
-				console.log("Extraindo "+file)
-				//Extrae o arquivo para a pasta dir colocando na subspasta indicada pelo título do LOM.
-				zip.extractEntryTo(file, DIR+'/'+lomFile.qualified_name+'/'+ext, false, true)
-				console.log("Extraindo "+path.dirname(file)+"/components/")
-				//Extrae os componentes para uma subspasta components localizada na mesma pasta acima.
-				zip.extractEntryTo(path.dirname(file)+"/components/", DIR+'/'+lomFile.qualified_name+"/components/", false, true)
-				count++
+			   if(err)
+				   console.log(err)
+			   count++
+			   if(count == toCollection.length)
+				{
+					console.log("Dados inseridos com sucesso")
+					callback()
+				}
 			})
-		}
-		if(count == fileNames.length)
-			callback()
+		})
 	})
 }
 
@@ -68,30 +70,39 @@ function criaEntradaMetadados(db, lom, callback)
   }
   
 //Cria entradas de arquivos executáveis e seus componentes.
-function criaEntradasExec(db, jsonExec, jsonComp, fileName, callback)
+function criaEntradasExec(db, zip, element, qualified_name, jsonExec, jsonComp, callback)
 {
   var count = 0;
+  var ext
   jsonExec._id = new mongodb.ObjectID()
   jsonComp._id = new mongodb.ObjectID()
   jsonExec._id_components = jsonComp._id
-  
   db.collection('Componentes').insert(jsonComp, function(err, data)
   {
     if(err)
+	{
       console.error(err);
+      callback(err, data)
+	}
     console.log("Inserindo componentes de "+path.basename(jsonExec.locations[0])+ " na coleção de Componentes");
+	zip.extractEntryTo(path.dirname(element)+"/components/", DIR+'/'+qualified_name+"/components/", false, true)
 	count++
 	if(count == 2)
-		callback(fileName)
+		callback(err, data)
   })
   db.collection('DescritorDeArquivoExecutavel').insert(jsonExec, function(err, data)
   {
     if(err)
+	{
       console.error(err);
+	  callback(err, data)
+	}
+	ext = (path.extname(element)).substr(1);
+	zip.extractEntryTo(element, DIR+'/'+qualified_name+'/'+ext, false, true)
 	console.log("Inserindo " +path.basename(jsonExec.locations[0])+ " na coleção de Descritor de Arquivo Executável");
 	count++
 	if(count == 2)
-		callback(fileName)
+		callback(err, data)
   })
 }
 
