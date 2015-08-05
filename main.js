@@ -10,7 +10,7 @@ var server = http.Server(app);
 var io = require('socket.io')(server);
 var mongodb = require('mongodb');
 var multer = require('multer')
-
+var EJS = require('ejs')
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
@@ -66,7 +66,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.render('pages/pesquisar_oac', {'files' : null});
+	res.render('pages/pesquisar_oac', {'files' : null, 'term' : ""});
 });
 
 app.get('/incluir_oac', function (req, res) {
@@ -79,6 +79,8 @@ app.get('/incluir_versao_customizada', function (req, res) {
 
 app.get('/iniciar_busca', function (req, res)
 {
+	var input = req.query.input
+	var result = new Array()
 	connector.open(function(err, db)
 	{
 		if(err)
@@ -88,30 +90,7 @@ app.get('/iniciar_busca', function (req, res)
 		}
 		bd.buscarOAC(db, input, function(list)
 		{
-			for(index in list)
-			{
-				bd.buscarArquivos(db, new mongodb.ObjectID(list[index]._id), function(fileEntries)
-				{
-					/*
-					var qualified_name = list[index].qualified_name
-					var pos = parseInt(index) + 1
-					var toHtml = pos +". "+list[index].title.value
-					var link
-					for(j in fileEntries)
-					{
-						for(i in fileEntries[j].locations)
-						{
-							var ext = path.extname(fileEntries[j].locations[i]).replace('.', '')
-							var filePath = qualified_name + "/" + ext + "/" + fileEntries[j].locations[i].replace('.', '')
-							link = "<a href='/OAC?id="+encodeURIComponent(fileEntries[j]._id)+"&filePath="+encodeURIComponent(filePath)+"'>("+ext+")</a>"
-							toHtml += link
-							io.sockets.connected[socket.id].emit("resultOac", toHtml)
-						}	
-					}
-					io.sockets.connected[socket.id].emit("resultOac", toHtml)*/
-					connector.close()
-				})
-			}
+			console.log(list)
 		})
 	})
 })

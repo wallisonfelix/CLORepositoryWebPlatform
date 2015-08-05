@@ -26,12 +26,13 @@
 			<br><br>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-10">
-					<input type="text" style="resize:none; width: 20%" name="input" class="form-control"/>
+					<input type="text" style="resize:none; width: 20%" name="input" value = '<%= term %>'class="form-control"/><br>
 					<input type="submit" class="btn btn-info" class="form-control"/>
 				</div>
 			</div>
 			</form>
 			<br>
+			<div id="result>
 			<% if(files) {%>
 				<% for(var i = 0; i < files.length; i++){ %>
 					<p><%= files[i].title %></p>
@@ -42,6 +43,7 @@
 				<% } %>
 			<% } %>
 				</ul>
+				</div>
 			<br><br>
 	    </div>
 

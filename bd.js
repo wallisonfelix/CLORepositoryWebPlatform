@@ -106,17 +106,44 @@ function criaEntradasExec(db, zip, element, qualified_name, jsonExec, jsonComp, 
   })
 }
 
-var buscarOAC = function(db, title, callback)
+var buscarOAC = function(db, term, callback)
 {
 	var listTitles = []
-	var myRegex = new RegExp(".*["+title+"].*", "i")
-	db.collection("DescritorDeMetadados").find({"title.value": myRegex}).toArray(function(err, titles)
+	var myRegex = new RegExp(".*["+term+"].*", "i")
+	var result = []
+	var count = 0
+	db.collection("DescritorDeMetadados").find({"title.value": myRegex}).each(function(err, ret)
 	{
 		if(err)
 		{
 			console.error(err)
 		}
-		callback(JSON.parse(JSON.stringify(titles)))
+		if(ret != null)
+		{
+			var obj = {}
+			obj.title = ret.title.value
+			obj.files = new Array()
+			db.collection("DescritorDeArquivoExecutavel").find({"clo_id" : ret._id}).each(function(err, doc)
+			{
+				if(doc != null)
+				{
+					result.push(obj)
+					console.log(result)
+				}
+				var file = {}
+				file._id = doc._id
+				file.info = new Array()
+				doc.locations.forEach(function(location)
+				{
+					var infoData = {}
+					console.log(location)
+					infoData.ext = path.extname.location.substr(1)
+					infoData.path = ret.qualified_name.concat('/'+infoData.ext).concat('/'+path.basename(location))
+					file.info.push(infoData)
+				})
+				obj.files.push(file)
+			})
+		}
 	})
 }
 
