@@ -32,18 +32,20 @@
 			</div>
 			</form>
 			<br>
-			<div id="result>
-			<% if(files) {%>
-				<% for(var i = 0; i < files.length; i++){ %>
-					<p><%= files[i].title %></p>
+			<div id="result">
+			<% if(data) {%>
+				<% for(var i = 0; i < data.length; i++){ %>
+					<p><%= data[i].title %></p>
 					<ul>
-						<% for(var j = 0; i < files.exec.length; i++){ %>
-							<li><a href="/OAC?<%= files[i].exec[j]._id%>&filePath<%= files[i].exec[j].path%>"><%= files[i].exec[j].ext%></a></li>
+						<% for(var j = 0; j < data[i].files.length; j++){ %>
+							<% for(var k = 0; k < data[i].files[j].info.length; k++){%>
+								<li><a href="localhost/OAC?id=<%= data[i].files[j]._id%>&filePath=<%= data[i].files[j].info[k].path%>"><%= data[i].files[j].info[k].ext%></a></li>
+							<%}%>
 						<% } %>
 				<% } %>
 			<% } %>
 				</ul>
-				</div>
+			</div>
 			<br><br>
 	    </div>
 

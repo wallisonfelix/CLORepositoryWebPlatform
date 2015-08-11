@@ -66,7 +66,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.render('pages/pesquisar_oac', {'files' : null, 'term' : ""});
+	res.render('pages/pesquisar_oac', {'data' : null, 'term' : ""});
 });
 
 app.get('/incluir_oac', function (req, res) {
@@ -90,7 +90,7 @@ app.get('/iniciar_busca', function (req, res)
 		}
 		bd.buscarOAC(db, input, function(list)
 		{
-			console.log(list)
+			res.render('pages/pesquisar_oac', {'data' : list, 'term' : input})
 		})
 	})
 })
