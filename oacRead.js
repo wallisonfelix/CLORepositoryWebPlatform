@@ -3,8 +3,9 @@ var DIR = './file'
 var ZIP = require('adm-zip')
 var path = require('path');
 
-//Lê o arquivo MANIFEST.MF, seta a lista de arquivos e retorna a versão contida no MANIFEST.MF.
-var readManifest = function(zip)
+//Lê o arquivo MANIFEST.MF e monta um objeto com a versão do MANIFEST e com
+// lista de arquivos executáveis contidas no OAC.
+var lerManifest = function(zip)
 {
 	var mf = zip.getEntry("MANIFEST.MF")
 	var data = {}
@@ -250,7 +251,7 @@ var gerarPacoteVersao = function(fullpath, callback)
 		})
 	})
 }
-module.exports.readManifest = readManifest
+module.exports.lerManifest = lerManifest
 module.exports.prepararEdicaoOAC = prepararEdicaoOAC
 module.exports.gerarPacoteVersao = gerarPacoteVersao
 module.exports.getDelta = getDelta

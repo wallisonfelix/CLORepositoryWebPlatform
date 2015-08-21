@@ -11,12 +11,12 @@ var criarEntrada = function(db, zip, fileNames, callback)
   //Variáveis que receberão os jsons de arquivos executáveis e seus componentes.
   var toCollection = []
   var count = 0
-  //Variáveis para formatação de nome do json de cara arquivo executável e componente.
+  //Variáveis para formatação de nome do json de cada arquivo executável e componente.
   var lista_componentes, dae, ext, dir
   var lomFile = JSON.parse(zip.readAsText("LOM.json").trim())
   //Diretório principal para onde os arquivos serão extraídos.
-      //Cria e insere descritor raíz.
-  criaEntradaMetadados(db, lomFile, function()
+  //Cria e insere o novo DescritorRaiz.
+  criarDescritorRaiz(db, lomFile, function()
    {
 	   fileNames.forEach(function(element)
 	   {
@@ -39,14 +39,14 @@ var criarEntrada = function(db, zip, fileNames, callback)
 		})
 		toCollection.forEach(function(item)
 		{
-			criaEntradasExec(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
+			criarDescritorDeArquivoExecutavel(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
 			{
 			   if(err)
 				   console.log(err)
 			   count++
 			   if(count == toCollection.length)
 				{
-					console.log("Dados inseridos com sucesso")
+					console.log("OAC inserido com sucesso.")
 					callback()
 				}
 			})
@@ -54,56 +54,75 @@ var criarEntrada = function(db, zip, fileNames, callback)
 	})
 }
 
-//Cria a entrada de metadados e atualiza o campo lom_id do descritor raíz utilizando o clo_id como critério de busca.
-function criaEntradaMetadados(db, lom, callback)
+//Cria um novo documento na Collection DescritorRaiz
+function criarDescritorRaiz(db, lom, callback)
   {
     lom._id = new mongodb.ObjectID()
     lom.user = Math.floor(100000000*Math.random())
 	lom.date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
-    db.collection('DescritorDeMetadados').insert(lom, function(err, data)
+    db.collection('DescritoresRaizes').insert(lom, function(err, data)
     {
       if(err)
 		console.error(err)
-      console.log("Inserindo LOM.json.\n_id do descritor de metadados = "+lom._id+".");
+      console.log("Inserindo novo documento DescritorRaiz: " + lom._id + ";");
 	  callback()
     })
   }
   
-//Cria entradas de arquivos executáveis e seus componentes.
-function criaEntradasExec(db, zip, element, qualified_name, jsonExec, jsonComp, callback)
+//Criar um novo DescritorDeArquivoExecutavel, criando também o DescritorDeComponents ao qual ele o referencia
+function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jsonExec, jsonComp, callback)
 {
   var count = 0;
-  var ext
-  jsonExec._id = new mongodb.ObjectID()
-  jsonComp._id = new mongodb.ObjectID()
-  jsonExec._id_components = jsonComp._id
-  db.collection('Componentes').insert(jsonComp, function(err, data)
+
+  jsonExec._id = new mongodb.ObjectID();
+  jsonComp._id = new mongodb.ObjectID();
+  jsonExec.id_components = jsonComp._id;
+
+  //Variáveis com o path dos diretórios de destino do Arquivo Executável e dos seus Componentes
+  var diretorioDestinoExecutavel = DIR + '/' + path.dirname(element.replace("executable_files", qualified_name));
+  var diretorioDestinoComponentes = diretorioDestinoExecutavel + "/components/";
+
+  //Atualiza os campos "source" do JSON com o estado dos Componentes antes de inclui-lo no banco
+  jsonComp.scenes.forEach(function(scene) 
+  {
+  	scene.components.forEach(function(component) 
+  	{
+	  	if (component.hasOwnProperty("source")) {
+	  		component.source = diretorioDestinoComponentes + path.basename(component.source);
+	  	}
+  	});
+  });
+
+  db.collection('DescritoresDeComponentes').insert(jsonComp, function(err, data)
   {
     if(err)
 	{
       console.error(err);
       callback(err, data)
 	}
-    console.log("Inserindo componentes de "+path.basename(jsonExec.locations[0])+ " na coleção de Componentes");
-	zip.extractEntryTo(path.dirname(element)+"/components/", DIR+'/'+qualified_name+"/components/", false, true)
+    zip.extractEntryTo(path.dirname(element) + "/components/", diretorioDestinoComponentes, false, false);
+    console.log("Inserindo novo documento DescritorDeComponente: " + jsonComp._id + ";");
 	count++
 	if(count == 2)
 		callback(err, data)
   })
-  db.collection('DescritorDeArquivoExecutavel').insert(jsonExec, function(err, data)
+
+  //Cria a lista "locations" no JSON que resultará no Descritor de Arquivo Executável,
+  //contendo o path de onde ficará o Arquivo Executável.
+  jsonExec.locations = [diretorioDestinoExecutavel + '/' + path.basename(element)];
+  db.collection('DescritoresDeArquivosExecutaveis').insert(jsonExec, function(err, data)
   {
     if(err)
 	{
       console.error(err);
 	  callback(err, data)
-	}
-	ext = (path.extname(element)).substr(1);
-	zip.extractEntryTo(element, DIR+'/'+qualified_name+'/'+ext, false, true)
-	console.log("Inserindo " +path.basename(jsonExec.locations[0])+ " na coleção de Descritor de Arquivo Executável");
+	}	
+	zip.extractEntryTo(element, diretorioDestinoExecutavel, false, true)
+	console.log("Inserindo novo documento DescritorDeArquivoExecutavel: " + jsonExec._id + ";");
 	count++
 	if(count == 2)
 		callback(err, data)
-  })
+  });
 }
 
 var buscarOAC = function(db, term, callback)

@@ -32,12 +32,12 @@ bd.gerarPacoteVersao(fullpath, function(oac)
 })*/
 
 //Servidor do mongodb
-var mongo = new mongodb.Server('localhost', 27017);
+var mongo = new mongodb.Server('127.0.0.1', 27017);
 //Conector do banco de dados.
-var connector = new mongodb.Db("oac", mongo, {w:0})
+var connector = new mongodb.Db("clorepository", mongo, {w:0})
 
-/*var clo = new admzip("./teste.oac")
-manifestData = oacRead.readManifest(clo)
+/*var oac = new admzip("./teste.oac")
+manifestData = oacRead.readManifest(oac)
 
 console.log("Versao do MANIFEST.MF: " + manifestData.version)
 console.log(JSON.stringify(manifestData.fileNames))
@@ -49,7 +49,7 @@ connector.open(function(err, db)
 		console.log(err)
 		connector.close()
 	}
-	bd.criarEntrada(db, clo, manifestData.fileNames, function()
+	bd.criarEntrada(db, oac, manifestData.fileNames, function()
 	{
 		connector.close()
 	})
@@ -125,10 +125,10 @@ app.get("/OAC", function(res, req)
 	})
 })
 				
-app.post("/oacfiles", function(req, res)
+app.post("/incluirOAC", function(req, res)
 {
-	var clo = new admzip(req.files.fileInput.path)
-	var manifestData = oacRead.readManifest(clo)
+	var oac = new admzip(req.files.fileInput.path)
+	var manifestData = oacRead.lerManifest(oac)
 	console.log("Versao do MANIFEST.MF: " + manifestData.version)
 	connector.open(function(err, db)
 	{
@@ -137,11 +137,12 @@ app.post("/oacfiles", function(req, res)
 			console.log(err)
 			connector.close()
 		}
-		bd.criarEntrada(db, clo, manifestData.fileNames, function()
+		bd.criarEntrada(db, oac, manifestData.fileNames, function()
 		{
 			fs.unlink(req.files.fileInput.path, function(err)
 			{
-				if(err) throw err
+				if(err) 
+					throw err
 				console.log("Arquivo removido")
 			})
 			connector.close()
@@ -209,7 +210,7 @@ io.on('connection', function(socket)
 							}	
 						}
 						io.sockets.connected[socket.id].emit("resultOac", toHtml)
-						connector.close()
+						connector.oacse()
 					})
 				}
 			})
