@@ -127,44 +127,65 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
 
 var buscarOAC = function(db, term, callback)
 {
-	var listTitles = []
 	var myRegex = new RegExp(".*["+term+"].*", "i")
 	var result = []
-	var count = 0
-	db.collection("DescritorDeMetadados").find({"title.value": myRegex}).each(function(err, ret)
+	var countMeta = 0
+	var countExe = 0
+	var metadadosCount
+	var execCount
+	var cursorExe
+	var cursorMetadados = db.collection("DescritorDeMetadados").find({"title.value": myRegex})
+	cursorMetadados.count(function(err, count)
 	{
-		if(err)
-		{
-			console.error(err)
-		}
-		if(ret != null)
+		metadadosCount = count
+		console.log(metadadosCount)
+		cursorMetadados.forEach(function(ret)
 		{
 			var obj = {}
 			obj.title = ret.title.value
 			obj.files = new Array()
-			db.collection("DescritorDeArquivoExecutavel").find({"clo_id" : ret._id}).each(function(err, doc)
+			console.log("Buscando Descritores de Arquivos Executáveis.")
+			cursorExe = db.collection("DescritorDeArquivoExecutavel").find({"clo_id" : ret._id})
+			cursorExe.count(function(err, count)
 			{
-				if(doc != null)
+				execCount = count
+				cursorExe.forEach(function(doc)
 				{
-					result.push(obj)
-					console.log(result)
-				}
-				var file = {}
-				file._id = doc._id
-				file.info = new Array()
-				doc.locations.forEach(function(location)
-				{
-					var infoData = {}
-					console.log(location)
-					infoData.ext = path.extname.location.substr(1)
-					infoData.path = ret.qualified_name.concat('/'+infoData.ext).concat('/'+path.basename(location))
-					file.info.push(infoData)
+					var file = {}
+					file._id = doc._id
+					file.info = new Array()
+					console.log("Iniciando construção de path de cada arquivo")
+					doc.locations.forEach(function(location)
+					{
+						var infoData = {}
+						infoData.ext = path.extname(location).substr(1)
+						infoData.path = ret.qualified_name.concat('/'+infoData.ext).concat('/'+path.basename(location).substr(1))
+						console.log(JSON.stringify(infoData))
+						file.info.push(infoData)
+					})
+					console.log("Adicionando arquivo à lista.")
+					obj.files.push(file)
+					countExe++
+					if(countExe == execCount)
+					{
+						console.log("Jogando arquivos no resultado buscado.")
+						console.log(JSON.stringify(obj))
+						result.push(obj)
+						countMeta++
+						console.log(countMeta)
+						if(countMeta == metadadosCount)
+						{
+							console.log("Retornando resultado.")
+							console.log(JSON.stringify(result))
+							callback(result)
+						}
+					}
 				})
-				obj.files.push(file)
 			})
-		}
+		})
 	})
 }
+
 
 var buscarArquivos = function(db, lom_id, callback)
 {
