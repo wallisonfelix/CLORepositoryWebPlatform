@@ -129,12 +129,13 @@ app.post("/incluirOAC", function(req, res)
 {
 	var oac = new admzip(req.files.fileInput.path);
 	var manifestData = oacRead.lerManifest(oac);
-	console.log("Versao do MANIFEST.MF: " + manifestData.version);
+	console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
 	connector.open(function(err, db)
 	{
 		if(err)
 		{
-			console.log(err);
+			console.error(new Date() + " Erro ao Incluir OAC: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
 			connector.close();
 		}
 		bd.criarEntrada(db, oac, manifestData.fileNames, function()
@@ -143,7 +144,7 @@ app.post("/incluirOAC", function(req, res)
 			{
 				if(err) 
 					throw err
-				console.log("Arquivo temporário do OAC removido com sucesso.")
+				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.")
 			});
 			connector.close();
 			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});

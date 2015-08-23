@@ -43,11 +43,11 @@ var criarEntrada = function(db, zip, fileNames, callback)
 			criarDescritorDeArquivoExecutavel(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
 			{
 			   if(err)
-				   console.log(err)
+				   console.error(new Date() + " Erro ao Incluir Descritor Raiz: " + err);
 			   count++
 			   if(count == toCollection.length)
 				{
-					console.log("OAC inserido com sucesso.")
+					console.log(new Date() + " OAC inserido com sucesso.")
 					callback()
 				}
 			})
@@ -64,8 +64,8 @@ function criarDescritorRaiz(db, lom, callback)
     db.collection('DescritoresRaizes').insert(lom, function(err, data)
     {
       if(err)
-		console.error(err)
-      console.log("Inserindo novo documento DescritorRaiz: " + lom._id + ";");
+		console.error(new Date() + " Erro ao Incluir DescritorRaiz: " + err);
+      console.log(new Date() + " Novo documento DescritorRaiz inserido: " + lom._id + ".");
 	  callback()
     })
   }
@@ -97,13 +97,13 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   {
     if(err)
 	{
-      console.error(err);
+      console.error(new Date() + " Erro ao Incluir DescritorDeComponente: " + err);
       callback(err, data)
 	}
 	//Envia os componentes para o diretório de destino no servidor.
 	//Caso exista arquivos com a mesma nomenclatura, eles não são substituidos.
     zip.extractEntryTo(path.dirname(element) + "/components/", diretorioDestinoComponentes, false, false);
-    console.log("Inserindo novo documento DescritorDeComponente: " + jsonComp._id + ";");
+    console.log(new Date() + " Novo documento DescritorDeComponente inserido: " + jsonComp._id + ".");
 	count++
 	if(count == 2)
 		callback(err, data)
@@ -116,13 +116,13 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   {
     if(err)
 	{
-      console.error(err);
+      console.error(new Date() + " Erro ao Incluir DescritorDeArquivoExecutavel: " + err);
 	  callback(err, data)
 	}	
 	//Envia o arquivo executável para o diretório de destino no servidor.
 	//Caso exista um arquivo com a mesma nomenclatura, ele não é substituido.
 	zip.extractEntryTo(element, diretorioDestinoExecutavel, false, false)
-	console.log("Inserindo novo documento DescritorDeArquivoExecutavel: " + jsonExec._id + ";");
+	console.log(new Date() + " Novo documento DescritorDeArquivoExecutavel inserido: " + jsonExec._id + ".");
 	count++
 	if(count == 2)
 		callback(err, data)
