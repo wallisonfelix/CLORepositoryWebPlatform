@@ -1,0 +1,10 @@
+<% if(messages) {
+	var index = 0;
+	messages.forEach(function(message){ %>
+		<div class="alert alert-<%= messagesTypes[index] %> fade in">
+			<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+			<%= message %>
+		</div>
+	<% index++; 
+	}); %>
+<% } %>

@@ -62,7 +62,7 @@ app.set('views', './views')
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {  
-  res.render('pages/index');
+  res.render('pages/index', {'messages': null});
 });
 
 app.get('/pesquisar_oac', function (req, res) {
@@ -127,15 +127,15 @@ app.get("/OAC", function(res, req)
 				
 app.post("/incluirOAC", function(req, res)
 {
-	var oac = new admzip(req.files.fileInput.path)
-	var manifestData = oacRead.lerManifest(oac)
-	console.log("Versao do MANIFEST.MF: " + manifestData.version)
+	var oac = new admzip(req.files.fileInput.path);
+	var manifestData = oacRead.lerManifest(oac);
+	console.log("Versao do MANIFEST.MF: " + manifestData.version);
 	connector.open(function(err, db)
 	{
 		if(err)
 		{
-			console.log(err)
-			connector.close()
+			console.log(err);
+			connector.close();
 		}
 		bd.criarEntrada(db, oac, manifestData.fileNames, function()
 		{
@@ -143,9 +143,10 @@ app.post("/incluirOAC", function(req, res)
 			{
 				if(err) 
 					throw err
-				console.log("Arquivo removido")
-			})
-			connector.close()
+				console.log("Arquivo temporário do OAC removido com sucesso.")
+			});
+			connector.close();
+			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
 		})
 	})
 })

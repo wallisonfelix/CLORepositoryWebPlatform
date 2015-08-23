@@ -37,6 +37,7 @@ var criarEntrada = function(db, zip, fileNames, callback)
 		   obj.fileName = element
 		   toCollection.push(obj)
 		})
+	   	//Intera a lista de arquivos executáveis do OAC para incluí-los no banco
 		toCollection.forEach(function(item)
 		{
 			criarDescritorDeArquivoExecutavel(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
@@ -82,7 +83,7 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   var diretorioDestinoExecutavel = DIR + '/' + path.dirname(element.replace("executable_files", qualified_name));
   var diretorioDestinoComponentes = diretorioDestinoExecutavel + "/components/";
 
-  //Atualiza os campos "source" do JSON com o estado dos Componentes antes de inclui-lo no banco
+  //Atualiza os campos "source" do JSON com o estado dos Componentes antes de incluí-lo no banco
   jsonComp.scenes.forEach(function(scene) 
   {
   	scene.components.forEach(function(component) 
@@ -92,7 +93,6 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
 	  	}
   	});
   });
-
   db.collection('DescritoresDeComponentes').insert(jsonComp, function(err, data)
   {
     if(err)
@@ -100,6 +100,8 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
       console.error(err);
       callback(err, data)
 	}
+	//Envia os componentes para o diretório de destino no servidor.
+	//Caso exista arquivos com a mesma nomenclatura, eles não são substituidos.
     zip.extractEntryTo(path.dirname(element) + "/components/", diretorioDestinoComponentes, false, false);
     console.log("Inserindo novo documento DescritorDeComponente: " + jsonComp._id + ";");
 	count++
@@ -117,7 +119,9 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
       console.error(err);
 	  callback(err, data)
 	}	
-	zip.extractEntryTo(element, diretorioDestinoExecutavel, false, true)
+	//Envia o arquivo executável para o diretório de destino no servidor.
+	//Caso exista um arquivo com a mesma nomenclatura, ele não é substituido.
+	zip.extractEntryTo(element, diretorioDestinoExecutavel, false, false)
 	console.log("Inserindo novo documento DescritorDeArquivoExecutavel: " + jsonExec._id + ";");
 	count++
 	if(count == 2)
