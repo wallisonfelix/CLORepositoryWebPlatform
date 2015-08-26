@@ -1,16 +1,17 @@
-var oacRead = require('./oacRead.js')
-var bd = require('./bd.js')
-var path = require('path')
-var fs = require('fs')
-var admzip = require('adm-zip')
-var express = require('express')
-var app = express()
-var http = require('http')
+var oacRead = require('./oacRead.js');
+var bd = require('./bd.js');
+var path = require('path');
+var fs = require('fs');
+var admzip = require('adm-zip');
+var express = require('express');
+var app = express();
+var http = require('http');
 var server = http.Server(app);
 var io = require('socket.io')(server);
 var mongodb = require('mongodb');
-var multer = require('multer')
-var EJS = require('ejs')
+var multer = require('multer');
+var EJS = require('ejs');
+
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
@@ -19,7 +20,7 @@ if (typeof String.prototype.startsWith != 'function') {
   String.prototype.startsWith = function (str){
     return this.indexOf(str) == 0;
   };
-}
+};
 /*
 //bd.prepararEdicaoOAC(zip)
 var userId = (new mongodb.ObjectID()).toString()
@@ -55,7 +56,6 @@ connector.open(function(err, db)
 	})
 })*/
 	
-//Servidor fica ouvindo a porta 80.
 app.use(multer({dest:"./sent"}))
 
 app.set('views', './views')
@@ -65,28 +65,29 @@ app.get('/', function(req, res) {
   res.render('pages/index', {'messages': null});
 });
 
-app.get('/pesquisar_oac', function (req, res) {
-	res.render('pages/pesquisar_oac', {'data' : null, 'term' : ""});
-});
-
 app.get('/incluir_oac', function (req, res) {
 	res.render('pages/incluir_oac');
+});
+
+app.get('/pesquisar_oac', function (req, res) {
+	res.render('pages/pesquisar_oac', {'data' : null, 'term' : ""});
 });
 
 app.get('/incluir_versao_customizada', function (req, res) {
 	res.render('pages/incluir_versao_customizada');
 });
 
-app.get('/iniciar_busca', function (req, res)
+app.get('/pesquisarOAC', function (req, res)
 {
-	var input = req.query.input
+	var input = req.query.title
 	var result = new Array()
 	connector.open(function(err, db)
 	{
 		if(err)
 		{
-			console.log("Erro: Fechando conexão")
-			connector.close()
+			console.error(new Date() + " Erro ao Pesquisar OAC: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
+			connector.close();
 		}
 		bd.buscarOAC(db, input, function(list)
 		{
@@ -150,7 +151,8 @@ app.post("/incluirOAC", function(req, res)
 			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
 		})
 	})
-})
+});
+
 app.post("/sent", function(req, res)
 {
 	var title = req.body.title
@@ -177,7 +179,9 @@ app.post("/sent", function(req, res)
 })
 
 app.use(express.static(__dirname + '/views/images'));
+//Servidor fica ouvindo a porta 80.
 server.listen(80);
+
 /*
 io.on('connection', function(socket)
 {

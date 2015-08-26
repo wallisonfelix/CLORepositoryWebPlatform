@@ -1,13 +1,12 @@
 var path = require('path');
 var mongodb = require('mongodb');
-var ZIP = require('adm-zip')
-var oacRead = require('./oacRead.js')
-var DIR = './file'
-var crypto = require('crypto')
+var ZIP = require('adm-zip');
+var oacRead = require('./oacRead.js');
+var DIR = './file';
+var crypto = require('crypto');
 
 var criarEntrada = function(db, zip, fileNames, callback)
 {
- 
   //Variáveis que receberão os jsons de arquivos executáveis e seus componentes.
   var toCollection = []
   var count = 0
