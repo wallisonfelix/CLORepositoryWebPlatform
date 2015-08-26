@@ -70,7 +70,7 @@ app.get('/incluir_oac', function (req, res) {
 });
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.render('pages/pesquisar_oac', {'data' : null, 'term' : ""});
+	res.render('pages/pesquisar_oac', {'data' : null, 'title' : ""});
 });
 
 app.get('/incluir_versao_customizada', function (req, res) {
@@ -79,8 +79,8 @@ app.get('/incluir_versao_customizada', function (req, res) {
 
 app.get('/pesquisarOAC', function (req, res)
 {
-	var input = req.query.title
-	var result = new Array()
+	var title = req.query.title;
+	var result = new Array();
 	connector.open(function(err, db)
 	{
 		if(err)
@@ -89,11 +89,11 @@ app.get('/pesquisarOAC', function (req, res)
 			res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
 			connector.close();
 		}
-		bd.buscarOAC(db, input, function(list)
+		bd.buscarOAC(db, title, function(list)
 		{
-			res.render('pages/pesquisar_oac', {'data' : list, 'term' : input})
-		})
-	})
+			res.render('pages/pesquisar_oac', {'data' : list, 'title' : title})
+		});
+	});
 })
 
 app.get("/OAC", function(res, req)
