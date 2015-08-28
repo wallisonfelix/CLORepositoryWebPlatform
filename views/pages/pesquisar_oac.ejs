@@ -49,38 +49,43 @@
 				      	</tr>
 				    </thead>
 				    <tbody>
-				    <% if(data) {
-						for(var i = 0; i < data.length; i++) { %>
+				    <% if(result) {
+						for(var i = 0; i < result.length; i++) { %>
 				      		<tr>
-					        	<td>%= data[i].title %></td>
-					        	<td class="text-center">
+					        	<td style="vertical-align: middle;"><%= result[i].title %></td>
+					        	<td class="text-center" style="vertical-align: middle;">
 					        		<a href="#">
 						        		<span class="glyphicon glyphicon-search" />
 						        	</a>
 						        </td>
 						        <td class="text-center">
-						        	<% 	for(var j = 0; j < data[i].files.length; j++) { 
-											for(var k = 0; k < data[i].files[j].info.length; k++) { %>
-								        		<tr>
-									        		<a href="localhost/OAC?id=<%= data[i].files[j]._id%>&filePath=<%= data[i].files[j].info[k].path%>">
-									        			<%= data[i].files[j].info[k].ext %>
-									        		</a>
-									        	</tr>
-									    <%	}
-									    } %>	
+						        	<table class="table">
+							        	<% 	for(var j = 0; j < result[i].files.length; j++) { %>
+							        			<tr>
+												<% for(var k = 0; k < result[i].files[j].locations.length; k++) { %>			
+								        			<td class="text-center">
+										        		<a href="/OAC?id=<%= result[i].files[j]._id %>&filePath=<%= result[i].files[j].locations[k].path %>">
+										        			<%= result[i].files[j].locations[k].ext %>
+										        		</a>
+										        	<td>
+										   		 <%	} %>
+										    	</tr>
+										<% } %>	
+									</table>    
 						        </td>
 						        <td class="text-center">
-						        	<% 	for(var j = 0; j < data[i].files.length; j++) { 
-											for(var k = 0; k < data[i].files[j].info.length; k++) { %>
-								        		<tr>
-									        		<a href="#">
-									        			<span class="glyphicon glyphicon-folder-open" />
-									        			<!-- Analisar a apresentação da quantidade de versões customizadas -->
-				        								<span class="badge"><%= data[i].length %></span>
-									        		</a>
-									        	</tr>
-									    <%	}
-									    } %>	
+						        	<table class="table">
+							        	<% 	for(var j = 0; j < result[i].files.length; j++) { %>
+							        			<tr>												
+								        			<td class="text-center" style="text-align: center;">
+										        		<a href="/listarVersoesCustomizadas?id=<%= result[i].files[j]._id %>">	
+										        			<span class="glyphicon glyphicon-folder-open" />
+				        									<span class="badge"><%= result[i].files[j].qtyCustomizedVersion %></span>
+										        		</a>
+										        	<td>
+										    	</tr>
+										<% } %>	
+									</table> 	
 						        </td>
 			      			</tr>
 				      	<%	}
@@ -88,7 +93,7 @@
 				    </tbody>
 				</table>
 
-				<% if(!data) { %>
+				<% if(!result || result.length == 0) { %>
 					<div class="alert alert-warning fade in">
 						Nenhum OAC retornado
 					</div>
