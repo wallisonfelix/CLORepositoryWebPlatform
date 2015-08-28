@@ -244,10 +244,11 @@ var gerarOACFromDb = function(db, fileId, filePath, callback)
 	})
 }
 
-var isValueIn = function(value, key, array)
+var isValueIn = function(value, keyName, array)
 {
 	var is = false
-	for(var i = 0; i < array.length && is == false; i++)
+	var key = keyName
+	for(var i = 0; i < array.length && !is; i++)
 	{
 		if(array[i][key] === value)
 			is = true
@@ -263,17 +264,17 @@ var gerarDescritorVersao = function(db, id, componentsJson, callback)
 	{
 		if(err)
 			console.log(err)
-		document.customizations.forEach(function(desScene)
+		document.customizations.forEach(function(desScenes)
 		{
-			if(isValueIn(desScene.scene, scene, componentsJson))
+			if(isValueIn(desScenes.scene, "scene", componentsJson.scenes))
 			{
-				componentsJson.forEach(function(componentScene)
+				componentsJson.scenes.forEach(function(componentScene)
 				{
-					if(componentScene == desScene)
+					if(componentScene.scene == desScenes.scene)
 					{
-						desScene.components.forEach(function(delta)
+						desScenes.components.forEach(function(delta)
 						{
-							if(isValueIn(delta.name, name, componentScene.components))
+							if(isValueIn(delta.name, "name", componentScene.components))
 							{
 								componentScene.components.forEach(function(comp)
 								{
@@ -291,7 +292,7 @@ var gerarDescritorVersao = function(db, id, componentsJson, callback)
 				})
 			}
 			else
-				componentsJson.push(desScene)
+				componentsJson.scenes.push(desScene)
 		})
 		callback(componentsJson)
 	})
@@ -388,6 +389,7 @@ var persistirCustomizacoes = function(db, oac, language, title, description, cal
 	})
 	getVersion(db, file_id, function(result)
 	{
+		console.log(result)
 		if(result)
 		{
 			descritorVersao =
@@ -474,3 +476,4 @@ module.exports.buscarOAC = buscarOAC
 module.exports.buscarArquivos = buscarArquivos
 module.exports.gerarOACFromDb = gerarOACFromDb
 module.exports.persistirCustomizacoes = persistirCustomizacoes
+module.exports.gerarDescritorVersao = gerarDescritorVersao

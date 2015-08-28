@@ -7,7 +7,6 @@ var express = require('express');
 var app = express();
 var http = require('http');
 var server = http.Server(app);
-var io = require('socket.io')(server);
 var mongodb = require('mongodb');
 var multer = require('multer');
 var EJS = require('ejs');
@@ -21,41 +20,12 @@ if (typeof String.prototype.startsWith != 'function') {
     return this.indexOf(str) == 0;
   };
 };
-/*
-//bd.prepararEdicaoOAC(zip)
-var userId = (new mongodb.ObjectID()).toString()
-var permission = Math.floor(Math.random() * 5)
-var fullpath = "./newteste.zip"	
-bd.gerarPacoteVersao(fullpath, function(oac)
-{
-	console.log("Escrevendo arquivo "+fullpath+".")
-	oac.writeZip(fullpath)
-})*/
 
 //Servidor do mongodb
 var mongo = new mongodb.Server('127.0.0.1', 27017);
 //Conector do banco de dados.
 var connector = new mongodb.Db("clorepository", mongo, {w:0})
 
-/*var oac = new admzip("./teste.oac")
-manifestData = oacRead.readManifest(oac)
-
-console.log("Versao do MANIFEST.MF: " + manifestData.version)
-console.log(JSON.stringify(manifestData.fileNames))
-
-connector.open(function(err, db)
-{
-	if(err)
-	{
-		console.log(err)
-		connector.close()
-	}
-	bd.criarEntrada(db, oac, manifestData.fileNames, function()
-	{
-		connector.close()
-	})
-})*/
-	
 app.use(multer({dest:"./sent"}))
 
 app.set('views', './views')
@@ -181,45 +151,3 @@ app.post("/sent", function(req, res)
 app.use(express.static(__dirname + '/views/images'));
 //Servidor fica ouvindo a porta 80.
 server.listen(80);
-
-/*
-io.on('connection', function(socket)
-{
-	socket.on('oacSearch', function(input)
-	{
-		connector.open(function(err, db)
-		{
-			if(err)
-			{
-				console.log("Erro: Fechando conexão")
-				connector.close()
-			}
-			bd.buscarOAC(db, input, function(list)
-			{
-				for(index in list)
-				{
-					bd.buscarArquivos(db, new mongodb.ObjectID(list[index]._id), function(fileEntries)
-					{
-						var qualified_name = list[index].qualified_name
-						var pos = parseInt(index) + 1
-						var toHtml = pos +". "+list[index].title.value
-						var link
-						for(j in fileEntries)
-						{
-							for(i in fileEntries[j].locations)
-							{
-								var ext = path.extname(fileEntries[j].locations[i]).replace('.', '')
-								var filePath = qualified_name + "/" + ext + "/" + fileEntries[j].locations[i].replace('.', '')
-								link = "<a href='/OAC?id="+encodeURIComponent(fileEntries[j]._id)+"&filePath="+encodeURIComponent(filePath)+"'>("+ext+")</a>"
-								toHtml += link
-								io.sockets.connected[socket.id].emit("resultOac", toHtml)
-							}	
-						}
-						io.sockets.connected[socket.id].emit("resultOac", toHtml)
-						connector.oacse()
-					})
-				}
-			})
-		})
-	})
-})*/

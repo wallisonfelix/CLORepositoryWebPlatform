@@ -56,7 +56,7 @@ var gerarArquivoDescritorVersao = function(descritorDeVersao, descritorName, tok
 		for(index in files)
 			des.addLocalFile(componentsDir+'/'+files[index], "components/")
 		//Adiciona o arquivo JSON contendo o resultado da busca de descrições 	 //de componentes do banco no pacote.
-		des.addFile(descritorName".json", new Buffer(JSON.stringify(descritorDeVersao)), "comentário")
+		des.addFile(descritorName+".json", new Buffer(JSON.stringify(descritorDeVersao)), "comentário")
 		//Cria arquivo token.txt contendo a identificação do executável, do 
 		//usuário e a permissão.
 		des.addFile("token.txt", new Buffer(tokenString), "comentário")
@@ -151,6 +151,7 @@ var getDelta = function(jsonFromFile, jsonDescritor, permission, callback)
 {
 	var i
 	var delta = new Array()
+	console.log("Calculando delta")
 	//Lê arquivo json enviado pelo usuário.
 	for(var k = 0; k < jsonFromFile.scenes.length; k++)
 	{
@@ -198,6 +199,7 @@ var getDelta = function(jsonFromFile, jsonDescritor, permission, callback)
 			}
 		}
 	}
+	console.log(delta)
 	callback(delta)
 }
 
