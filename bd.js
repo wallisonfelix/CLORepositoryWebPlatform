@@ -69,7 +69,7 @@ function criarDescritorRaiz(db, lom, callback)
     })
   }
   
-//Criar um novo DescritorDeArquivoExecutavel, criando também o DescritorDeComponents ao qual ele o referencia
+//Cria um novo DescritorDeArquivoExecutavel, criando também o DescritorDeComponents ao qual ele o referencia
 function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jsonExec, jsonComp, callback)
 {
   var count = 0;
@@ -128,65 +128,88 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   });
 }
 
-var buscarOAC = function(db, term, callback)
+//Realiza a busca de OACs cujo metadados correspondam com os campos passados como parâmetro
+var buscarOAC = function(db, title, callback)
 {
-	var myRegex = new RegExp(".*["+term+"].*", "i")
-	var result = []
-	var countMeta = 0
-	var countExe = 0
-	var metadadosCount
-	var execCount
-	var cursorExe
-	var cursorMetadados = db.collection("DescritorDeMetadados").find({"title.value": myRegex})
-	cursorMetadados.count(function(err, count)
-	{
-		metadadosCount = count
-		console.log(metadadosCount)
-		cursorMetadados.forEach(function(ret)
-		{
-			var obj = {}
-			obj.title = ret.title.value
-			obj.files = new Array()
-			console.log("Buscando Descritores de Arquivos Executáveis.")
-			cursorExe = db.collection("DescritorDeArquivoExecutavel").find({"clo_id" : ret._id})
-			cursorExe.count(function(err, count)
-			{
-				execCount = count
-				cursorExe.forEach(function(doc)
-				{
-					var file = {}
-					file._id = doc._id
-					file.info = new Array()
-					console.log("Iniciando construção de path de cada arquivo")
-					doc.locations.forEach(function(location)
-					{
-						var infoData = {}
-						infoData.ext = path.extname(location).substr(1)
-						infoData.path = ret.qualified_name.concat('/'+infoData.ext).concat('/'+path.basename(location).substr(1))
-						console.log(JSON.stringify(infoData))
-						file.info.push(infoData)
-					})
-					console.log("Adicionando arquivo à lista.")
-					obj.files.push(file)
-					countExe++
-					if(countExe == execCount)
-					{
-						console.log("Jogando arquivos no resultado buscado.")
-						console.log(JSON.stringify(obj))
-						result.push(obj)
-						countMeta++
-						console.log(countMeta)
-						if(countMeta == metadadosCount)
-						{
-							console.log("Retornando resultado.")
-							console.log(JSON.stringify(result))
-							callback(result)
+	//Monta Regex para consulta pelo campo Título do OAC
+	var titleRegex = new RegExp(".*" + title + ".*", "i");
+	
+	var result = [];
+
+	//Pesquisa os Descritores Raízes passando os campos utilizados como filtro e 
+	//limitando o retorno aos campos que serão utilizados
+	var cursorDescritoresRaizes = db.collection("DescritoresRaizes").find({"title.value": titleRegex}, {"qualified_name": 1, "title.value": 1});
+
+	cursorDescritoresRaizes.count(function(err, count) {			
+
+		if (err) {
+		    console.error(new Date() + " Erro ao Pesquisar DescritoresRaizes: " + err);
+			callback(err, result);
+		}
+
+		var countDescritoresRaizes = count;
+		var indexDescritoresRaizes = 0;	
+
+		if (countDescritoresRaizes == 0) {
+			console.log(new Date() + " Pesquisa por OAC com retorno vazio.");
+			callback(result);
+		}
+		//Intera na lista de resultados
+		cursorDescritoresRaizes.forEach(function(descritorRaiz)	{
+			//Prepara objeto para representar um registro no retorno da busca
+			var obj = {};
+			obj._id = descritorRaiz._id;
+			obj.title = descritorRaiz.title.value;
+			obj.files = new Array();
+
+			//Pesquisa os Descritores de Arquivos Executáveis referente ao Descritor Raiz,
+			//limitando o retorno aos campos que serão utilizados
+			var cursorDescritoresDeArqExec = db.collection("DescritoresDeArquivosExecutaveis").find({"clo_id" : descritorRaiz._id}, {"locations": 1});
+
+			cursorDescritoresDeArqExec.count(function(err, count) {
+
+				if (err) {
+				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
+					callback(err, result);
+				}
+
+				var countDescritoresDeArqExec = count;	
+				var indexDescritoresDeArqExec = 0;						
+				
+				//Intera na lista dos Descritores de Arquivos Executáveis
+				cursorDescritoresDeArqExec.forEach(function(descritorDeArqExec) {
+					//Prepara objeto para representar o Arquivo Executável
+					var file = {};
+					file._id = descritorDeArqExec._id;
+					//TODO: Preencher o campo qtyCustomizedVersion
+					file.qtyCustomizedVersion = 1;
+					//Caminhos onde o Arquivo Executável pode ser encontrado
+					file.locations = [];
+					descritorDeArqExec.locations.forEach(function(location) {
+						var fileLocation = {}
+						fileLocation.ext = path.extname(location);
+						fileLocation.path = location;
+						file.locations.push(fileLocation);
+					});
+
+					obj.files.push(file);
+
+					indexDescritoresDeArqExec++;
+					if(indexDescritoresDeArqExec == countDescritoresDeArqExec) {
+						//Adiciona a lista de resultados o objeto montado para representar um registro na busca 
+						result.push(obj);
+						
+						indexDescritoresRaizes++;
+						if(indexDescritoresRaizes == countDescritoresRaizes) {					
+							//Retorna a lista de resultados da pesquisa
+							console.log(new Date() + " Retorno de uma Pesquisa por OAC: " + JSON.stringify(result) + ".");
+							callback(result);
 						}
 					}
-				})
-			})
-		})
-	})
+				});
+			});
+		});
+	});
 }
 
 
