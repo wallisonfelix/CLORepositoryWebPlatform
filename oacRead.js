@@ -44,6 +44,26 @@ deleteFolderRecursive = function(path) {
     }
 };
 
+var gerarArquivoDescritorVersao = function(descritorDeVersao, descritorName, tokenString, componentsDir, callback)
+{
+	var des = new ZIP()
+	fs.readdir(componentsDir, function(err, files)
+	{
+		if(err)
+			console.error(err)
+		console.log(files.toString())
+		//Adiciona cada arquivo encontrado no pacote.
+		for(index in files)
+			des.addLocalFile(componentsDir+'/'+files[index], "components/")
+		//Adiciona o arquivo JSON contendo o resultado da busca de descrições 	 //de componentes do banco no pacote.
+		des.addFile(descritorName".json", new Buffer(JSON.stringify(descritorDeVersao)), "comentário")
+		//Cria arquivo token.txt contendo a identificação do executável, do 
+		//usuário e a permissão.
+		des.addFile("token.txt", new Buffer(tokenString), "comentário")
+		callback(des)
+	})
+}
+
 //Gera arquivo OAC a partir dos dados informados na entrada.
 var gerarArquivoOAC = function(fileId, filePath, componentContent, userId, permission, callback)
 {

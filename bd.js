@@ -209,7 +209,7 @@ var gerarOACFromDb = function(db, fileId, filePath, callback)
 	{
 		if(err)
 			console.log(err)
-		db.collection("Componentes").findOne({_id : new mongodb.ObjectID(document._id_components)},function(err, component)
+		db.collection('DescritoresDeComponentes').findOne({_id : new mongodb.ObjectID(document._id_components)},function(err, component)
 		{
 			if(err)
 				console.log(err)
@@ -221,6 +221,58 @@ var gerarOACFromDb = function(db, fileId, filePath, callback)
 	})
 }
 
+var isValueIn = function(value, key, array)
+{
+	var is = false
+	for(var i = 0; i < array.length && is == false; i++)
+	{
+		if(array[i][key] === value)
+			is = true
+	}
+	return is
+}
+
+var gerarDescritorVersao = function(db, id, componentsJson, callback)
+{
+	var userId = (new mongodb.ObjectID()).toString()
+	var permission = Math.floor(Math.random() * 5)
+	db.collection("DescritorDeVersao").findOne({"_id" : id}, function(err, document)
+	{
+		if(err)
+			console.log(err)
+		document.customizations.forEach(function(desScene)
+		{
+			if(isValueIn(desScene.scene, scene, componentsJson))
+			{
+				componentsJson.forEach(function(componentScene)
+				{
+					if(componentScene == desScene)
+					{
+						desScene.components.forEach(function(delta)
+						{
+							if(isValueIn(delta.name, name, componentScene.components))
+							{
+								componentScene.components.forEach(function(comp)
+								{
+									if(delta.name == comp.name)
+									{
+										for(var key in delta)
+											comp[key] = delta[key]
+									}
+								})
+							}
+							else
+								componentScene.components.push(delta)
+						})
+					}
+				})
+			}
+			else
+				componentsJson.push(desScene)
+		})
+		callback(componentsJson)
+	})
+}
 var getVersion = function(db, id, callback)
 {
 	db.collection("DescritorDeArquivoExecutavel").findOne({"_id" : id},function(anErr, anResult)
