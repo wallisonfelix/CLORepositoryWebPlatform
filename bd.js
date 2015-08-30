@@ -224,6 +224,7 @@ var gerarOACFromDb = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 
 		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel
 		db.collection('DescritoresDeComponentes').findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentes) {
+
 			if (err) {	
 				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
 				callback(err);

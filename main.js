@@ -89,7 +89,7 @@ app.get("/baixarOAC", function(res, req)
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
 			res.res.set('Content-Type', 'application/zip');
 			//Informa o nome do arquivo ao navegador.
-			res.res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath) + '.zip');
+			res.res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
 			//Informa o tamanho do arquivo ao navegador.
 			res.res.set('Content-Length', oac.toBuffer().length);
 			//Envia o arquivo em forma de bytes.

@@ -74,7 +74,7 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 	  	scene.components.forEach(function(component) {
 		  	if (component.hasOwnProperty("source")) {
 		  		//Adiciona, no diretório "components/", o arquivo referenciado pelo campo "source"
-		  		oac.addFile("components/" + path.basename(component.source), new Buffer(component.source));
+		  		oac.addLocalFile(component.source, "components/");
 		  		//E atualiza a referência do campo
 		  		component.source = "./components/" + path.basename(component.source);
 		  	}
@@ -83,7 +83,7 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 	//Adiciona o DescritorDeComponentes
 	oac.addFile(path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json"), new Buffer(JSON.stringify(descritorDeComponentes)));
 	//Adiciona o Arquivo Executável
-	oac.addFile(path.basename(pathArquivoExecutavel), new Buffer(pathArquivoExecutavel));	
+	oac.addLocalFile(pathArquivoExecutavel);	
 	//Adiciona o token.txt
 	oac.addFile("token.txt", new Buffer(idDescritorDeArquivoExecutavel + " " + userId + " " + permission));
 
