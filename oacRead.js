@@ -64,39 +64,31 @@ var gerarArquivoDescritorVersao = function(descritorDeVersao, descritorName, tok
 	})
 }
 
-//Gera arquivo OAC a partir dos dados informados na entrada.
-var gerarArquivoOAC = function(fileId, filePath, componentContent, userId, permission, callback)
-{
-	//Extensão do arquivo executável.
-	var fileExt = path.extname(filePath).replace('.','')
-	//Nome do arquivo executável.
-	var fileName = path.basename(filePath)
-	//Diretório sem o nome do arquivo. A constante DIR pode ser
-    //substituída por um diretório raiz qualquer.
-	var dir = DIR+'/'+ path.dirname(filePath)
-	//Diretório dos componentes. Basta substituir a extensão do 
-    //executável, presente no diretório do mesmo, pela subpasta 
-    //“components”, que é onde fica os componentes utilizados pelo objeto.
-	var componentsDir = dir.replace(fileExt, "components")
-	var oac =  new ZIP()
-	//Função usada para ler o diretório de componentes.
-	fs.readdir(componentsDir, function(err, files)
-	{
-		if(err)
-			console.error(err)
-		console.log(files.toString())
-		//Adiciona cada arquivo encontrado no pacote.
-		for(index in files)
-			oac.addLocalFile(componentsDir+'/'+files[index], "components/")
-		//Adiciona o arquivo JSON contendo o resultado da busca de descrições 	 //de componentes do banco no pacote.
-		oac.addFile(path.basename(filePath, "."+fileExt)+".json", new Buffer(JSON.stringify(componentContent)), "comentário")
-		//Cria arquivo token.txt contendo a identificação do executável, do 
-		//usuário e a permissão.
-		oac.addFile("token.txt", new Buffer(fileId+ " " +userId+ " "+ permission), "comentário")
-		//Adiciona o arquivo executável.
-		oac.addLocalFile(DIR+'/'+filePath)
-		callback(oac)
-	})
+//Gera, a partir dos dados informados, o arquivo compactado que representará o OAC
+var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, permission, callback) {
+	//Monta o arquivo compactado que representará o OAC
+	var oac =  new ZIP();
+	
+	//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes do OAC
+	oac.addFile("components/", null);
+	descritorDeComponentes.scenes.forEach(function(scene) {
+	  	scene.components.forEach(function(component) {
+		  	if (component.hasOwnProperty("source")) {
+		  		//Adiciona, no diretório "components/", o arquivo referenciado pelo campo "source"
+		  		oac.addFile(component.source, "components/");
+		  		//E atualiza a referência do campo
+		  		component.source = "./components/" + path.basename(component.source);
+		  	}
+	  	});
+	});
+	//Adiciona o DescritorDeComponentes
+	oac.addFile(path.basename(pathArquivoExecutavel + ".json", new Buffer(JSON.stringify(descritorDeComponentes))));
+	//Adiciona o Arquivo Executável
+	oac.addLocalFile(pathArquivoExecutavel);	
+	oac.addFile("token.txt", new Buffer(idDescritorDeArquivoExecutavel + " " + userId + " " + permission));
+
+	//Retorna o arquivo criado
+	callback(oac);
 }
 
 //Copia os arquivos contidos no OAC e os coloca com o prefixo "new_".

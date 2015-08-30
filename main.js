@@ -58,43 +58,47 @@ app.get('/pesquisarOAC', function (req, res)
 			res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
 			connector.close();
 		}
+
 		bd.buscarOAC(db, title, function(result)
 		{
 			console.log("chamou funcao");
 			res.render('pages/pesquisar_oac', {'result' : result, 'title' : title});
 		});
 	});
-})
+});
 
-app.get("/OAC", function(res, req)
+app.get("/baixarOAC", function(res, req)
 {
-	//Lê a identificação de executável contida na query string enviada 
-	//pelo usuário ao clicar no link desejado.
+	//Lê a identificação do DescritorDeArquivoExecutável e o diretório em que 
+	//o arquivo executável está localizado no servidor
 	var id = req.req.query.id
-	//Lê o diretório contido na query string.
-	var filepath = req.req.query.filePath
+	var filePath = req.req.query.filePath
+
 	connector.open(function(err, db)
 	{
 		if(err)
 		{
-			console.log("Erro: Fechando conexão")
-			db.close()
+			console.error(new Date() + " Erro ao Baixar OAC: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Baixar OAC: " + err], 'messagesTypes': ["danger"]});
+			connector.close();
 		}
-		//Chama a função de geração de arquivo.
-		bd.gerarOACFromDb(db, id, filepath, function(oac)
+		
+		//Chama a função que gera e retornar o arquivo representando o OAC
+		bd.gerarOACFromDb(db, id, filePath, function(oac)
 		{
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
-			res.res.set('Content-Type', 'application/zip')
+			res.res.set('Content-Type', 'application/zip');
 			//Informa o nome do arquivo ao navegador.
-			res.res.set('Content-Disposition', 'attachment; filename='+path.basename(filepath)+'.zip')
-			//Informa o tamanho do arquivo ao navegador para que apareça o tamanho total na hora de baixar o arquivo.
-			res.res.set('Content-Length', oac.toBuffer().length)
+			res.res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath) + '.zip');
+			//Informa o tamanho do arquivo ao navegador.
+			res.res.set('Content-Length', oac.toBuffer().length);
 			//Envia o arquivo em forma de bytes.
-			res.res.send(oac.toBuffer())
-			db.close()
-		})
-	})
-})
+			res.res.send(oac.toBuffer());
+
+			db.close();
+		});
+	});
+});
 
 app.post("/incluirOAC", function(req, res)
 {
@@ -119,8 +123,8 @@ app.post("/incluirOAC", function(req, res)
 			});
 			connector.close();
 			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
-		})
-	})
+		});
+	});
 });
 
 app.post("/sent", function(req, res)

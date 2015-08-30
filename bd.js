@@ -83,19 +83,15 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   var diretorioDestinoComponentes = diretorioDestinoExecutavel + "/components/";
 
   //Atualiza os campos "source" do JSON com o estado dos Componentes antes de incluí-lo no banco
-  jsonComp.scenes.forEach(function(scene) 
-  {
-  	scene.components.forEach(function(component) 
-  	{
+  jsonComp.scenes.forEach(function(scene) {
+  	scene.components.forEach(function(component) {
 	  	if (component.hasOwnProperty("source")) {
 	  		component.source = diretorioDestinoComponentes + path.basename(component.source);
 	  	}
   	});
   });
-  db.collection('DescritoresDeComponentes').insert(jsonComp, function(err, data)
-  {
-    if(err)
-	{
+  db.collection('DescritoresDeComponentes').insert(jsonComp, function(err, data) {
+    if(err) {
       console.error(new Date() + " Erro ao Incluir DescritorDeComponente: " + err);
       callback(err, data)
 	}
@@ -111,10 +107,8 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   //Cria a lista "locations" no JSON que resultará no Descritor de Arquivo Executável,
   //contendo o path de onde ficará o Arquivo Executável.
   jsonExec.locations = [diretorioDestinoExecutavel + '/' + path.basename(element)];
-  db.collection('DescritoresDeArquivosExecutaveis').insert(jsonExec, function(err, data)
-  {
-    if(err)
-	{
+  db.collection('DescritoresDeArquivosExecutaveis').insert(jsonExec, function(err, data) {
+    if(err) {
       console.error(new Date() + " Erro ao Incluir DescritorDeArquivoExecutavel: " + err);
 	  callback(err, data)
 	}	
@@ -212,36 +206,37 @@ var buscarOAC = function(db, title, callback)
 	});
 }
 
-
-var buscarArquivos = function(db, lom_id, callback)
+//Gera e retorna um arquivo compactado representando o OAC compatível com os parâmetros informados
+var gerarOACFromDb = function(db, idDescritorDeArquivoExecutavel, pathArquivoExecutavel, callback)
 {
-	var filesJSON = []
-	db.collection("DescritorDeArquivoExecutavel").find({"clo_id" : lom_id}).toArray(function(err, fileDes)
-	{
-		filesJSON = fileDes
-		callback(filesJSON)
-	})
-	
-}
+	//Gera, temporariamente, números aleatórios para representar o id e o Grau de Liberdade do Usuário  que faz o download
+	//TODO: setar corretamente quando a Plataforma possuir autenticação. Caso o usuário não esteja autenticado, setar 'null'
+	var userId = (new mongodb.ObjectID()).toString();
+	var permission = Math.floor(Math.random() * 5);
 
-var gerarOACFromDb = function(db, fileId, filePath, callback)
-{
-	var userId = (new mongodb.ObjectID()).toString()
-	var permission = Math.floor(Math.random() * 5)
-	db.collection("DescritorDeArquivoExecutavel").findOne({_id : new mongodb.ObjectID(fileId)}, function(err, document)
-	{
-		if(err)
-			console.log(err)
-		db.collection('DescritoresDeComponentes').findOne({_id : new mongodb.ObjectID(document._id_components)},function(err, component)
-		{
-			if(err)
-				console.log(err)
-			oacRead.gerarArquivoOAC(fileId, filePath, component, userId, permission, function(oac)
-			{
+	//Pesquisa o DescritorDeArquivoExecutavel do OAC que se deseja baixar
+	console.log(idDescritorDeArquivoExecutavel);
+	db.collection("DescritoresDeArquivosExecutaveis").findOne({_id : idDescritorDeArquivoExecutavel}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
+		
+		if (err) {
+			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
+			callback(err);
+		}
+
+		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel
+		db.collection('DescritoresDeComponentes').findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentes) {
+			
+			if (err) {
+				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
+				callback(err);
+			}
+
+			//Gera o arquivo compactado que representa o OAC
+			oacRead.gerarArquivoOAC(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, permission, function(oac) {
 				callback(oac);
-			})
-		})
-	})
+			});
+		});
+	});
 }
 
 var isValueIn = function(value, keyName, array)
@@ -473,7 +468,6 @@ var persistirCustomizacoes = function(db, oac, language, title, description, cal
 
 module.exports.criarEntrada = criarEntrada
 module.exports.buscarOAC = buscarOAC
-module.exports.buscarArquivos = buscarArquivos
 module.exports.gerarOACFromDb = gerarOACFromDb
 module.exports.persistirCustomizacoes = persistirCustomizacoes
 module.exports.gerarDescritorVersao = gerarDescritorVersao
