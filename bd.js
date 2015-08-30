@@ -215,8 +215,7 @@ var gerarOACFromDb = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 	var permission = Math.floor(Math.random() * 5);
 
 	//Pesquisa o DescritorDeArquivoExecutavel do OAC que se deseja baixar
-	console.log(idDescritorDeArquivoExecutavel);
-	db.collection("DescritoresDeArquivosExecutaveis").findOne({_id : idDescritorDeArquivoExecutavel}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
+	db.collection("DescritoresDeArquivosExecutaveis").findOne({_id : new mongodb.ObjectID(idDescritorDeArquivoExecutavel)}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
 		
 		if (err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
@@ -225,8 +224,7 @@ var gerarOACFromDb = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 
 		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel
 		db.collection('DescritoresDeComponentes').findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentes) {
-			
-			if (err) {
+			if (err) {	
 				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
 				callback(err);
 			}

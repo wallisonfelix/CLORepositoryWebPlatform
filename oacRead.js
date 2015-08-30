@@ -70,21 +70,21 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 	var oac =  new ZIP();
 	
 	//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes do OAC
-	oac.addFile("components/", null);
 	descritorDeComponentes.scenes.forEach(function(scene) {
 	  	scene.components.forEach(function(component) {
 		  	if (component.hasOwnProperty("source")) {
 		  		//Adiciona, no diretório "components/", o arquivo referenciado pelo campo "source"
-		  		oac.addFile(component.source, "components/");
+		  		oac.addFile("components/" + path.basename(component.source), new Buffer(component.source));
 		  		//E atualiza a referência do campo
 		  		component.source = "./components/" + path.basename(component.source);
 		  	}
 	  	});
 	});
 	//Adiciona o DescritorDeComponentes
-	oac.addFile(path.basename(pathArquivoExecutavel + ".json", new Buffer(JSON.stringify(descritorDeComponentes))));
+	oac.addFile(path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json"), new Buffer(JSON.stringify(descritorDeComponentes)));
 	//Adiciona o Arquivo Executável
-	oac.addLocalFile(pathArquivoExecutavel);	
+	oac.addFile(path.basename(pathArquivoExecutavel), new Buffer(pathArquivoExecutavel));	
+	//Adiciona o token.txt
 	oac.addFile("token.txt", new Buffer(idDescritorDeArquivoExecutavel + " " + userId + " " + permission));
 
 	//Retorna o arquivo criado
