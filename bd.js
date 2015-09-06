@@ -7,10 +7,10 @@ var crypto = require('crypto');
 
 var criarEntrada = function(db, zip, fileNames, callback)
 {
-  //Variáveis que receberão os jsons de arquivos executáveis e seus componentes.
+  //Variáveis que receberão os JSONs de arquivos executáveis e seus componentes.
   var toCollection = []
   var count = 0
-  //Variáveis para formatação de nome do json de cada arquivo executável e componente.
+  //Variáveis para formatação de nome do JSON de cada arquivo executável e componente.
   var lista_componentes, dae, ext, dir
   var lomFile = JSON.parse(zip.readAsText("LOM.json").trim())
   //Diretório principal para onde os arquivos serão extraídos.
@@ -23,10 +23,10 @@ var criarEntrada = function(db, zip, fileNames, callback)
 		   //Nome do executável a partir do caminho completo.
 		   fileName = path.basename(element);
 		   //Recebe o nome original do arquivo e substitui 
-		   //sua extensão por json para que fique no formato NomeDoOAC.json
+		   //sua extensão por JSON para que fique no formato NomeDoOAC.json
 		   ext = (path.extname(element)).substr(1);
 		   newFileName = fileName.replace(ext, "json");
-		   //Caminho completo do arquivo NomeDoOAC_extensão.json
+		   //Caminho completo do arquivo NomeDoOAC_extensao.json
 		   dae = element.replace(".", "_") + ".json";
 		   //Caminho completo do arquivo NomeDoOAC.json
 		   lista_componentes = element.replace(fileName, newFileName);
@@ -42,12 +42,12 @@ var criarEntrada = function(db, zip, fileNames, callback)
 			criarDescritorDeArquivoExecutavel(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
 			{
 			   if(err)
-				   console.error(new Date() + " Erro ao Incluir Descritor Raiz: " + err);
+				   console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
 			   count++
 			   if(count == toCollection.length)
 				{
-					console.log(new Date() + " OAC inserido com sucesso.")
-					callback()
+					console.log(new Date() + " OAC inserido com sucesso.");
+					callback();
 				}
 			})
 		})
@@ -63,7 +63,7 @@ function criarDescritorRaiz(db, lom, callback)
     db.collection('DescritoresRaizes').insert(lom, function(err, data)
     {
       if(err)
-		console.error(new Date() + " Erro ao Incluir DescritorRaiz: " + err);
+		console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
       console.log(new Date() + " Novo documento DescritorRaiz inserido: " + lom._id + ".");
 	  callback()
     })
@@ -91,8 +91,9 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   	});
   });
   db.collection('DescritoresDeComponentes').insert(jsonComp, function(err, data) {
+    
     if(err) {
-      console.error(new Date() + " Erro ao Incluir DescritorDeComponente: " + err);
+      console.error(new Date() + " Erro ao Inserir DescritorDeComponente: " + err);
       callback(err, data)
 	}
 	//Envia os componentes para o diretório de destino no servidor.
@@ -109,7 +110,7 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   jsonExec.locations = [diretorioDestinoExecutavel + '/' + path.basename(element)];
   db.collection('DescritoresDeArquivosExecutaveis').insert(jsonExec, function(err, data) {
     if(err) {
-      console.error(new Date() + " Erro ao Incluir DescritorDeArquivoExecutavel: " + err);
+      console.error(new Date() + " Erro ao Inserir DescritorDeArquivoExecutavel: " + err);
 	  callback(err, data)
 	}	
 	//Envia o arquivo executável para o diretório de destino no servidor.
@@ -180,7 +181,7 @@ var buscarOAC = function(db, title, callback)
 					//Caminhos onde o Arquivo Executável pode ser encontrado
 					file.locations = [];
 					descritorDeArqExec.locations.forEach(function(location) {
-						var fileLocation = {}
+						var fileLocation = {};
 						fileLocation.ext = path.extname(location);
 						fileLocation.path = location;
 						file.locations.push(fileLocation);
@@ -291,178 +292,267 @@ var gerarDescritorVersao = function(db, id, componentsJson, callback)
 		callback(componentsJson)
 	})
 }
-var getVersion = function(db, id, callback)
-{
-	db.collection("DescritorDeArquivoExecutavel").findOne({"_id" : id},function(anErr, anResult)
-	{
-		if(anErr)
-			console.log(anErr)
-		//Primeiro nível.
-		if(anResult)
-		{
-			var ret = {}
-			ret.root = id
-			db.collection("DescritorDeVersao").find({"_id_source_version" : id}).toArray(function(err, result)
-			{
-				var version = 0.0
-				for(var i = 0; i < result.length; i++)
-				{
-					if(parseFloat(result[i].version) > version)
-						version = parseFloat(result[i].version)
-				}
-				ret.version = ""+(version+1.0)+".0"
-				callback(ret)
-			})
+
+//Retorna as informações referentes à versão de um novo DescritorDeVersao deve assumir, 
+//com base no identificador da versão de origem passado como parâmetro
+var getVersion = function(db, id, callback) {
+
+	//Pesquisa um DescritorDeArquivoExecutavel que possua o identificador passado como parâmetro
+	db.collection("DescritoresDeArquivosExecutaveis").findOne({"_id": id}, {'id_source_version': 1}, function(err, resultDescDeArqExec) {		
+		
+		if (err) {
+		    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
+			callback(err, null);
 		}
-		else
-		{
-			db.collection("DescritorDeVersao").find({$or: [{"_id" : id}, {"_id_source_version" : id}]}).toArray(function(err3, list)
-			{
-				var prefix
-				var lastDigit
-				var ret = {}
-				if(list.length > 0)
-				{
-					ret.root = list[0]._id_root_version
-					if(list.length > 1)
-					{
-						var version_maior
-						var maiorLastDigit = 0
-						for(var i = 0; i < list.length; i++)
-						{
-							if(list[i]._id != id)
-							{
-								lastDigit = parseInt(list[i].version.charAt(list[i].version.length-1)) //Último dígito convertido para inteiro.
-								if(lastDigit > maiorLastDigit)
-								{
-									version_maior = list[i].version
-									maiorLastDigit = parseInt(version_maior.charAt(version_maior.length-1))
-								}
+		
+		//Caso seja retornado um DescritorDeArquivoExecutavel,
+		//a nova Versão Customizada é uma versão de Primeiro Nível
+		if(resultDescDeArqExec) {
+
+			var ret = {};
+			//A versão raiz e a de origem para o novo DescritorDeVersao são o próprio DescritorDeArquivoExecutavel retornado
+			ret.id_root_version = id;
+			ret.id_source_version = id;
+
+			//Pesquisa os DescritoresDeVersoes cuja versão de origem seja o próprio DescritorDeArquivoExecutavel retornado
+			db.collection("DescritoresDeVersoes").find({"id_source_version" : id}, {'id_source_version': 1}).toArray(function(err, resultDescDeVerPrimeiroNivel) {
+
+				if (err) {
+				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
+					callback(err, null);
+				}
+
+				//Define a versão que o novo DescritorDeVersao deve assumir
+				var version = 0;
+				for(var i = 0; i < resultDescDeVerPrimeiroNivel.length; i++) {
+					if(parseInt(resultDescDeVerPrimeiroNivel[i].version) > version) {
+						version = parseInt(resultDescDeVerPrimeiroNivel[i].version);
+					}	
+				}
+				ret.version = (version + 1).toString();
+				
+				callback(ret);
+			});
+		
+		} else {
+			//Não sendo encontrado um DescritorDeArquivoExecutavel com o identificador passado como parâmetro,
+			//busca-se DescritoresDeVersoes com esse _id e, simultaneamente, suas Versões Customizadas
+			db.collection("DescritoresDeVersoes").find({$or: [{"_id" : id}, {"id_source_version": id}]}, {"id_root_version": 1, "id_source_version": 1}).toArray(function(err, resultDescDeVers) {
+				
+				if (err) {
+				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
+					callback(err, null);
+				}
+
+				var ret = {};
+	
+				//Caso seja retornado um DescritorDeVersao,
+				//a nova Versão Customizada é uma versão de Segundo Nível em diante	
+				if(resultDescDeVers.length > 0) {
+					
+					//A versão raiz do novo DescritorDeVersao é a mesma dos demais elementos na sua hierarquia
+					ret.id_root_version = resultDescDeVers[0].id_root_version;
+					//A versão de origem do novo DescritorDeVersao
+					ret.id_source_version = id;
+
+					//Define a versão que o novo DescritorDeVersao deve assumir
+					var prefix;
+					var greaterLastVersionNumber = 0;
+					var versionNumbers = [];
+					var lastVersionNumber;
+					//O retorno de mais de um DescritorDeVersao indica a existência de outras Versões Customizadas
+					//derivadas da versão de origem	
+					for(var i = 0; i < resultDescDeVers.length; i++) {
+						
+						if(resultDescDeVers[i]._id != id) {
+							//Obtêm o último inteiro do campo version
+							versionNumbers = resultDescDeVers[i].version.split(".");
+							lastVersionNumber = parseInt(versionNumbers[versionNumbers.length-1]));
+							//Obtêm o último número de versão de um dado nível da hierarquia
+							if(lastVersionNumber > greaterLastVersionNumber) {
+								greaterLastVersionNumber = lastVersionNumber;
 							}
-						}		
-						prefix = version_maior.substr(0, version_maior.length-1)
-						maiorLastDigit++
-						ret.version = prefix.concat(maiorLastDigit)
-					}
-					else
-					{
-						lastDigit = parseInt(list[0].version.charAt(list[0].version.length-1))
-						if(lastDigit == 0)
-						{
-							lastDigit++
-							prefix = list[0].version.substr(0, list[0].version.length-1)
-							ret.version = prefix.concat(lastDigit)
-						}
-						else
-							ret.version = list[0].version.concat(".1")
-					}
+						} else {
+							//Obtêm o prefixo do número de versão
+							prefix = resultDescDeVers[i].version;
+						}	
+
+					}							
+					greaterLastVersionNumber++;
+					ret.version = prefix.concat('.' + greaterLastVersionNumber);					
+				} else {
+					//Caso não se encontre DescritoresDeArquivosExecutaveis e DescritoresDeVersoes com o identificador,
+					//o retorno da função é anulada
+					ret = null;
 				}
-				else
-					ret = null
-				callback(ret)
-			})
+
+				callback(ret);
+			});
 		}
-	})
+	});
 }
 
-var persistirCustomizacoes = function(db, oac, language, title, description, callback)
-{
-	var jsonDescritor = []
-	var jsonFromFile
-	var descritorVersao
-	var shasum = crypto.createHash('sha1')
-	var token_array = oac.readAsText("token.txt").split(" ")
-	var file_id = new mongodb.ObjectID(token_array[0])
-	var permission = token_array[2]
-	var oacEntries = oac.getEntries()
-	var extractDir
-	oacEntries.forEach(function(entry)
-	{
-		if(entry.entryName.endsWith(".json"))
-			jsonFromFile = JSON.parse(oac.readAsText(entry.entryName))
-	})
-	getVersion(db, file_id, function(result)
-	{
-		console.log(result)
-		if(result)
-		{
-			descritorVersao =
-			{
-				_id : new mongodb.ObjectID(),
-				_id_source_version : file_id,
-				_id_root_version : result.root,
-				version : result.version,
-				languages : language,
-				metadata : [{user : token_array[1], date : new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''), title : title, description : description}]
-			}
-			db.collection("DescritorDeArquivoExecutavel").findOne({_id: new mongodb.ObjectID(result.root)}, function(err, file)
-			{
-				if(err)
-					console.log(err)
-				db.collection("Componentes").findOne({_id : new mongodb.ObjectID(file._id_components)}, function(error, component)
-				{
-					if(error)
-						console.log(error)
-					jsonDescritor = component
-					oacRead.getDelta(jsonFromFile, jsonDescritor, permission, function(delta)
-					{
-						descritorVersao.customizations = delta
-						shasum.update(JSON.stringify(delta))
-						descritorVersao.hash = shasum.digest('hex')
-						console.log(JSON.stringify(descritorVersao, null, 1))
-						db.collection("DescritorDeVersao").findOne({hash: descritorVersao.hash}, function(err, file)
-						{
-							if(err)
-								console.log(err)
-							if(file)
-							{
-								var metadata = file.metadata
-								var exists = false
-								metadata.forEach(function(data)
-								{
-									if(descritorVersao.metadata[0].user == data.user && 
-									descritorVersao.metadata[0].title == data.title && 
-									descritorVersao.metadata[0].description == data.description)
-										exists = true
-								})
-								if(!exists)
-								{
-									metadata.push(descritorVersao.metadata[0])
-									db.collection("DescritorDeVersao").update({_id : file._id}, {$set: {metadata: metadata}})
-								}
-								callback(metadata)
-							}
-							else
-							{
-								db.collection("DescritorDeVersao").insert(descritorVersao, function(err1, data)
-								{
-									if(err1)
-										console.log(err1)
-									jsonFromFile.scenes.forEach(function(element)
-									{
-										element.components.forEach(function(entry)
-										{
-											oacEntries.forEach(function(file)
-											{
-												extractDir = DIR+entry.source
-												if(path.basename(extractDir) == path.basename(file.entryName))
-												{
-													console.log(DIR+entry.source+"\n")
-													oac.extractEntryTo(file, DIR+path.dirname(entry.source), false, true)
-												}
-											})
-										})
-									})
-									console.log("Inserção concluída.")
-									callback(descritorVersao)
-								})
-							}
-						})
-					})
-				})
-			})
+var persistirCustomizacoes = function(db, oac, title, description, languages, callback) {
+	
+	//Novo DescritorDeVersao
+	var descritorDeVersao = {};
+	//Gerador de Hash SHA1
+	var shasum = crypto.createHash('sha1');
+	
+	//Conteúdo do token.txt
+	var tokenAsArray = oac.readAsText("token.txt").split(" ");
+	//Descritor de origem da nova Versão Customizada
+	var idDescritorOrigem = new mongodb.ObjectID(token_array[0]);
+	//Grau de Liberdade do Usuário
+	var grauDeLiberdade = parseInt(token_array[2]);
+
+	//Diretório em que o Arquivo Executável da Versão está localizado no servidor
+	var diretorioArquivoExecutavel;
+	//Path do diretório de destino dos arquivos de mídias modificados
+	var diretorioDestinoComponentes;
+
+	//Conteúdo do Arquivo Compactado
+	var oacEntries = oac.getEntries();
+
+	//Obtêm o JSON com o novo estado dos componentes
+	var jsonComp;
+	oacEntries.forEach(function(entry) {
+		if(entry.entryName.endsWith(".json")) {
+			jsonComp = JSON.parse(oac.readAsText(entry.entryName));
 		}
-	})
+	});
+	
+	//Obtêm as informações referentes à versão para o novo DescritorDeVersao
+	getVersion(db, idDescritorOrigem, function(err, result) {
+
+		if (err) {
+		    console.error(new Date() + " Erro ao Obter Número de Versão para novo DescritorDeVersao: " + err);
+			callback(err, null);
+		}
+
+		if(result) {
+			console.log(new Date() + " Inserindo nova Versão Customizada: \n" + result);
+			//Preenche o novo DescritorDeVersao
+			descritorDeVersao = {
+				_id : new mongodb.ObjectID(),			
+				id_source_version : result.id_source_version,
+				id_root_version : result.id_root_version,
+				version : result.version,
+				languages : languages,
+				//TODO: setar corretamente o Usuário quando a Plataforma possuir autenticação
+				metadata : [{user : token_array[1], date : new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''), title : title, description : description}];
+			}
+
+			//Pesquisa o DescritorDeArquivoExecutavel raiz da hierarquia onde o novo DescritorDeVersao será inserido
+			db.collection("DescritorDeArquivoExecutavel").findOne({_id: new mongodb.ObjectID(result.id_root_version)}, {id_components: 1}, function(err, descritorDeArqExec) {
+
+				if (err) {
+				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
+					callback(err, null);
+				}
+
+				diretorioArquivoExecutavel = descritorDeArqExec.locations;
+
+				//Pesquisa o DescritorDeComponente referenciado pelo DescritorDeArquivoExecutavel raiz da hierarquia
+				db.collection("DescritoresDeComponentes").findOne({_id : new mongodb.ObjectID(descritorDeArqExec.id_components)}, function(error, descritorDeComponente) {
+					
+				    if(error) {
+				      console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + error);
+				      callback(error, null);
+					}
+
+					//Obtêm o Delta (diferença) entre o estado dos componentes na raiz da hierarquia e a nova Versão Customizada
+					oacRead.getDelta(jsonComp, descritorDeComponente, grauDeLiberdade, function(err, delta) {
+
+						if (err) {
+						    console.error(new Date() + " Erro ao Obter Delta para novo DescritorDeVersao: " + err);
+							callback(err, null);
+						}
+
+						descritorDeVersao.customizations = delta;
+						//Obtêm o Hash do Delta
+						descritorDeVersao.hash = shasum.update(JSON.stringify(delta)).digest('hex');
+
+						//Pesquisa DescritorDeVersao com o mesmo Hash na hierarquia
+						db.collection("DescritoresDeVersoes").findOne({id_root_version: new mongodb.ObjectID(descritorDeVersao.id_root_version), hash: descritorDeVersao.hash}, function(err, descDeVersParaIncorporacao) {
+
+							if(err) {						      
+						    	console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
+						    	callback(err, null);
+							}
+
+							if(descDeVersParaIncorporacao) {
+								//Caso seja encontrado DescritorDeVersao com as mesmas customizações, 
+								//a Incorporação de Versão é realizada
+								var metadata = descDeVersParaIncorporacao.metadata;						
+								//Verifica se já existe um nó com os mesmos metadados
+								var exists = false;								
+								metadata.forEach(function(data) {
+									if(descritorDeVersao.metadata[0].user == data.user && 
+									descritorDeVersao.metadata[0].title == data.title && 
+									descritorDeVersao.metadata[0].description == data.description) {
+										exists = true;
+									}
+								});
+								//Caso não exista um nó idêntico, realiza-se a Incorporação de Versão
+								if(!exists) {
+									metadata.push(descritorDeVersao.metadata[0]);
+									//Atualiza o DescritorDeVersao
+									db.collection("DescritoresDeVersoes").update({_id : descDeVersParaIncorporacao._id}, {$set: {metadata: metadata}}, function(err, descDeVersAtualizado) {
+										if(err) {						      
+									    	console.error(new Date() + " Erro ao Atualizar DescritorDeVersao: " + err);
+									    	callback(err, null);
+										}
+
+										console.log(new Date() + " Nova Incorporação de Versão realizada: " + descDeVersParaIncorporacao._id);
+										callback(metadata);
+									});
+								}																
+							} else {
+								//Caso não seja encontrado DescritorDeVersao com as mesmas customizações, 
+								//um novo DescritorDeVersao é incluído
+
+								//Atualiza os campos "source" dos Componentes que tiveram o arquivo de mídia referenciado modificado
+								diretorioDestinoComponentes = path.dirname(diretorioArquivoExecutavel[0]) + "/components/";
+								descritorDeVersao.version.split(".").forEach(function(numberVersion) {
+									diretorioDestinoComponentes.concat(numberVersion + "/");
+								}
+
+								descritorDeVersao.customizations.forEach(function(scene) {
+								  	scene.components.forEach(function(component) {
+								  		if (component.hasOwnProperty("source")) {
+									  		oacEntries.forEach(function(file) {
+									  				if(component.source == path.basename(file.entryName)) {
+									  					component.source = diretorioDestinoComponentes + path.basename(component.source);
+									  				}
+											  	}
+											});  	
+										}
+								  	});
+								});
+
+								//Inclui um novo DescritorDeVersao
+								db.collection("DescritoresDeVersoes").insert(descritorDeVersao, function(err, data) {
+									
+									if(err) {						      
+								    	console.error(new Date() + " Erro ao Inserir DescritorDeVersao: " + err);
+								    	callback(err, null);
+									}
+
+									//Envia os novos Componentes para o diretório de destino no servidor.
+									//Caso exista arquivos com a mesma nomenclatura, eles não são substituidos.
+								    oac.extractEntryTo("/components/", diretorioDestinoComponentes, false, false);
+									
+									console.log(new Date() + " Novo documento DescritorDeVersao inserido: " + descritorDeVersao._id);
+									callback(descritorDeVersao);
+								});
+							}
+						});
+					});
+				});
+			});
+		}
+	});
 }
 
 module.exports.criarEntrada = criarEntrada

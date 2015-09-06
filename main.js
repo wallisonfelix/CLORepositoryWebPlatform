@@ -105,21 +105,22 @@ app.post("/incluirOAC", function(req, res)
 	var oac = new admzip(req.files.fileInput.path);
 	var manifestData = oacRead.lerManifest(oac);
 	console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
-	connector.open(function(err, db)
-	{
-		if(err)
-		{
+
+	connector.open(function(err, db) {
+		
+		if(err) {
 			console.error(new Date() + " Erro ao Incluir OAC: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
 			connector.close();
 		}
-		bd.criarEntrada(db, oac, manifestData.fileNames, function()
-		{
-			fs.unlink(req.files.fileInput.path, function(err)
-			{
-				if(err) 
-					throw err
-				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.")
+
+		bd.criarEntrada(db, oac, manifestData.fileNames, function() {
+			fs.unlink(req.files.fileInput.path, function(err) {
+				if(err) {
+					console.error(new Date() + " Erro ao Incluir OAC: " + err);
+					res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
+				}
+				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 			});
 			connector.close();
 			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
@@ -127,30 +128,41 @@ app.post("/incluirOAC", function(req, res)
 	});
 });
 
-app.post("/sent", function(req, res)
+app.post("/incluirVersaoCustomizada", function(req, res)
 {
-	var title = req.body.title
-	var description = req.body.description
-	var languages = req.body.languages.split(";")
-	var oac = new admzip(req.files.fileInput.path)
+	var title = req.body.title;
+	var description = req.body.description;
+	var languages = req.body.languages.split(";");
+	var oac = new admzip(req.files.fileInput.path);
+
 	connector.open(function(err, db)
 	{
-		if(err)
-		{
-			db.close()
+		if(err) {
+			console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Incluir Versão Customizada: " + err], 'messagesTypes': ["danger"]});
+			connector.close();
 		}
-		bd.persistirCustomizacoes(db, oac, languages, title, description, function(output)
-		{
-			console.log(JSON.stringify(output, null, 1))
-			fs.unlink(req.files.fileInput.path, function(err)
-			{
-				if(err) throw err
-				console.log("Arquivo removido")
-			})
-			db.close()
-		})
-	})
-})
+
+		bd.persistirCustomizacoes(db, oac, title, description, languages, function(err) {				
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Incluir Versão Customizada: " + err], 'messagesTypes': ["danger"]});
+			}
+
+			fs.unlink(req.files.fileInput.path, function(err) {
+				if(err) {
+					console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
+					res.render('pages/index', {'messages': ["Erro ao Incluir Versão Customizada: " + err], 'messagesTypes': ["danger"]});
+				}
+				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+			});
+			
+			db.close();
+			res.render('pages/index', {'messages': ["Versão Customizada incluída com sucesso"], 'messagesTypes': ["success"]});
+		});
+	});
+});
 
 app.use(express.static(__dirname + '/views/images'));
 //Servidor fica ouvindo a porta 80.
