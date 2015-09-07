@@ -192,7 +192,7 @@ var getDelta = function(jsonFromFile, jsonDescritor, permission, callback)
 		}
 	}
 	console.log(delta)
-	callback(delta)
+	callback(null, delta);
 }
 
 var gerarPacoteVersao = function(fullpath, callback)

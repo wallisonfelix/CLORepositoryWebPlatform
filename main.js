@@ -143,7 +143,7 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 			connector.close();
 		}
 
-		bd.persistirCustomizacoes(db, oac, title, description, languages, function(err) {				
+		bd.persistirCustomizacoes(db, oac, title, description, languages, function(err, result) {				
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
