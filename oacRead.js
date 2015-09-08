@@ -138,16 +138,17 @@ var checarPermissao = function(key, permission)
 		return key == "enabled" || key == "visible"
 	
 }
+
 //Compara os componentes scene por scene e retorna o delta.
-var getDelta = function(jsonFromFile, jsonDescritor, permission, callback)
-{
-	var i
-	var delta = new Array()
-	console.log("Calculando delta")
-	//Lê arquivo json enviado pelo usuário.
-	for(var k = 0; k < jsonFromFile.scenes.length; k++)
-	{
-		//Lê arquivo json obtido no banco.
+var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) {
+	
+	var i;
+	var delta = new Array();
+
+	//Lê arquivo JSON com o estado dos componentes do arquivo compactado
+	for(var k = 0; k < jsonFromFile.scenes.length; k++) {
+		
+		//Lê arquivo JSON com o estado dos componentes no início da hierarquia
 		for(var j = 0; j < jsonDescritor.scenes.length; j++)
 		{
 			//Se as scenes forem iguais, inicializa-se a variável delta, que conterá a diferença entre as scenes.
@@ -163,14 +164,20 @@ var getDelta = function(jsonFromFile, jsonDescritor, permission, callback)
 						if(jsonDescritor.scenes[j].components[b].name == jsonFromFile.scenes[k].components[a].name)
 						{
 							for(var key in jsonFromFile.scenes[k].components[a])
-							{		
-									if(
-									(!jsonDescritor.scenes[j].components[b].hasOwnProperty(key) || 
-									jsonFromFile.scenes[k].components[a][key] != jsonDescritor.scenes[j].components[b][key])
-									&&
-									checarPermissao(key, permission)
-									)
+							{
+								if(!jsonDescritor.scenes[j].components[b].hasOwnProperty(key) || 
+										(key == 'source' && path.basename(jsonFromFile.scenes[k].components[a][key]) != path.basename(jsonDescritor.scenes[j].components[b][key])) ||
+										(key != 'source' && jsonFromFile.scenes[k].components[a][key] != jsonDescritor.scenes[j].components[b][key])) {
+									//É verificado se o usuário que realiza a inclusão da Versão Customizada
+									//possui Grau de Liberdade compatível com as modificações
+									if (checarPermissao(key, grauDeLiberdade)) {
 										obj[key] = jsonFromFile.scenes[k].components[a][key]
+									} else {
+										//Se as alterações não forem compatíveis com o Grau de Liberdade, 
+										//a inclusão deve ser cancelada
+										callback(new Error("Customizações não compatíveis com o Grau de Liberdade"), null);
+									}
+								}
 								
 							}
 							//Se o tamanho da variável obj for maior que zero, armazena-se nela o nome do componente e adiciona-o à variável delta.
@@ -191,7 +198,7 @@ var getDelta = function(jsonFromFile, jsonDescritor, permission, callback)
 			}
 		}
 	}
-	console.log(delta)
+
 	callback(null, delta);
 }
 

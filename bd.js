@@ -469,9 +469,6 @@ var persistirCustomizacoes = function(db, oac, title, description, languages, ca
 							callback(err, null);
 						}
 
-						console.log(JSON.stringify(delta, null, '\t'));
-						callback(err, null);
-
 						descritorDeVersao.customizations = delta;
 						//Obtêm o Hash do Delta
 						descritorDeVersao.hash = shasum.update(JSON.stringify(delta)).digest('hex');
@@ -508,7 +505,7 @@ var persistirCustomizacoes = function(db, oac, title, description, languages, ca
 										}
 
 										console.log(new Date() + " Nova Incorporação de Versão realizada: " + descDeVersParaIncorporacao._id);
-										callback(metadata);
+										callback(null, metadata);
 									});
 								}																
 							} else {
@@ -517,9 +514,10 @@ var persistirCustomizacoes = function(db, oac, title, description, languages, ca
 
 								//Atualiza os campos "source" dos Componentes que tiveram o arquivo de mídia referenciado modificado
 								diretorioDestinoComponentes = path.dirname(diretorioArquivoExecutavel[0]) + "/components/";
-								descritorDeVersao.version.split(".").forEach(function(numberVersion) {
-									diretorioDestinoComponentes.concat(numberVersion + "/");
+								descritorDeVersao.version.split(".").forEach(function(numberVersion) {								
+									diretorioDestinoComponentes = diretorioDestinoComponentes + numberVersion + "/";
 								});
+							
 								descritorDeVersao.customizations.forEach(function(scene) {
 								  	scene.components.forEach(function(component) {
 								  		if (component.hasOwnProperty("source")) {
@@ -542,10 +540,10 @@ var persistirCustomizacoes = function(db, oac, title, description, languages, ca
 
 									//Envia os novos Componentes para o diretório de destino no servidor.
 									//Caso exista arquivos com a mesma nomenclatura, eles não são substituidos.
-								    oac.extractEntryTo("/components/", diretorioDestinoComponentes, false, false);
+								    oac.extractEntryTo("components/", diretorioDestinoComponentes, false, false);
 									
 									console.log(new Date() + " Novo documento DescritorDeVersao inserido: " + descritorDeVersao._id);
-									callback(descritorDeVersao);
+									callback(null, descritorDeVersao);
 								});
 							}
 						});
