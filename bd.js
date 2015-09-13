@@ -5,7 +5,8 @@ var oacRead = require('./oacRead.js');
 var DIR = './file';
 var crypto = require('crypto');
 
-var criarEntrada = function(db, zip, fileNames, callback)
+//Realiza a criação dos elementos que compõem um OAC no banco de dados
+var criarOAC = function(db, zip, fileNames, callback)
 {
   //Variáveis que receberão os JSONs de arquivos executáveis e seus componentes.
   var toCollection = []
@@ -15,10 +16,14 @@ var criarEntrada = function(db, zip, fileNames, callback)
   var lomFile = JSON.parse(zip.readAsText("LOM.json").trim())
   //Diretório principal para onde os arquivos serão extraídos.
   //Cria e insere o novo DescritorRaiz.
-  criarDescritorRaiz(db, lomFile, function()
+  criarDescritorRaiz(db, lomFile, function(err)
    {
-	   fileNames.forEach(function(element)
-	   {
+   		if(err) {
+			console.error(new Date() + " Erro ao Criar DescritorRaiz: " + err);
+			callback(err);
+		}
+
+		fileNames.forEach(function(element) {
 		   var obj = {}
 		   //Nome do executável a partir do caminho completo.
 		   fileName = path.basename(element);
@@ -41,31 +46,35 @@ var criarEntrada = function(db, zip, fileNames, callback)
 		{
 			criarDescritorDeArquivoExecutavel(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
 			{
-			   if(err)
-				   console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
-			   count++
-			   if(count == toCollection.length)
-				{
+			   if(err) {
+					console.error(new Date() + " Erro ao Criar DescritorDeArquivoExecutavel: " + err);
+					callback(err);
+				}
+			   	count++;
+			   	if(count == toCollection.length) {
 					console.log(new Date() + " OAC inserido com sucesso.");
-					callback();
+					callback(null);
 				}
 			})
 		})
 	})
 }
 
-//Cria um novo documento na Collection DescritorRaiz
+//Cria um novo documento na Collection DescritoresRaizes
 function criarDescritorRaiz(db, lom, callback)
   {
     lom._id = new mongodb.ObjectID()
     lom.user = Math.floor(100000000*Math.random())
 	lom.date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
-    db.collection('DescritoresRaizes').insert(lom, function(err, data)
-    {
-      if(err)
-		console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
-      console.log(new Date() + " Novo documento DescritorRaiz inserido: " + lom._id + ".");
-	  callback()
+    db.collection('DescritoresRaizes').insert(lom, function(err, data) {
+
+	    if(err) {
+			console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
+			callback(err);
+		}
+
+	    console.log(new Date() + " Novo documento DescritorRaiz inserido: " + lom._id + ".");
+		callback(null)
     })
   }
   
@@ -102,7 +111,7 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
     console.log(new Date() + " Novo documento DescritorDeComponente inserido: " + jsonComp._id + ".");
 	count++
 	if(count == 2)
-		callback(err, data)
+		callback(null, data)
   })
 
   //Cria a lista "locations" no JSON que resultará no Descritor de Arquivo Executável,
@@ -119,7 +128,7 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
 	console.log(new Date() + " Novo documento DescritorDeArquivoExecutavel inserido: " + jsonExec._id + ".");
 	count++
 	if(count == 2)
-		callback(err, data)
+		callback(null, data)
   });
 }
 
@@ -146,8 +155,8 @@ var buscarOAC = function(db, title, callback)
 		var indexDescritoresRaizes = 0;	
 
 		if (countDescritoresRaizes == 0) {
-			console.log(new Date() + " Pesquisa por OAC com retorno vazio.");
-			callback(result);
+			console.log(new Date() + " Pesquisa por OAC com retorno vazio");
+			callback(null, result);
 		}
 		//Intera na lista de resultados
 		cursorDescritoresRaizes.forEach(function(descritorRaiz)	{
@@ -198,7 +207,7 @@ var buscarOAC = function(db, title, callback)
 						if(indexDescritoresRaizes == countDescritoresRaizes) {					
 							//Retorna a lista de resultados da pesquisa
 							console.log(new Date() + " Retorno de uma Pesquisa por OAC: " + JSON.stringify(result) + ".");
-							callback(result);
+							callback(null, result);
 						}
 					}
 				});
@@ -207,8 +216,30 @@ var buscarOAC = function(db, title, callback)
 	});
 }
 
+//Realiza a busca dos metadados do OAC cujo DescritorRaiz tem o mesmo id passado como parâmetro
+function buscarMetadadosOAC(db, idDescritorRaiz, callback) {
+    
+	db.collection("DescritoresRaizes").findOne({_id: new mongodb.ObjectID(idDescritorRaiz)}, function(err, descritorRaiz) {
+
+	    if(err) {
+			console.error(new Date() + " Erro ao Pesquisar DescritorRaiz: " + err);
+			callback(err, null);
+		}
+
+		console.log(descritorRaiz);
+
+		if(descritorRaiz) {		
+			console.log(new Date() + " Retornando Metadados para Visualização: " + idDescritorRaiz + ".");
+			callback(null, descritorRaiz);	
+		} else {
+			callback(new Error(" DescritorRaiz com o id " + idDescritorRaiz + " não encontrado."), null);
+		}	    
+		
+    });
+}
+
 //Gera e retorna um arquivo compactado representando o OAC compatível com os parâmetros informados
-var gerarOACFromDb = function(db, idDescritorDeArquivoExecutavel, pathArquivoExecutavel, callback)
+var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExecutavel, callback)
 {
 	//Gera, temporariamente, números aleatórios para representar o id e o Grau de Liberdade do Usuário  que faz o download
 	//TODO: setar corretamente quando a Plataforma possuir autenticação. Caso o usuário não esteja autenticado, setar 'null'
@@ -220,7 +251,7 @@ var gerarOACFromDb = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 		
 		if (err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
-			callback(err);
+			callback(err, null);
 		}
 
 		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel
@@ -228,12 +259,12 @@ var gerarOACFromDb = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 
 			if (err) {	
 				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
-				callback(err);
+				callback(err, null);
 			}
 
 			//Gera o arquivo compactado que representa o OAC
 			oacRead.gerarArquivoOAC(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, permission, function(oac) {
-				callback(oac);
+				callback(null, oac);
 			});
 		});
 	});
@@ -392,7 +423,9 @@ var getVersion = function(db, id, callback) {
 	});
 }
 
-var persistirCustomizacoes = function(db, oac, title, description, languages, callback) {
+//Cria um novo documento na Collection DescritoresDeVersoes ou realiza uma incorporação,
+//para a representação da nova Versão Customizada no banco de dados
+var criarVersaoCustomizada = function(db, oac, title, description, languages, callback) {
 	
 	//Novo DescritorDeVersao
 	var descritorDeVersao = {};
@@ -554,8 +587,9 @@ var persistirCustomizacoes = function(db, oac, title, description, languages, ca
 	});
 }
 
-module.exports.criarEntrada = criarEntrada
-module.exports.buscarOAC = buscarOAC
-module.exports.gerarOACFromDb = gerarOACFromDb
-module.exports.persistirCustomizacoes = persistirCustomizacoes
-module.exports.gerarDescritorVersao = gerarDescritorVersao
+module.exports.criarOAC = criarOAC;
+module.exports.buscarOAC = buscarOAC;
+module.exports.buscarMetadadosOAC = buscarMetadadosOAC;
+module.exports.gerarPacoteOAC = gerarPacoteOAC;
+module.exports.criarVersaoCustomizada = criarVersaoCustomizada;
+module.exports.gerarDescritorVersao = gerarDescritorVersao;

@@ -59,10 +59,38 @@ app.get('/pesquisarOAC', function (req, res)
 			connector.close();
 		}
 
-		bd.buscarOAC(db, title, function(result)
-		{
-			console.log("chamou funcao");
+		bd.buscarOAC(db, title, function(err, result) {
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Pesquisar OAC: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
+				connector.close();
+			}
+
 			res.render('pages/pesquisar_oac', {'result' : result, 'title' : title});
+		});
+	});
+});
+
+app.get('/visualizarMetadadosOAC', function (req, res) {
+	
+	var idOAC = req.query.id;
+	connector.open(function(err, db) {
+		if(err) { 
+			console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Visualizar Metadados de OAC: " + err], 'messagesTypes': ["danger"]});
+			connector.close();
+		}
+
+		bd.buscarMetadadosOAC(db, idOAC, function(err, metadados) {
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Visualizar Metadados de OAC: " + err], 'messagesTypes': ["danger"]});
+				connector.close();
+			}
+
+			res.render('pages/visualizar_metadados_oac', {'metadados' : metadados});
 		});
 	});
 });
@@ -84,8 +112,14 @@ app.get("/baixarOAC", function(res, req)
 		}
 		
 		//Chama a função que gera e retornar o arquivo representando o OAC
-		bd.gerarOACFromDb(db, id, filePath, function(oac)
-		{
+		bd.gerarPacoteOAC(db, id, filePath, function(err, oac)
+		{			
+			if(err) {
+				console.error(new Date() + " Erro ao Baixar OAC: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Baixar OAC: " + err], 'messagesTypes': ["danger"]});
+				connector.close();
+			}
+
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
 			res.res.set('Content-Type', 'application/zip');
 			//Informa o nome do arquivo ao navegador.
@@ -114,7 +148,14 @@ app.post("/incluirOAC", function(req, res)
 			connector.close();
 		}
 
-		bd.criarEntrada(db, oac, manifestData.fileNames, function() {
+		bd.criarOAC(db, oac, manifestData.fileNames, function(err) {
+
+			if(err) {
+				console.error(new Date() + " Erro ao Incluir OAC: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
+				connector.close();
+			}
+
 			fs.unlink(req.files.fileInput.path, function(err) {
 				if(err) {
 					console.error(new Date() + " Erro ao Incluir OAC: " + err);
@@ -143,7 +184,7 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 			connector.close();
 		}
 
-		bd.persistirCustomizacoes(db, oac, title, description, languages, function(err, result) {				
+		bd.criarVersaoCustomizada(db, oac, title, description, languages, function(err, result) {				
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
