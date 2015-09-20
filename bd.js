@@ -270,6 +270,31 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 	});
 }
 
+//Realiza a busca dos das Versões Customizadas do DescritorDeArquivoExecutavel que tem o mesmo id passado como parâmetro
+function buscarVersoesCustomizadasDeArqExec(db, idDescritorDeArquivoExecutavel, filePath, callback) {
+
+	//Deve retornar uma lista com objetos do seguinte tipo:
+	//{_id: "", id_root_version: "", id_source_version: "", languages: [], path: "", title: "", description: "", user: , date: ""}
+    
+/*	db.collection("DescritoresRaizes").findOne({_id: new mongodb.ObjectID(idDescritorRaiz)}, function(err, descritorRaiz) {
+
+	    if(err) {
+			console.error(new Date() + " Erro ao Pesquisar DescritorRaiz: " + err);
+			callback(err, null);
+		}
+
+		console.log(descritorRaiz);
+
+		if(descritorRaiz) {		
+			console.log(new Date() + " Retornando Metadados para Visualização: " + idDescritorRaiz + ".");
+			callback(null, descritorRaiz);	
+		} else {
+			callback(new Error(" DescritorRaiz com o id " + idDescritorRaiz + " não encontrado."), null);
+		}	    
+		
+    }); */
+}
+
 var isValueIn = function(value, keyName, array)
 {
 	var is = false

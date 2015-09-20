@@ -134,6 +134,31 @@ app.get("/baixarOAC", function(res, req)
 	});
 });
 
+app.get('/listarVersoesCustomizadas', function (req, res) {
+	
+	var idArquivoExecutavel = req.query.id;
+	var filePath = req.query.filePath;
+
+	connector.open(function(err, db) {
+		if(err) { 
+			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+			connector.close();
+		}
+
+		bd.buscarVersoesCustomizadasDeArqExec(db, idArquivoExecutavel, filePath, function(err, versoesCustomizadas) {
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+				connector.close();
+			}
+
+			res.render('pages/listar_versoes_customizadas', {'versoesCustomizadas' : versoesCustomizadas});
+		});
+	});
+});
+
 app.post("/incluirOAC", function(req, res)
 {
 	var oac = new admzip(req.files.fileInput.path);
