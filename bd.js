@@ -185,8 +185,6 @@ var buscarOAC = function(db, title, callback)
 					//Prepara objeto para representar o Arquivo Executável
 					var file = {};
 					file._id = descritorDeArqExec._id;
-					//TODO: Preencher o campo qtyCustomizedVersion
-					file.qtyCustomizedVersion = 1;
 					//Caminhos onde o Arquivo Executável pode ser encontrado
 					file.locations = [];
 					descritorDeArqExec.locations.forEach(function(location) {
@@ -196,20 +194,32 @@ var buscarOAC = function(db, title, callback)
 						file.locations.push(fileLocation);
 					});
 
-					obj.files.push(file);
+					//Obtem a quantidade de Versões Customizadas do DescritorDeArquivoExecutavel
+					db.collection("DescritoresDeVersoes").count({"id_root_version" : descritorDeArqExec._id}, function(err, qtyCustomizedVersion) {
 
-					indexDescritoresDeArqExec++;
-					if(indexDescritoresDeArqExec == countDescritoresDeArqExec) {
-						//Adiciona a lista de resultados o objeto montado para representar um registro na busca 
-						result.push(obj);
-						
-						indexDescritoresRaizes++;
-						if(indexDescritoresRaizes == countDescritoresRaizes) {					
-							//Retorna a lista de resultados da pesquisa
-							console.log(new Date() + " Retorno de uma Pesquisa por OAC: " + JSON.stringify(result) + ".");
-							callback(null, result);
+						if (err) {
+						    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
+							callback(err, result);
 						}
-					}
+
+						//Preenche o campo qtyCustomizedVersion
+						file.qtyCustomizedVersion = qtyCustomizedVersion;						
+
+						obj.files.push(file);
+
+						indexDescritoresDeArqExec++;
+						if(indexDescritoresDeArqExec == countDescritoresDeArqExec) {
+							//Adiciona a lista de resultados o objeto montado para representar um registro na busca 
+							result.push(obj);
+							
+							indexDescritoresRaizes++;
+							if(indexDescritoresRaizes == countDescritoresRaizes) {					
+								//Retorna a lista de resultados da pesquisa
+								console.log(new Date() + " Retorno de uma Pesquisa por OAC: " + JSON.stringify(result) + ".");
+								callback(null, result);
+							}
+						}
+					});
 				});
 			});
 		});
@@ -270,29 +280,56 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 	});
 }
 
-//Realiza a busca dos das Versões Customizadas do DescritorDeArquivoExecutavel que tem o mesmo id passado como parâmetro
+//Realiza a busca das Versões Customizadas do DescritorDeArquivoExecutavel que tem o mesmo id passado como parâmetro
 function buscarVersoesCustomizadasDeArqExec(db, idDescritorDeArquivoExecutavel, filePath, callback) {
+	var result = [];
 
-	//Deve retornar uma lista com objetos do seguinte tipo:
-	//{_id: "", id_root_version: "", id_source_version: "", languages: [], path: "", title: "", description: "", user: , date: ""}
-    
-/*	db.collection("DescritoresRaizes").findOne({_id: new mongodb.ObjectID(idDescritorRaiz)}, function(err, descritorRaiz) {
+	//Pesquisa as Versões Customizadas do DescritorDeArquivoExecutavel com o id passado como parâmetro
+	var cursorDescritoresDeVersoes = db.collection("DescritoresDeVersoes").find({"id_root_version" : new mongodb.ObjectID(idDescritorDeArquivoExecutavel)});
 
-	    if(err) {
-			console.error(new Date() + " Erro ao Pesquisar DescritorRaiz: " + err);
-			callback(err, null);
+	cursorDescritoresDeVersoes.count(function(err, qtyCustomizedVersion) {			
+
+		if (err) {
+		    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
+			callback(err, result);
 		}
 
-		console.log(descritorRaiz);
-
-		if(descritorRaiz) {		
-			console.log(new Date() + " Retornando Metadados para Visualização: " + idDescritorRaiz + ".");
-			callback(null, descritorRaiz);	
-		} else {
-			callback(new Error(" DescritorRaiz com o id " + idDescritorRaiz + " não encontrado."), null);
-		}	    
+		if (qtyCustomizedVersion == 0) {
+			console.log(new Date() + " Pesquisa por Versões Customizadas com retorno vazio");
+			callback(null, result);
+		}
 		
-    }); */
+		indexDescritoresDeVersoes = 0;
+		//Intera na lista de Versões Customizadas retornadas
+		cursorDescritoresDeVersoes.forEach(function(descritorDeVersao)	{
+			indexMetadados = 0;
+			//Um registro de Versão Customizada para cada Versão existente ou incorporação realizada
+			descritorDeVersao.metadata.forEach(function(metadata) {
+				//Prepara objeto para representar um registro no retorno da busca
+				var obj = {};
+				obj._id = descritorDeVersao._id;
+				obj.id_root_version = descritorDeVersao.id_root_version;
+				obj.id_source_version = descritorDeVersao.id_source_version;
+				obj.languages = descritorDeVersao.languages;
+				obj.path = filePath;
+
+				obj.user = metadata.user;
+				obj.date = metadata.date;
+				obj.title = metadata.title;
+				obj.description = metadata.description;
+				
+				result.push(obj);
+
+				indexMetadados++;
+				if (indexMetadados == descritorDeVersao.metadata.length) {
+					indexDescritoresDeVersoes++;
+					if (indexDescritoresDeVersoes == qtyCustomizedVersion) {
+						callback(null, result);
+					}
+				}
+			});
+		});		
+	});
 }
 
 var isValueIn = function(value, keyName, array)
@@ -392,16 +429,16 @@ var getVersion = function(db, id, callback) {
 		
 		} else {
 			//Não sendo encontrado um DescritorDeArquivoExecutavel com o identificador passado como parâmetro,
-			//busca-se DescritoresDeVersoes com esse _id e, simultaneamente, suas Versões Customizadas
-			db.collection("DescritoresDeVersoes").find({$or: [{"_id" : id}, {"id_source_version": id}]}, {"id_root_version": 1, "id_source_version": 1}).toArray(function(err, resultDescDeVers) {
+			//busca-se DescritoresDeVersoes com esse id e, simultaneamente, suas Versões Customizadas
+			db.collection("DescritoresDeVersoes").find({$or: [{"_id" : id}, {"id_source_version": id}]}, {"id_root_version": 1, "id_source_version": 1, "version": 1}).toArray(function(err, resultDescDeVers) {
 				
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
 					callback(err, null);
 				}
 
-				var ret = {};
-	
+				var ret = {};						
+
 				//Caso seja retornado um DescritorDeVersao,
 				//a nova Versão Customizada é uma versão de Segundo Nível em diante	
 				if(resultDescDeVers.length > 0) {
@@ -412,15 +449,15 @@ var getVersion = function(db, id, callback) {
 					ret.id_source_version = id;
 
 					//Define a versão que o novo DescritorDeVersao deve assumir
-					var prefix;
+					var prefix = "";
 					var greaterLastVersionNumber = 0;
 					var versionNumbers = [];
 					var lastVersionNumber;
 					//O retorno de mais de um DescritorDeVersao indica a existência de outras Versões Customizadas
 					//derivadas da versão de origem	
 					for(var i = 0; i < resultDescDeVers.length; i++) {
-						
-						if(resultDescDeVers[i]._id != id) {
+
+						if(resultDescDeVers[i]._id.valueOf() != "" + id) {
 							//Obtêm o último inteiro do campo version
 							versionNumbers = resultDescDeVers[i].version.split(".");
 							lastVersionNumber = parseInt(versionNumbers[versionNumbers.length-1]);
@@ -615,6 +652,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 module.exports.criarOAC = criarOAC;
 module.exports.buscarOAC = buscarOAC;
 module.exports.buscarMetadadosOAC = buscarMetadadosOAC;
+module.exports.buscarVersoesCustomizadasDeArqExec = buscarVersoesCustomizadasDeArqExec;
 module.exports.gerarPacoteOAC = gerarPacoteOAC;
 module.exports.criarVersaoCustomizada = criarVersaoCustomizada;
 module.exports.gerarDescritorVersao = gerarDescritorVersao;
