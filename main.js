@@ -136,7 +136,7 @@ app.get("/baixarOAC", function(res, req)
 
 app.get('/listarVersoesCustomizadas', function (req, res) {
 	
-	var idArquivoExecutavel = req.query.id;
+	var idSourceVersion = req.query.id;
 	var filePath = req.query.filePath;
 
 	connector.open(function(err, db) {
@@ -146,7 +146,7 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 			connector.close();
 		}
 
-		bd.buscarVersoesCustomizadasDeArqExec(db, idArquivoExecutavel, filePath, function(err, versoesCustomizadas) {
+		bd.buscarVersoesCustomizadasDeArqExec(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
@@ -155,6 +155,32 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 			}
 
 			res.render('pages/listar_versoes_customizadas', {'versoesCustomizadas' : versoesCustomizadas});
+		});
+	});
+});
+
+app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
+	
+	var idSourceVersion = req.query.id;
+	var filePath = req.query.filePath;
+
+	connector.open(function(err, db) {
+		if(err) { 
+			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+			connector.close();
+		}
+
+		bd.buscarVersoesCustomizadasDeArqExec(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+				connector.close();
+			}
+
+			res.setHeader('Content-Type', 'application/json');
+    		res.send(JSON.stringify(versoesCustomizadas));
 		});
 	});
 });

@@ -3,97 +3,88 @@
 <head>
 	<% include ../partials/head %>
 	<script type="text/javascript">
-		function buscarVersoesCustomizadasDeVersao(idVersaoCustomizada, filePath){
-		    $.ajax({url: "/listarVersoesCustomizadas?id=" + idVersaoCustomizada + "&filePath=" + filePath, success: function(versoesCustomizadas){
-		    	var tabelaVersoesCustomizadas = "";
+		function buscarVersoesCustomizadasDeVersao(idVersaoCustomizada, idUser, filePath) {			
+		    var request = $.ajax({url: "/listarVersoesCustomizadasDeVersao?id=" + idVersaoCustomizada + "&filePath=" + filePath});
+
+		    request.done(function(versoesCustomizadas){
+
+		    	var tabelaVersoesCustomizadas = "";		    	
 		    	if(versoesCustomizadas) {
-			    	tabelaVersoesCustomizadas.append("
-			    		<table class='table table-striped table-responsive'>   
-					    	<tbody>";
-					
+		    		
+			    	tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<table class='table table-responsive'><tbody>");			    				    	
 					for(var i = 0; i < versoesCustomizadas.length; i++) {
-						tabelaVersoesCustomizadas.append("
-								<tr>
-									<td class='text-center'>"
-						        		+ versoesCustomizadas[i].version + "
-							    	</td>
-				        			<td class='text-left'>
-						        		<a href='/baixarVersaoCustomizada?id='" + versoesCustomizadas[i]._id + "'&idRootVersion='" + versoesCustomizadas[i].id_root_version + "&filePath=" + versoesCustomizadas[i].path + "'>					        		
-						        			" + versoesCustomizadas[i].title + " : " + " 
-						        		</a>					        	
-						        		<br /> 
-						        		" + versoesCustomizadas[i].description + "
-							    	</td>
-							    	<td class='text-center'>
-						        		<button type='button' class='btn btn-link' data-toggle='modal' data-target='#metadata_" + versoesCustomizadas[i].user + "'>
-						        			<span class='glyphicon glyphicon-search' />
-						        		</button>
-						        		<div id='metadata_" + versoesCustomizadas[i].user + "' class='modal fade text-left' role='dialog'>
-											<div class='modal-dialog'>
-											    <div class='modal-content'>											    	
-											      	<div class='modal-body'>	
-											        	<form role='form' class='form-horizontal' accept-charset='UTF-8' id='formMetadata_" + versoesCustomizadas[i].user "'>
-												      		<div class='form-group'>
-											    				<label class='control-label col-sm-4'>Usuário responsável :</label>
-											    				<div class='col-sm-8'>
-											    					<p class='form-control-static'>" + versoesCustomizadas[i].user + "</span>
-											    				</div>
-											    			</div>
-											    			<div class='form-group'>
-											    				<label class='control-label col-sm-4'>Data de Criação :</label>
-											    				<div class='col-sm-8'>
-											    					<p class='form-control-static'>" + versoesCustomizadas[i].date + "</span>
-											    				</div>
-												      		</div>
-												      		<div class='form-group'>
-										    				<label class='control-label col-sm-4'>Idiomas :</label>
-										    				<div class='col-sm-8'>	
-										    					<p class='form-control-static'>");
+						tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<tr>" + 
+									"<td class='text-center'>" + 
+										versoesCustomizadas[i].version + 
+							    	"</td>" +
+				        			"<td class='text-left'>" +
+						        		"<a href='/baixarVersaoCustomizada?id='" + versoesCustomizadas[i]._id + "'&idRootVersion='" + versoesCustomizadas[i].id_root_version + "&filePath=" + versoesCustomizadas[i].path + "'>" + 
+						        			versoesCustomizadas[i].title + " : " +  
+						        		"</a>" +
+						        		"<br />" +
+						        		versoesCustomizadas[i].description +
+							    	"</td>" + 
+							    	"<td class='text-center'>" +
+						        		"<button type='button' class='btn btn-link' data-toggle='modal' data-target='#metadata_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "'>" +
+						        			"<span class='glyphicon glyphicon-search' />" +
+						        		"</button>" + 
+						        		"<div id='metadata_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "' class='modal fade text-left' role='dialog'>" +
+											"<div class='modal-dialog'>" + 
+											    "<div class='modal-content'>" +
+											      	"<div class='modal-body'>" +
+											        	"<form role='form' class='form-horizontal' accept-charset='UTF-8' id='formMetadata_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "'>" +
+												      		"<div class='form-group'>" + 
+											    				"<label class='control-label col-sm-4'>Usuário responsável :</label>" + 
+											    				"<div class='col-sm-8'>" + 
+											    					"<p class='form-control-static'>" + versoesCustomizadas[i].user + "</p>" +
+											    				"</div>" + 
+											    			"</div>" +
+											    			"<div class='form-group'>" + 
+											    				"<label class='control-label col-sm-4'>Data de Criação :</label>" + 
+											    				"<div class='col-sm-8'>" +
+											    					"<p class='form-control-static'>" + versoesCustomizadas[i].date + "</p>" +
+											    				"</div>" + 
+												      		"</div>" + 
+												      		"<div class='form-group'>" +
+										    				"<label class='control-label col-sm-4'>Idiomas :</label>" +
+										    				"<div class='col-sm-8'>" +
+										    					"<p class='form-control-static'>");
 						for(var j = 0; j < versoesCustomizadas[i].languages.length; j++) { 
-							tabelaVersoesCustomizadas.append(		versoesCustomizadas[i].languages[j]);
+							tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat(versoesCustomizadas[i].languages[j]);
 							if(j < (versoesCustomizadas[i].languages.length - 1)) { 
-								tabelaVersoesCustomizadas.append(   " ; ");
+								tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat(" ; ");
 							}
 						}			    										
-						tabelaVersoesCustomizadas.append("
-										    					</p>	
-										    				</div>
-											      		</div>											    			
-												      	</form>	
-											      	</div>
-											    	<div class='modal-footer'>
-											        	<button type='button' class='btn btn-default' data-dismiss='modal'>Fechar</button>
-											    	</div>
-											    </div>
-											</div>
-										</div>
-							    	</td>
-							    	<td class='text-center'>");
-
-					if(versoesCustomizadas[i].qtyCustomizedVersion > 0) {
-						tabelaVersoesCustomizadas.append("
-						        			<button type='button' class='btn btn-info' onclick='buscarVersoesCustomizadasDeVersao(" + versoesCustomizadas[i]._id + ", " + versoesCustomizadas[i].path + ");'>
-							        			<span id='plusButton_" + versoesCustomizadas[i]._id + "' class='glyphicon glyphicon-plus' />
-							        		</button>");
+						tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("    </p>"	+
+										    				"</div>" +
+											      		"</div>" +
+												      	"</form>" +
+											      	"</div>" +
+											    	"<div class='modal-footer'>" +
+											        	"<button type='button' class='btn btn-default' data-dismiss='modal'>Fechar</button>" +
+											    	"</div>" +
+											    "</div>" +
+											"</div>" +
+										"</div>" +
+							    	"</td>" +
+							    	"<td class='text-center'>");
+						if(versoesCustomizadas[i].qtyCustomizedVersion > 0) {
+							tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<button type='button' class='btn btn-link' onclick='buscarVersoesCustomizadasDeVersao(" + versoesCustomizadas[i]._id + ", " + versoesCustomizadas[i].user + ", " +versoesCustomizadas[i].path + ");'>" +
+								        			"<span id='plusButton_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "' class='glyphicon glyphicon-plus' />" +
+								        		"</button>");
+						}
+						tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("</td></tr>");
+						if(versoesCustomizadas[i].qtyCustomizedVersion > 0) { 
+							tabelaVersoesCustomizadas.concat("<tr id='customizedVersions_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "'> </tr>");
+						}
 					}
-					tabelaVersoesCustomizadas.append("
-							    	</td>						    	
-								</tr>");
-					if(versoesCustomizadas[i].qtyCustomizedVersion > 0) { 
-						tabelaVersoesCustomizadas.append("
-								<tr> 
-									<div id='customizedVersions_" + versoesCustomizadas[i]._id + "'></div>
-								</tr>");
-					}										
-					tabelaVersoesCustomizadas.append("
-						</tbody>
-					</table>					    
-			    	");
+
+					tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("</tbody></table>");				
 		    	}
 
-		        $("#customizedVersions_" + idVersaoCustomizada).html(tabelaVersoesCustomizadas);
-		    }});
-		});
+		        $("#customizedVersions_" + idVersaoCustomizada + "_" + idUser).html(tabelaVersoesCustomizadas);
+		    });
+		}
 	</script>
 </head>
 
@@ -119,10 +110,10 @@
 			<div id="versoesCustomizadas">
 
 				<h4>Versões Customizadas:</h4>
-				<table class="table table-striped table-responsive">
+				<table class="table table-responsive">
 				    <thead>
 				      	<tr>
-				      		<th />
+				      		<th class="text-center">Versão</th>
 				        	<th class="text-center">Título</th>
 				        	<th class="text-center">Detalhes</th>
 				        	<th class="text-center">Versões Customizadas</th>
@@ -143,26 +134,26 @@
 					        		<%= versoesCustomizadas[i].description %>	
 						    	</td>
 						    	<td class="text-center">
-					        		<button type="button" class="btn btn-link" data-toggle="modal" data-target="#metadata_<%= versoesCustomizadas[i].user %>">
+					        		<button type="button" class="btn btn-link" data-toggle="modal" data-target="#metadata_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>">
 					        			<span class="glyphicon glyphicon-search" />
 					        		</button>
-					        		<div id="metadata_<%= versoesCustomizadas[i].user %>" class="modal fade text-left" role="dialog">
+					        		<div id="metadata_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>" class="modal fade text-left" role="dialog">
 										<div class="modal-dialog">
 										    <div class="modal-content">
 										    											    
 										      	<div class="modal-body">										        	
-										        	<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formMetadata_<%= versoesCustomizadas[i].user %>">
+										        	<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formMetadata_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>">
 											      		<div class="form-group">
 										    				<label class="control-label col-sm-4">Usuário responsável :</label>
 										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= versoesCustomizadas[i].user %></span>
+										    					<p class="form-control-static"><%= versoesCustomizadas[i].user %></p>
 										    				</div>
 											      		</div>				
 
 														<div class="form-group">
 										    				<label class="control-label col-sm-4">Data de Criação :</label>
 										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= versoesCustomizadas[i].date %></span>
+										    					<p class="form-control-static"><%= versoesCustomizadas[i].date %></p>
 										    				</div>
 											      		</div>	
 
@@ -192,15 +183,14 @@
 						    	</td>
 						    	<td class="text-center">
 						    		<% if(versoesCustomizadas[i].qtyCustomizedVersion > 0) { %>
-					        			<button type="button" class="btn btn-info" onclick="buscarVersoesCustomizadasDeVersao(<%= versoesCustomizadas[i]._id %>, <%= versoesCustomizadas[i].path %>);">
-						        			<span id="plusButton_<%= versoesCustomizadas[i]._id %>" class="glyphicon glyphicon-plus" />
+					        			<button type="button" class="btn btn-link" onclick="buscarVersoesCustomizadasDeVersao('<%= versoesCustomizadas[i]._id %>', '<%= versoesCustomizadas[i].user %>', '<%= versoesCustomizadas[i].path %>');">
+						        			<span id="plusButton_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>" class="glyphicon glyphicon-plus" />
 						        		</button>					        			
 					        		<%  } %>
 						    	</td>						    	
 							</tr>
 							<% if(versoesCustomizadas[i].qtyCustomizedVersion > 0) { %>
-								<tr> 
-									<div id="customizedVersions_<%= versoesCustomizadas[i]._id %>"></div>
+								<tr id="customizedVersions_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>">
 								</tr>
 							<%  } %>
 						<%  } %>

@@ -26,23 +26,32 @@ var lerManifest = function(zip)
 	return data;
 }
 
-//Apaga diretórios recursivamente.
-//Fonte: http://stackoverflow.com/questions/12627586/is-node-js-rmdir-recursive-will-it-work-on-non-empty-directories
-deleteFolderRecursive = function(path) {
-    var files = [];
-    if( fs.existsSync(path) ) {
-        files = fs.readdirSync(path);
-        files.forEach(function(file,index){
-            var curPath = path + "/" + file;
-            if(fs.lstatSync(curPath).isDirectory()) { // recurse
-                deleteFolderRecursive(curPath);
-            } else { // delete file
-                fs.unlinkSync(curPath);
-            }
-        });
-        fs.rmdirSync(path);
-    }
-};
+//Gera, a partir dos dados informados, o arquivo compactado que representará o OAC
+var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, grauDeLiberdade, callback) {
+	//Monta o arquivo compactado que representará o OAC
+	var oac =  new ZIP();
+	
+	//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes do OAC
+	descritorDeComponentes.scenes.forEach(function(scene) {
+	  	scene.components.forEach(function(component) {
+		  	if (component.hasOwnProperty("source")) {
+		  		//Adiciona, no diretório "components/", o arquivo referenciado pelo campo "source"
+		  		oac.addLocalFile(component.source, "components/");
+		  		//E atualiza a referência do campo
+		  		component.source = "./components/" + path.basename(component.source);
+		  	}
+	  	});
+	});
+	//Adiciona o DescritorDeComponentes
+	oac.addFile(path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json"), new Buffer(JSON.stringify(descritorDeComponentes)));
+	//Adiciona o Arquivo Executável
+	oac.addLocalFile(pathArquivoExecutavel);	
+	//Adiciona o token.txt
+	oac.addFile("token.txt", new Buffer(idDescritorDeArquivoExecutavel + " " + userId + " " + grauDeLiberdade));
+
+	//Retorna o arquivo criado
+	callback(oac);
+}
 
 var gerarArquivoDescritorVersao = function(descritorDeVersao, descritorName, tokenString, componentsDir, callback)
 {
@@ -64,77 +73,16 @@ var gerarArquivoDescritorVersao = function(descritorDeVersao, descritorName, tok
 	})
 }
 
-//Gera, a partir dos dados informados, o arquivo compactado que representará o OAC
-var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, permission, callback) {
-	//Monta o arquivo compactado que representará o OAC
-	var oac =  new ZIP();
-	
-	//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes do OAC
-	descritorDeComponentes.scenes.forEach(function(scene) {
-	  	scene.components.forEach(function(component) {
-		  	if (component.hasOwnProperty("source")) {
-		  		//Adiciona, no diretório "components/", o arquivo referenciado pelo campo "source"
-		  		oac.addLocalFile(component.source, "components/");
-		  		//E atualiza a referência do campo
-		  		component.source = "./components/" + path.basename(component.source);
-		  	}
-	  	});
-	});
-	//Adiciona o DescritorDeComponentes
-	oac.addFile(path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json"), new Buffer(JSON.stringify(descritorDeComponentes)));
-	//Adiciona o Arquivo Executável
-	oac.addLocalFile(pathArquivoExecutavel);	
-	//Adiciona o token.txt
-	oac.addFile("token.txt", new Buffer(idDescritorDeArquivoExecutavel + " " + userId + " " + permission));
-
-	//Retorna o arquivo criado
-	callback(oac);
-}
-
-//Copia os arquivos contidos no OAC e os coloca com o prefixo "new_".
-var prepararEdicaoOAC = function(zip)
-{
-	var entries = zip.getEntries()
-	entries.forEach(function(zipEntry)
-	{
-		console.log(zipEntry.entryName)
-		if(zipEntry.entryName.endsWith("json"))
-		{
-			fs.writeFile("./new_"+zipEntry.name, zip.readFile(zipEntry), function(err)
-			{
-				if(err)
-					console.log(err)
-				console.log("Arquivo " + "./new_"+zipEntry.entryName + " criado.")
-			})
-		}
-		if(zipEntry.entryName.startsWith("components"))
-		{
-			deleteFolderRecursive("./new_components")
-			zip.extractEntryTo(zipEntry, "./new_components", false, true)
-		}
-	})
-}
-
-//Salva as mudanças realizadas no OAC.
-var salvarMudancas = function(dir, content)
-{
-	fs.writeFile(dir, content, function(err)
-	{
-		if(err)
-			console.log(err)
-		console.log("Mudanças salvas em "+dir+".")
-	})
-}
-
-var checarPermissao = function(key, permission)
-{
-	if(permission == 4)
+//Verifica se o Grau de Liberdade informado como parâmetro tem permissão para 
+//customizar um determinado atributo de componente
+var checarPermissao = function(key, grauDeLiberdade) {
+	if(grauDeLiberdade == 4)
 		return true
-	if(permission == 3)
+	if(grauDeLiberdade == 3)
 		return key == "enabled" || key == "visible" || key == "startTime" || key == "stopTime" || key == "label" || key == "text" || key == "source"
-	if(permission == 2)
+	if(grauDeLiberdade == 2)
 		return key == "enabled" || key == "visible" || key == "startTime" || key == "stopTime"
-	if(permission == 1)
+	if(grauDeLiberdade == 1)
 		return key == "enabled" || key == "visible"
 	
 }
@@ -202,76 +150,6 @@ var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) 
 	callback(null, delta);
 }
 
-var gerarPacoteVersao = function(fullpath, callback)
-{
-	var dir = path.dirname(fullpath)
-	var fileId
-	var userId = (new mongodb.ObjectID()).toString()
-	var permission = Math.floor(Math.random() * 5)
-	var oac = new ZIP()
-	//Contador para controle de retorno das funções assíncronas.
-	var count = 0
-	//Lê o diretório.
-	fs.readdir(dir, function(err, files)
-	{
-		files.forEach(function(file)
-		{
-			//Confirma se o a entrada encontrada inicia com “new_”.
-			if(file.startsWith("new_"))
-			{
-				//Checa se a entrada é arquivo ou diretório.
-				fs.stat(dir+'/'+file, function(err, stats)
-				{
-					if(err)
-						console.log(err)
-					//Se for diretório, simplesmente adiciona-se o conteúdo 
-					//para uma pasta “components” dentro do novo zip e 
-					//incrementa o contador. Se o resultado for dois, chama 
-					//a função de callback.
-					if(stats.isDirectory())
-					{
-						fs.readdir(dir+'/'+file, function(err, files)
-						{
-							if(err)
-								console.log(err)
-							files.forEach(function(content)
-							{
-								oac.addLocalFile(dir+'/'+file+'/'+content, "components/")
-							})
-							console.log("Pasta de componentes copiada.")
-							count++
-							if(count == 2)
-								callback(oac)
-						})
-					}
-					//Se não for diretório, copia-se o conteúdo do arquivo para um novo sem o 
-					//prefixo e incrementa o contador. Chama-se a função de callback caso o 
-					//contador tenha chegado a dois.
-					else
-					{
-						if(file.endsWith(".json"))
-						{
-							fs.readFile(file, function(err, data)
-							{
-								if(err)
-									console.log(err)
-								var json = JSON.parse(data.toString())
-								fileId = json[0].file_id
-								oac.addFile("token.txt", new Buffer(fileId+ " " +userId+ " "+ permission), "comentário")
-								console.log("Arquivo de token gerado.")
-								oac.addFile(file.replace('new_', ''), new Buffer(data), "comentário")
-								console.log("Arquivo json copiado.")
-								count++
-								if(count == 2)
-									callback(oac)
-							})
-						}
-					}
-				})
-			}
-		})
-	})
-}
 module.exports.lerManifest = lerManifest
 module.exports.prepararEdicaoOAC = prepararEdicaoOAC
 module.exports.gerarPacoteVersao = gerarPacoteVersao

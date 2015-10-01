@@ -80,7 +80,9 @@
 							        			<% for(var k = 0; k < result[i].files[j].locations.length; k++) { %>
 									        			<td class="text-center" style="text-align: center;">
 											        		<a href="/listarVersoesCustomizadas?id=<%= result[i].files[j]._id %>&filePath=<%= result[i].files[j].locations[k].path %>">
-											        			<span class="glyphicon glyphicon-folder-open" />
+											        			<% if(result[i].files[j].qtyCustomizedVersion > 0) { %>
+											        				<span class="glyphicon glyphicon-folder-open" />
+											        			<% } %>
 					        									<span class="badge"><%= result[i].files[j].qtyCustomizedVersion %></span>
 											        		</a>
 											        	<td>
