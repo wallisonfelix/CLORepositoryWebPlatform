@@ -281,7 +281,7 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 }
 
 //Realiza a busca das Versões Customizadas do DescritorDeVersao ou DescritorDeArquivoExecutavel que tem o mesmo id passado como parâmetro
-function buscarVersoesCustomizadas(db, idSourceVersion, filePath, callback) {
+var buscarVersoesCustomizadas = function(db, idSourceVersion, filePath, callback) {
 	var result = [];
 
 	//Pesquisa as Versões Customizadas oriundas do DescritorDeVersao ou do DescritorDeArquivoExecutavel com o id passado como parâmetro
@@ -338,6 +338,7 @@ function buscarVersoesCustomizadas(db, idSourceVersion, filePath, callback) {
 					if (indexMetadados == descritorDeVersao.metadata.length) {
 						indexDescritoresDeVersoes++;
 						if (indexDescritoresDeVersoes == cursorSize) {
+							console.log(JSON.stringify(result, null, '\t'))
 							callback(null, result);
 						}
 					}
@@ -669,5 +670,5 @@ module.exports.buscarOAC = buscarOAC;
 module.exports.buscarMetadadosOAC = buscarMetadadosOAC;
 module.exports.buscarVersoesCustomizadas = buscarVersoesCustomizadas;
 module.exports.gerarPacoteOAC = gerarPacoteOAC;
+module.exports.gerarPacoteVersao = gerarPacoteVersao;
 module.exports.criarVersaoCustomizada = criarVersaoCustomizada;
-module.exports.gerarDescritorVersao = gerarDescritorVersao;

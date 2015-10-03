@@ -100,14 +100,15 @@ var mergeCustomizations = function(descritorDeVersao, descritorDeComponentes, ca
 								component[key] = customizedComponent[key];
 							}
 						}
-					}
-				}
+					});
+				});
 			}
-		}
-	}
+		});
+	});
 
 	//Retorna o DescritorDeComponentes com as customizações incorporadas,
 	//representando dessa forma o estado dos componentes para uma determinada Versão Customizada
+	console.log(JSON.stringify(descritorDeComponentes));
 	callback(descritorDeComponentes);
 }
 

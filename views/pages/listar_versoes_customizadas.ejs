@@ -18,7 +18,7 @@
 										versoesCustomizadas[i].version + 
 							    	"</td>" +
 				        			"<td class='text-left'>" +
-						        		"<a href='/baixarVersaoCustomizada?id='" + versoesCustomizadas[i]._id + "'&idRootVersion='" + versoesCustomizadas[i].id_root_version + "&filePath=" + versoesCustomizadas[i].path + "'>" + 
+						        		"<a href='/baixarVersaoCustomizada?id=" + versoesCustomizadas[i]._id + "&idRootVersion=" + versoesCustomizadas[i].id_root_version + "&filePath=" + versoesCustomizadas[i].path + "' target='_blank'>" + 
 						        			versoesCustomizadas[i].title + " : " +  
 						        		"</a>" +
 						        		"<br />" +
@@ -127,7 +127,7 @@
 					        		<%= versoesCustomizadas[i].version %>
 						    	</td>
 			        			<td class="text-left">
-					        		<a href="/baixarVersaoCustomizada?id=<%= versoesCustomizadas[i]._id %>&idRootVersion=<%= versoesCustomizadas[i].id_root_version %>&filePath=<%= versoesCustomizadas[i].path %>">
+					        		<a href="/baixarVersaoCustomizada?id=<%= versoesCustomizadas[i]._id %>&idRootVersion=<%= versoesCustomizadas[i].id_root_version %>&filePath=<%= versoesCustomizadas[i].path %>" target="_blank">
 					        			<%= versoesCustomizadas[i].title %> :
 					        		</a>
 					        		<br />
