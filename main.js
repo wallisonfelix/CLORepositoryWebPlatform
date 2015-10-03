@@ -111,7 +111,7 @@ app.get("/baixarOAC", function(res, req)
 			connector.close();
 		}
 		
-		//Chama a função que gera e retornar o arquivo representando o OAC
+		//Chama a função que gera e retorna o arquivo representando o OAC
 		bd.gerarPacoteOAC(db, id, filePath, function(err, oac)
 		{			
 			if(err) {
@@ -146,7 +146,7 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 			connector.close();
 		}
 
-		bd.buscarVersoesCustomizadasDeArqExec(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
+		bd.buscarVersoesCustomizadas(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
@@ -171,7 +171,7 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 			connector.close();
 		}
 
-		bd.buscarVersoesCustomizadasDeArqExec(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
+		bd.buscarVersoesCustomizadas(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
@@ -181,6 +181,45 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 
 			res.setHeader('Content-Type', 'application/json');
     		res.send(JSON.stringify(versoesCustomizadas));
+		});
+	});
+});
+
+app.get("/baixarVersaoCustomizada", function(res, req) {
+	//Lê a identificação do DescritorDeVersao, do DescritorDeArquivoExecutável e o diretório em que 
+	//o arquivo executável está localizado no servidor
+	var id = req.req.query.id;
+	var idRootVersion = req.req.query.idRootVersion;
+	var filePath = req.req.query.filePath;
+
+	connector.open(function(err, db)
+	{
+		if(err)
+		{
+			console.error(new Date() + " Erro ao Baixar Versão Customizada: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Versão Customizada OAC: " + err], 'messagesTypes': ["danger"]});
+			connector.close();
+		}
+		
+		//Chama a função que gera e retorna o arquivo representando a Versão Customizada
+		bd.gerarPacoteVersao(db, id, idRootVersion, filePath, function(err, versaoCustomizada)
+		{			
+			if(err) {
+				console.error(new Date() + " Erro ao Baixar Versão Customizada: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Baixar Versão Customizada: " + err], 'messagesTypes': ["danger"]});
+				connector.close();
+			}
+
+			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
+			res.res.set('Content-Type', 'application/zip');
+			//Informa o nome do arquivo ao navegador.
+			res.res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
+			//Informa o tamanho do arquivo ao navegador.
+			res.res.set('Content-Length', versaoCustomizada.toBuffer().length);
+			//Envia o arquivo em forma de bytes.
+			res.res.send(versaoCustomizada.toBuffer());
+
+			db.close();
 		});
 	});
 });

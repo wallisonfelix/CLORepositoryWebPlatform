@@ -30,7 +30,7 @@ var lerManifest = function(zip)
 var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, grauDeLiberdade, callback) {
 	//Monta o arquivo compactado que representará o OAC
 	var oac =  new ZIP();
-	
+	s
 	//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes do OAC
 	descritorDeComponentes.scenes.forEach(function(scene) {
 	  	scene.components.forEach(function(component) {
@@ -53,24 +53,62 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 	callback(oac);
 }
 
-var gerarArquivoDescritorVersao = function(descritorDeVersao, descritorName, tokenString, componentsDir, callback)
-{
-	var des = new ZIP()
-	fs.readdir(componentsDir, function(err, files)
-	{
-		if(err)
-			console.error(err)
-		console.log(files.toString())
-		//Adiciona cada arquivo encontrado no pacote.
-		for(index in files)
-			des.addLocalFile(componentsDir+'/'+files[index], "components/")
-		//Adiciona o arquivo JSON contendo o resultado da busca de descrições 	 //de componentes do banco no pacote.
-		des.addFile(descritorName+".json", new Buffer(JSON.stringify(descritorDeVersao)), "comentário")
-		//Cria arquivo token.txt contendo a identificação do executável, do 
-		//usuário e a permissão.
-		des.addFile("token.txt", new Buffer(tokenString), "comentário")
-		callback(des)
-	})
+//Gera, a partir dos dados informados, o arquivo compactado que representará a Versão Customizada
+var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, grauDeLiberdade, callback) {
+	//Monta o arquivo compactado que representará a Versão Customizada
+	var versaoCustomizada =  new ZIP();
+	var idSourceVersion = descritorDeVersao._id;
+	
+	mergeCustomizations(descritorDeVersao, descritorDeComponentesRaiz, function(descritorDeComponentes) {
+		//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes da Versão Customizada
+		descritorDeComponentes.scenes.forEach(function(scene) {
+		  	scene.components.forEach(function(component) {
+			  	if (component.hasOwnProperty("source")) {
+			  		//Adiciona, no diretório "components/", o arquivo referenciado pelo campo "source"
+			  		versaoCustomizada.addLocalFile(component.source, "components/");
+			  		//E atualiza a referência do campo
+			  		component.source = "./components/" + path.basename(component.source);
+			  	}
+		  	});
+		});
+		//Adiciona o DescritorDeComponentes
+		versaoCustomizada.addFile(path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json"), new Buffer(JSON.stringify(descritorDeComponentes)));
+		//Adiciona o Arquivo Executável
+		versaoCustomizada.addLocalFile(pathArquivoExecutavel);	
+		//Adiciona o token.txt
+		versaoCustomizada.addFile("token.txt", new Buffer(idSourceVersion + " " + userId + " " + grauDeLiberdade));
+
+		//Retorna o arquivo criado
+		callback(versaoCustomizada);
+	});
+}
+
+//Função que faz o merge das customizações realizadas para um determinado DescritorDeVersaoCustomizada 
+//com o estado inicial dos componentes
+var mergeCustomizations = function(descritorDeVersao, descritorDeComponentes, callback) {
+	
+	//Intera em todas as cenas que foram customizadas para a Versão Customizada
+	descritorDeVersao.customizations.forEach(function(customizedScene) {
+		descritorDeComponentes.scenes.forEach(function(scene) {
+			if (customizedScene.scene === scene.scene) {
+				//Intera em todos os componentes que foram customizadas em uma determinada cena
+				customizedScene.components.forEach(function(customizedComponent) {
+					scene.components.forEach(function(component) {
+						if (customizedComponent.name === component.name) {
+							//Substitui os valores dos atributos originais pelos os seus respectivos valores customizados
+							for(var key in customizedComponent) {
+								component[key] = customizedComponent[key];
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//Retorna o DescritorDeComponentes com as customizações incorporadas,
+	//representando dessa forma o estado dos componentes para uma determinada Versão Customizada
+	callback(descritorDeComponentes);
 }
 
 //Verifica se o Grau de Liberdade informado como parâmetro tem permissão para 
@@ -151,7 +189,6 @@ var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) 
 }
 
 module.exports.lerManifest = lerManifest
-module.exports.prepararEdicaoOAC = prepararEdicaoOAC
-module.exports.gerarPacoteVersao = gerarPacoteVersao
-module.exports.getDelta = getDelta
 module.exports.gerarArquivoOAC = gerarArquivoOAC
+module.exports.gerarArquivoVersaoCustomizada = gerarArquivoVersaoCustomizada
+module.exports.getDelta = getDelta

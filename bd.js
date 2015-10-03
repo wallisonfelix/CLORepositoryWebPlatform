@@ -254,7 +254,7 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 	//Gera, temporariamente, números aleatórios para representar o id e o Grau de Liberdade do Usuário  que faz o download
 	//TODO: setar corretamente quando a Plataforma possuir autenticação. Caso o usuário não esteja autenticado, setar 'null'
 	var userId = (new mongodb.ObjectID()).toString();
-	var permission = Math.floor(Math.random() * 5);
+	var grauDeLiberdade = Math.floor(Math.random() * 5);
 
 	//Pesquisa o DescritorDeArquivoExecutavel do OAC que se deseja baixar
 	db.collection("DescritoresDeArquivosExecutaveis").findOne({_id : new mongodb.ObjectID(idDescritorDeArquivoExecutavel)}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
@@ -273,15 +273,15 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 			}
 
 			//Gera o arquivo compactado que representa o OAC
-			oacRead.gerarArquivoOAC(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, permission, function(oac) {
+			oacRead.gerarArquivoOAC(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, grauDeLiberdade, function(oac) {
 				callback(null, oac);
 			});
 		});
 	});
 }
 
-//Realiza a busca das Versões Customizadas do DescritorDeArquivoExecutavel que tem o mesmo id passado como parâmetro
-function buscarVersoesCustomizadasDeArqExec(db, idSourceVersion, filePath, callback) {
+//Realiza a busca das Versões Customizadas do DescritorDeVersao ou DescritorDeArquivoExecutavel que tem o mesmo id passado como parâmetro
+function buscarVersoesCustomizadas(db, idSourceVersion, filePath, callback) {
 	var result = [];
 
 	//Pesquisa as Versões Customizadas oriundas do DescritorDeVersao ou do DescritorDeArquivoExecutavel com o id passado como parâmetro
@@ -303,7 +303,7 @@ function buscarVersoesCustomizadasDeArqExec(db, idSourceVersion, filePath, callb
 		//Intera na lista de Versões Customizadas retornadas
 		cursorDescritoresDeVersoes.forEach(function(descritorDeVersao)	{
 
-			//Obtem a quantidade de Versões Customizadas do DescritorDeArquivoExecutavel
+			//Obtem a quantidade de Versões Customizadas do DescritorDeVersao ou do DescritorDeArquivoExecutavel
 			db.collection("DescritoresDeVersoes").count({"id_source_version" : descritorDeVersao._id}, function(err, qtyCustomizedVersion) {
 
 				if (err) {
@@ -347,58 +347,58 @@ function buscarVersoesCustomizadasDeArqExec(db, idSourceVersion, filePath, callb
 	});
 }
 
-var isValueIn = function(value, keyName, array)
+//Gera e retorna um arquivo compactado representando a Versão Customizada compatível com os parâmetros informados
+var gerarPacoteVersao = function(db, idVersion, idRootVersion, pathArquivoExecutavel, callback)
 {
-	var is = false
-	var key = keyName
-	for(var i = 0; i < array.length && !is; i++)
-	{
-		if(array[i][key] === value)
-			is = true
-	}
-	return is
-}
+	//Gera, temporariamente, números aleatórios para representar o id e o Grau de Liberdade do Usuário que faz o download
+	//TODO: setar corretamente quando a Plataforma possuir autenticação. Caso o usuário não esteja autenticado, setar 'null'
+	var userId = (new mongodb.ObjectID()).toString();
+	var grauDeLiberdade = Math.floor(Math.random() * 5);
 
-var gerarDescritorVersao = function(db, id, componentsJson, callback)
-{
-	var userId = (new mongodb.ObjectID()).toString()
-	var permission = Math.floor(Math.random() * 5)
-	db.collection("DescritorDeVersao").findOne({"_id" : id}, function(err, document)
-	{
-		if(err)
-			console.log(err)
-		document.customizations.forEach(function(desScenes)
-		{
-			if(isValueIn(desScenes.scene, "scene", componentsJson.scenes))
-			{
-				componentsJson.scenes.forEach(function(componentScene)
-				{
-					if(componentScene.scene == desScenes.scene)
-					{
-						desScenes.components.forEach(function(delta)
-						{
-							if(isValueIn(delta.name, "name", componentScene.components))
-							{
-								componentScene.components.forEach(function(comp)
-								{
-									if(delta.name == comp.name)
-									{
-										for(var key in delta)
-											comp[key] = delta[key]
-									}
-								})
-							}
-							else
-								componentScene.components.push(delta)
-						})
-					}
-				})
+	//Pesquisa o DescritorDeArquivoExecutavel raiz da hierarquia em que a Versão está inserida
+	db.collection("DescritoresDeArquivosExecutaveis").findOne({_id : new mongodb.ObjectID(idRootVersion)}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
+		
+		if (err) {
+			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
+			callback(err, null);
+		}
+
+		if (!descritorDeArquivoExecutavel) {
+			callback(new Error(" DescritorDeArquivosExecutavel com o id " + idRootVersion + " não encontrado."), null);
+		}
+
+		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel raiz da hierarquia em que a Versão está inserida
+		db.collection("DescritoresDeComponentes").findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentesRaiz) {
+			
+			if (err) {
+				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
+				callback(err, null);
 			}
-			else
-				componentsJson.scenes.push(desScene)
-		})
-		callback(componentsJson)
-	})
+
+			if (!descritorDeComponentesRaiz) {
+				callback(new Error(" DescritorDeComponentes com o id " + descritorDeArquivoExecutavel.id_components + " não encontrado."), null);
+			}
+
+
+			//Pesquisa o DescritorDeVersao referente à versão que se deseja fazer o download
+			db.collection('DescritoresDeVersoes').findOne({_id : new mongodb.ObjectID(idVersion)}, function(err, descritorDeVersao) {
+
+				if (err) {
+					console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
+					callback(err, null);
+				}
+
+				if (!descritorDeVersao) {
+					callback(new Error(" DescritorDeVersao com o id " + idVersion + " não encontrado."), null);
+				}
+				
+				//Gera o arquivo compactado que representa a Versão Customizada
+				oacRead.gerarArquivoVersaoCustomizada(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, grauDeLiberdade, function(versaoCustomizada) {
+					callback(null, versaoCustomizada);
+				});
+			});
+		});
+	});
 }
 
 //Retorna as informações referentes à versão de um novo DescritorDeVersao deve assumir, 
@@ -667,7 +667,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 module.exports.criarOAC = criarOAC;
 module.exports.buscarOAC = buscarOAC;
 module.exports.buscarMetadadosOAC = buscarMetadadosOAC;
-module.exports.buscarVersoesCustomizadasDeArqExec = buscarVersoesCustomizadasDeArqExec;
+module.exports.buscarVersoesCustomizadas = buscarVersoesCustomizadas;
 module.exports.gerarPacoteOAC = gerarPacoteOAC;
 module.exports.criarVersaoCustomizada = criarVersaoCustomizada;
 module.exports.gerarDescritorVersao = gerarDescritorVersao;
