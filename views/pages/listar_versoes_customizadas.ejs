@@ -3,15 +3,27 @@
 <head>
 	<% include ../partials/head %>
 	<script type="text/javascript">
-		function buscarVersoesCustomizadasDeVersao(idVersaoCustomizada, idUser, filePath) {			
+
+		function buscarVersoesCustomizadasDeVersao(idVersaoCustomizada, idUser, filePath) {
 		    var request = $.ajax({url: "/listarVersoesCustomizadasDeVersao?id=" + idVersaoCustomizada + "&filePath=" + filePath});
 
 		    request.done(function(versoesCustomizadas){
 
-		    	var tabelaVersoesCustomizadas = "";		    	
+		    	var tabelaVersoesCustomizadas = "";
+		    	var minusButton = "";
+
 		    	if(versoesCustomizadas) {
 		    		
-			    	tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<table class='table table-responsive'><tbody>");			    				    	
+			    	tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<td colspan='4'><table id='table_" + idVersaoCustomizada + "_" + idUser + "' class='table table-responsive'>" + 
+			    		"<thead>" +
+			    			"<tr>" +
+					      		"<th class='text-center'>Versão</th>" +
+					        	"<th class='text-center'>Título</th>" +
+					        	"<th class='text-center'>Detalhes</th>" +
+					        	"<th class='text-center'>Versões Customizadas</th>" +
+				      		"</tr>" +
+				    	"</thead>"+
+				    	"<tbody>");			    				    	
 					for(var i = 0; i < versoesCustomizadas.length; i++) {
 						tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<tr>" + 
 									"<td class='text-center'>" + 
@@ -69,7 +81,7 @@
 							    	"</td>" +
 							    	"<td class='text-center'>");
 						if(versoesCustomizadas[i].qtyCustomizedVersion > 0) {
-							tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<button type='button' class='btn btn-link' onclick='buscarVersoesCustomizadasDeVersao(" + versoesCustomizadas[i]._id + ", " + versoesCustomizadas[i].user + ", " +versoesCustomizadas[i].path + ");'>" +
+							tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<button type='button' class='btn btn-link' onclick='buscarVersoesCustomizadasDeVersao(\"" + versoesCustomizadas[i]._id + "\", \"" + versoesCustomizadas[i].user + "\", \"" +versoesCustomizadas[i].path + "\");'>" +
 								        			"<span id='plusButton_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "' class='glyphicon glyphicon-plus' />" +
 								        		"</button>");
 						}
@@ -79,12 +91,28 @@
 						}
 					}
 
-					tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("</tbody></table>");				
+					tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("</tbody></table></td>");				
 		    	}
 
-		        $("#customizedVersions_" + idVersaoCustomizada + "_" + idUser).html(tabelaVersoesCustomizadas);
+		        $("#customizedVersions_" + idVersaoCustomizada + "_" + idUser).append(tabelaVersoesCustomizadas);
+
+		        minusButton = minusButton.concat("<button type='button' class='btn btn-link' onclick='closeSubtableVersoesCustomizadasDeVersao(\"" + idVersaoCustomizada + "\", \"" + idUser + "\", \"" + filePath + "\");'>" +
+		        		"<span id='minusButton_" + idVersaoCustomizada + "_" + idUser + "' class='glyphicon glyphicon-minus' />" +
+		        	"</button>");
+		        $("#columnButtonPlusMinus_" + idVersaoCustomizada + "_" + idUser).html(minusButton);
 		    });
 		}
+
+		function closeSubtableVersoesCustomizadasDeVersao(idVersaoCustomizada, idUser, filePath) {			
+			 var plusButton = "";
+			 plusButton = plusButton.concat("<button type='button' class='btn btn-link' onclick='buscarVersoesCustomizadasDeVersao(\"" + idVersaoCustomizada + "\", \"" + idUser + "\", \"" + filePath + "\");'>" +
+		        		"<span id='plusButton_" + idVersaoCustomizada + "_" + idUser + "' class='glyphicon glyphicon-plus' />" +
+		        "</button>");
+			 
+		    $("#columnButtonPlusMinus_" + idVersaoCustomizada + "_" + idUser).html(plusButton);
+			$("#customizedVersions_" + idVersaoCustomizada + "_" + idUser).html("");
+		}
+				
 	</script>
 </head>
 
@@ -181,13 +209,13 @@
 										</div>
 									</div>
 						    	</td>
-						    	<td class="text-center">
+						    	<td id="columnButtonPlusMinus_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>" class="text-center">
 						    		<% if(versoesCustomizadas[i].qtyCustomizedVersion > 0) { %>
 					        			<button type="button" class="btn btn-link" onclick="buscarVersoesCustomizadasDeVersao('<%= versoesCustomizadas[i]._id %>', '<%= versoesCustomizadas[i].user %>', '<%= versoesCustomizadas[i].path %>');">
 						        			<span id="plusButton_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>" class="glyphicon glyphicon-plus" />
-						        		</button>					        			
+						        		</button>
 					        		<%  } %>
-						    	</td>						    	
+						    	</td>
 							</tr>
 							<% if(versoesCustomizadas[i].qtyCustomizedVersion > 0) { %>
 								<tr id="customizedVersions_<%= versoesCustomizadas[i]._id %>_<%= versoesCustomizadas[i].user %>">
@@ -197,7 +225,6 @@
 					<%  } %>
 				    </tbody>
 				</table>
-
 
 		      	<% if(!versoesCustomizadas || versoesCustomizadas.length == 0) { %>
 					<div class="alert alert-warning fade in">

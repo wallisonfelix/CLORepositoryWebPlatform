@@ -338,7 +338,6 @@ var buscarVersoesCustomizadas = function(db, idSourceVersion, filePath, callback
 					if (indexMetadados == descritorDeVersao.metadata.length) {
 						indexDescritoresDeVersoes++;
 						if (indexDescritoresDeVersoes == cursorSize) {
-							console.log(JSON.stringify(result, null, '\t'))
 							callback(null, result);
 						}
 					}
