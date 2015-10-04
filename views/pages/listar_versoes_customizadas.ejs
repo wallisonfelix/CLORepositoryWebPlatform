@@ -79,7 +79,7 @@
 											"</div>" +
 										"</div>" +
 							    	"</td>" +
-							    	"<td class='text-center'>");
+							    	"<td id='columnButtonPlusMinus_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "' class='text-center'>");
 						if(versoesCustomizadas[i].qtyCustomizedVersion > 0) {
 							tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<button type='button' class='btn btn-link' onclick='buscarVersoesCustomizadasDeVersao(\"" + versoesCustomizadas[i]._id + "\", \"" + versoesCustomizadas[i].user + "\", \"" +versoesCustomizadas[i].path + "\");'>" +
 								        			"<span id='plusButton_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "' class='glyphicon glyphicon-plus' />" +
@@ -87,7 +87,7 @@
 						}
 						tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("</td></tr>");
 						if(versoesCustomizadas[i].qtyCustomizedVersion > 0) { 
-							tabelaVersoesCustomizadas.concat("<tr id='customizedVersions_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "'> </tr>");
+							tabelaVersoesCustomizadas = tabelaVersoesCustomizadas.concat("<tr id='customizedVersions_" + versoesCustomizadas[i]._id + "_" + versoesCustomizadas[i].user + "'> </tr>");
 						}
 					}
 
@@ -112,7 +112,7 @@
 		    $("#columnButtonPlusMinus_" + idVersaoCustomizada + "_" + idUser).html(plusButton);
 			$("#customizedVersions_" + idVersaoCustomizada + "_" + idUser).html("");
 		}
-				
+
 	</script>
 </head>
 
