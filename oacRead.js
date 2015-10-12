@@ -2,6 +2,7 @@ var fs = require('fs')
 var DIR = './file'
 var ZIP = require('adm-zip')
 var path = require('path');
+var async = require('async');
 
 //Lê o arquivo MANIFEST.MF e monta um objeto com a versão do MANIFEST e com
 // lista de arquivos executáveis contidas no OAC.
@@ -126,10 +127,86 @@ var checarPermissao = function(key, grauDeLiberdade) {
 	
 }
 
+var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback)
+{
+	
+	var delta = new Array();
+	async.each(jsonFromFile.scenes, processScenes, function arrayScenesCallback(err)
+	{
+		callback(null, delta)
+	})
+	
+	function processScenes(scene, sceneDone)
+	{
+		for(var j = 0; j < jsonDescritor.scenes.length; j++)
+		{
+			if(scene == jsonDescritor.scenes[j].scene)
+			{
+				var delta_scene = {}
+				async.each(scene.components, function processComponents(component, componentDone)
+				{
+					for(var b = 0; b < scene.components.length; b++)
+					{
+						getDiffComponent(component, jsonDescritor.scenes[j].components[b], function returnObj(err, obj)
+						{
+							if(err)
+								componentDone(err, null)
+							else
+							{
+								if(!delta_scene.scene)
+									delta_scene.scene = scene
+								if(!delta_scene.components)
+									delta_scene.components = new Array()
+								delta_scene.components.push(obj)
+									componentDone()
+							}
+						})
+					}
+				}, function arrayComponentsCallback(err)
+				{
+					if(delta_scene.components)
+						delta.push(delta_scene)
+				})
+			}
+		}
+	}
+	
+	function getDiffComponent(componentA, componentB, callback)
+	{
+		var obj = {}
+		if(componentA.name == componentB.name)
+		{
+			for(var key in componentA)
+			{
+				if(!componentB.hasOwnProperty(key) || 
+				(key == 'source' && path.basename(componentA[key]) != path.basename(componentB[key])) ||
+				(key != 'source' && componentA[key] != componentB[key])) 
+				{
+					//É verificado se o usuário que realiza a inclusão da Versão Customizada
+					//possui Grau de Liberdade compatível com as modificações
+					if (checarPermissao(key, grauDeLiberdade))
+						obj[key] = componentA[key]
+					else 
+					{
+						//Se as alterações não forem compatíveis com o Grau de Liberdade, 
+						//a inclusão deve ser cancelada
+						callback(new Error("Customizações não compatíveis com o Grau de Liberdade"), null);
+					}
+				}
+			}
+			if(Object.keys(obj).length > 0)
+			{
+				obj.name = componentA.name
+				callback(null, obj)
+			}
+		}
+	}
+}
+
+
 //Compara os componentes scene por scene e retorna o delta.
 var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) {
 	
-	var i;
 	var delta = new Array();
 
 	//Lê arquivo JSON com o estado dos componentes do arquivo compactado
