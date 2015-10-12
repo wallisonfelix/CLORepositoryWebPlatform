@@ -133,21 +133,24 @@ var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callb
 	var delta = new Array();
 	async.each(jsonFromFile.scenes, processScenes, function arrayScenesCallback(err)
 	{
-		callback(null, delta)
+		if(err)
+			callback(err, null)
+		else
+			callback(null, delta)
 	})
 	
 	function processScenes(scene, sceneDone)
 	{
-		for(var j = 0; j < jsonDescritor.scenes.length; j++)
+		jsonDescritor.scenes.forEach(function(sceneDescr)
 		{
-			if(scene == jsonDescritor.scenes[j].scene)
+			if(scene == sceneDescr)
 			{
 				var delta_scene = {}
 				async.each(scene.components, function processComponents(component, componentDone)
 				{
-					for(var b = 0; b < scene.components.length; b++)
+					sceneDescr.components.forEach(function(componentDescr)
 					{
-						getDiffComponent(component, jsonDescritor.scenes[j].components[b], function returnObj(err, obj)
+						getDiffComponent(component, componentDescr, function returnObj(err, obj)
 						{
 							if(err)
 								componentDone(err, null)
@@ -158,17 +161,17 @@ var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callb
 								if(!delta_scene.components)
 									delta_scene.components = new Array()
 								delta_scene.components.push(obj)
-									componentDone()
+								componentDone()
 							}
 						})
-					}
+					})
 				}, function arrayComponentsCallback(err)
 				{
 					if(delta_scene.components)
 						delta.push(delta_scene)
 				})
 			}
-		}
+		})
 	}
 	
 	function getDiffComponent(componentA, componentB, callback)
