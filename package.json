@@ -1,4 +1,4 @@
-
+  
 {
   "name": "clo-repository-web-platform",
   "version": "0.1.0",
@@ -24,7 +24,10 @@
     "express": "~4.13.1",
     "mongodb": "~2.0.36",
     "multer": "~0.1.8",
-    "ejs": "~2.3.3"
+    "ejs": "~2.3.3",
+    "sequelize": "~3.17.3",
+    "pg": "4.4.3",
+    "pg-hstore": "2.3.2"
   },
   "private": true,
   "subdomain": "CLORepositoryWebPlatform"

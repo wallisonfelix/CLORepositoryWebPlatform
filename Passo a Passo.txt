@@ -1,0 +1,11 @@
+- Baixar o Sequelize
+- Baixar o pg-hstore
+- Criar um arquivo para definição da conexão com o postgres (exportar o sequelize nele)
+- Definir os três modelos (ir atualizando a descrição dos usuários)
+- Iniciar o postgres, de modo a verificar a correta criação das tabelas
+
+- Implementar a autenticação com passport
+- Criar página de cadastro de usuário
+- Criar página de login
+- Adicionar um fluxo de administrador para validar o papel solicitado pelo usuário
+- Adicionar as validações para cada página

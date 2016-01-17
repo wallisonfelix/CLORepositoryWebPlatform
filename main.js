@@ -1,5 +1,6 @@
 var oacRead = require('./oacRead.js');
 var bd = require('./bd.js');
+var mongoConnection = require('./config/database/mongodb.js');
 var path = require('path');
 var fs = require('fs');
 var admzip = require('adm-zip');
@@ -7,7 +8,6 @@ var express = require('express');
 var app = express();
 var http = require('http');
 var server = http.Server(app);
-var mongodb = require('mongodb');
 var multer = require('multer');
 var EJS = require('ejs');
 
@@ -20,11 +20,6 @@ if (typeof String.prototype.startsWith != 'function') {
     return this.indexOf(str) == 0;
   };
 };
-
-//Servidor do mongodb
-var mongo = new mongodb.Server('127.0.0.1', 27017);
-//Conector do banco de dados.
-var connector = new mongodb.Db("clorepository", mongo, {w:0})
 
 app.use(multer({dest:"./sent"}))
 
@@ -50,13 +45,13 @@ app.get('/incluir_versao_customizada', function (req, res) {
 app.get('/pesquisarOAC', function (req, res)
 {
 	var title = req.query.title;
-	connector.open(function(err, db)
+	mongoConnection.open(function(err, db)
 	{
 		if(err)
 		{
 			console.error(new Date() + " Erro ao Pesquisar OAC: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 
 		bd.buscarOAC(db, title, function(err, result) {
@@ -64,7 +59,7 @@ app.get('/pesquisarOAC', function (req, res)
 			if(err) {
 				console.error(new Date() + " Erro ao Pesquisar OAC: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
-				connector.close();
+				mongoConnection.close();
 			}
 
 			res.render('pages/pesquisar_oac', {'result' : result, 'title' : title});
@@ -75,11 +70,11 @@ app.get('/pesquisarOAC', function (req, res)
 app.get('/visualizarMetadadosOAC', function (req, res) {
 	
 	var idOAC = req.query.id;
-	connector.open(function(err, db) {
+	mongoConnection.open(function(err, db) {
 		if(err) { 
 			console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Visualizar Metadados de OAC: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 
 		bd.buscarMetadadosOAC(db, idOAC, function(err, metadados) {
@@ -87,7 +82,7 @@ app.get('/visualizarMetadadosOAC', function (req, res) {
 			if(err) {
 				console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Visualizar Metadados de OAC: " + err], 'messagesTypes': ["danger"]});
-				connector.close();
+				mongoConnection.close();
 			}
 
 			res.render('pages/visualizar_metadados_oac', {'metadados' : metadados});
@@ -102,13 +97,13 @@ app.get("/baixarOAC", function(res, req)
 	var id = req.req.query.id
 	var filePath = req.req.query.filePath
 
-	connector.open(function(err, db)
+	mongoConnection.open(function(err, db)
 	{
 		if(err)
 		{
 			console.error(new Date() + " Erro ao Baixar OAC: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Baixar OAC: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando o OAC
@@ -117,7 +112,7 @@ app.get("/baixarOAC", function(res, req)
 			if(err) {
 				console.error(new Date() + " Erro ao Baixar OAC: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Baixar OAC: " + err], 'messagesTypes': ["danger"]});
-				connector.close();
+				mongoConnection.close();
 			}
 
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
@@ -139,11 +134,11 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 	var idSourceVersion = req.query.id;
 	var filePath = req.query.filePath;
 
-	connector.open(function(err, db) {
+	mongoConnection.open(function(err, db) {
 		if(err) { 
 			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 
 		bd.buscarVersoesCustomizadas(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
@@ -151,7 +146,7 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 			if(err) {
 				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
-				connector.close();
+				mongoConnection.close();
 			}
 
 			res.render('pages/listar_versoes_customizadas', {'versoesCustomizadas' : versoesCustomizadas});
@@ -164,11 +159,11 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 	var idSourceVersion = req.query.id;
 	var filePath = req.query.filePath;
 
-	connector.open(function(err, db) {
+	mongoConnection.open(function(err, db) {
 		if(err) { 
 			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 
 		bd.buscarVersoesCustomizadas(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
@@ -176,7 +171,7 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 			if(err) {
 				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
-				connector.close();
+				mongoConnection.close();
 			}
 
 			res.setHeader('Content-Type', 'application/json');
@@ -192,13 +187,13 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 	var idRootVersion = req.req.query.idRootVersion;
 	var filePath = req.req.query.filePath;
 
-	connector.open(function(err, db)
+	mongoConnection.open(function(err, db)
 	{
 		if(err)
 		{
 			console.error(new Date() + " Erro ao Baixar Versão Customizada: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Versão Customizada OAC: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando a Versão Customizada
@@ -207,7 +202,7 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 			if(err) {
 				console.error(new Date() + " Erro ao Baixar Versão Customizada: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Baixar Versão Customizada: " + err], 'messagesTypes': ["danger"]});
-				connector.close();
+				mongoConnection.close();
 			}
 
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
@@ -230,12 +225,12 @@ app.post("/incluirOAC", function(req, res)
 	var manifestData = oacRead.lerManifest(oac);
 	console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
 
-	connector.open(function(err, db) {
+	mongoConnection.open(function(err, db) {
 		
 		if(err) {
 			console.error(new Date() + " Erro ao Incluir OAC: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 
 		bd.criarOAC(db, oac, manifestData.fileNames, function(err) {
@@ -243,7 +238,7 @@ app.post("/incluirOAC", function(req, res)
 			if(err) {
 				console.error(new Date() + " Erro ao Incluir OAC: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
-				connector.close();
+				mongoConnection.close();
 			}
 
 			fs.unlink(req.files.fileInput.path, function(err) {
@@ -253,7 +248,7 @@ app.post("/incluirOAC", function(req, res)
 				}
 				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 			});
-			connector.close();
+			mongoConnection.close();
 			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
 		});
 	});
@@ -266,12 +261,12 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 	var languages = req.body.languages.split(";");
 	var oac = new admzip(req.files.fileInput.path);
 
-	connector.open(function(err, db)
+	mongoConnection.open(function(err, db)
 	{
 		if(err) {
 			console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Incluir Versão Customizada: " + err], 'messagesTypes': ["danger"]});
-			connector.close();
+			mongoConnection.close();
 		}
 
 		bd.criarVersaoCustomizada(db, oac, title, description, languages, function(err, result) {				
