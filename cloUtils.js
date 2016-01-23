@@ -1,6 +1,6 @@
-var fs = require('fs')
-var DIR = './file'
-var ZIP = require('adm-zip')
+var DIR = './file';
+var fs = require('fs');
+var zip = require('adm-zip');
 var path = require('path');
 
 //Lê o arquivo MANIFEST.MF e monta um objeto com a versão do MANIFEST e com
@@ -189,7 +189,7 @@ var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) 
 	callback(null, delta);
 }
 
-module.exports.lerManifest = lerManifest
-module.exports.gerarArquivoOAC = gerarArquivoOAC
-module.exports.gerarArquivoVersaoCustomizada = gerarArquivoVersaoCustomizada
-module.exports.getDelta = getDelta
+module.exports.lerManifest = lerManifest;
+module.exports.gerarArquivoOAC = gerarArquivoOAC;
+module.exports.gerarArquivoVersaoCustomizada = gerarArquivoVersaoCustomizada;
+module.exports.getDelta = getDelta;

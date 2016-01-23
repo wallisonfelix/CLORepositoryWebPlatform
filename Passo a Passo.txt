@@ -1,6 +1,3 @@
-- Definir os três modelos (ir atualizando a descrição dos usuários)
-- Iniciar o postgres, de modo a verificar a correta criação das tabelas
-
 - Implementar a autenticação com passport
 - Criar página de cadastro de usuário
 - Criar página de login

@@ -1,8 +1,8 @@
+var cloUtils = require('./cloUtils.js');
+var DIR = './file';
 var path = require('path');
 var mongodb = require('mongodb');
-var ZIP = require('adm-zip');
-var oacRead = require('./oacRead.js');
-var DIR = './file';
+var zip = require('adm-zip');
 var crypto = require('crypto');
 
 //Realiza a criação dos elementos que compõem um OAC no banco de dados
@@ -273,7 +273,7 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 			}
 
 			//Gera o arquivo compactado que representa o OAC
-			oacRead.gerarArquivoOAC(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, grauDeLiberdade, function(oac) {
+			cloUtils.gerarArquivoOAC(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, grauDeLiberdade, function(oac) {
 				callback(null, oac);
 			});
 		});
@@ -393,7 +393,7 @@ var gerarPacoteVersao = function(db, idVersion, idRootVersion, pathArquivoExecut
 				}
 				
 				//Gera o arquivo compactado que representa a Versão Customizada
-				oacRead.gerarArquivoVersaoCustomizada(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, grauDeLiberdade, function(versaoCustomizada) {
+				cloUtils.gerarArquivoVersaoCustomizada(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, grauDeLiberdade, function(versaoCustomizada) {
 					callback(null, versaoCustomizada);
 				});
 			});
@@ -572,7 +572,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 					}
 
 					//Obtêm o Delta (diferença) entre o estado dos componentes na raiz da hierarquia e a nova Versão Customizada
-					oacRead.getDelta(jsonComp, descritorDeComponente, grauDeLiberdade, function(err, delta) {
+					cloUtils.getDelta(jsonComp, descritorDeComponente, grauDeLiberdade, function(err, delta) {
 
 						if (err) {
 						    console.error(new Date() + " Erro ao Obter Delta para novo DescritorDeVersao: " + err);
