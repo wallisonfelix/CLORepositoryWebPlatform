@@ -1,6 +1,3 @@
-- Baixar o Sequelize
-- Baixar o pg-hstore
-- Criar um arquivo para definição da conexão com o postgres (exportar o sequelize nele)
 - Definir os três modelos (ir atualizando a descrição dos usuários)
 - Iniciar o postgres, de modo a verificar a correta criação das tabelas
 
@@ -9,3 +6,31 @@
 - Criar página de login
 - Adicionar um fluxo de administrador para validar o papel solicitado pelo usuário
 - Adicionar as validações para cada página
+
+//Para verificar se um usuário possui uma permissão (operação)
+
+//User
+roles = {};
+function carregarPapel(roleCode, role) {
+	map[roleCode] = role; 
+}
+function hasRole(roleCode) {
+	return (roleCode in roles); 
+}
+//Com Sequelize, apenas será necessário chamar o get da lista de Roles passando um parâmetro
+user.getRoles({ where: 'roleCode = "abc..."', attributes: ['roleCode'] }).then(function(role) {
+  
+})
+
+//Carregar Operation no Role
+operations = {};
+function carregarOperacoes(operationCode, operation) {
+	map[operationCode] = operation; 
+}
+function hasOperation(operationCode) {
+	return (operationCode in operations); 
+}
+//Com Sequelize, apenas será necessário chamar o get da lista de Operations passando um parâmetro
+user.getOperations({ where: 'operationCode = "abc..."', attributes: ['operationCode'] }).then(function(operation) {
+  
+})

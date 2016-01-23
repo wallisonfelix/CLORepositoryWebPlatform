@@ -1,6 +1,7 @@
 var oacRead = require('./oacRead.js');
 var bd = require('./bd.js');
 var mongoConnection = require('./config/database/mongodb.js');
+var sequelize = require('./config/database/postgres.js');
 var path = require('path');
 var fs = require('fs');
 var admzip = require('adm-zip');
@@ -10,6 +11,8 @@ var http = require('http');
 var server = http.Server(app);
 var multer = require('multer');
 var EJS = require('ejs');
+
+sequelize.sync( { force: true } );
 
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
