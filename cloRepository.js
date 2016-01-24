@@ -6,7 +6,7 @@ var zip = require('adm-zip');
 var crypto = require('crypto');
 
 //Realiza a criação dos elementos que compõem um OAC no banco de dados
-var criarOAC = function(db, zip, fileNames, callback)
+var criarOAC = function(mongoConnection, zip, fileNames, callback)
 {
   //Variáveis que receberão os JSONs de arquivos executáveis e seus componentes.
   var toCollection = []
@@ -16,7 +16,7 @@ var criarOAC = function(db, zip, fileNames, callback)
   var lomFile = JSON.parse(zip.readAsText("LOM.json").trim())
   //Diretório principal para onde os arquivos serão extraídos.
   //Cria e insere o novo DescritorRaiz.
-  criarDescritorRaiz(db, lomFile, function(err)
+  criarDescritorRaiz(mongoConnection, lomFile, function(err)
    {
    		if(err) {
 			console.error(new Date() + " Erro ao Criar DescritorRaiz: " + err);
@@ -44,7 +44,7 @@ var criarOAC = function(db, zip, fileNames, callback)
 	   	//Intera a lista de arquivos executáveis do OAC para incluí-los no banco
 		toCollection.forEach(function(item)
 		{
-			criarDescritorDeArquivoExecutavel(db, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
+			criarDescritorDeArquivoExecutavel(mongoConnection, zip, item.fileName, lomFile.qualified_name, item.exec, item.comp, function(err, data)
 			{
 			   if(err) {
 					console.error(new Date() + " Erro ao Criar DescritorDeArquivoExecutavel: " + err);
@@ -61,12 +61,12 @@ var criarOAC = function(db, zip, fileNames, callback)
 }
 
 //Cria um novo documento na Collection DescritoresRaizes
-function criarDescritorRaiz(db, lom, callback)
+function criarDescritorRaiz(mongoConnection, lom, callback)
   {
     lom._id = new mongodb.ObjectID()
     lom.user = Math.floor(100000000*Math.random())
 	lom.date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
-    db.collection('DescritoresRaizes').insert(lom, function(err, data) {
+    mongoConnection.collection('DescritoresRaizes').insert(lom, function(err, data) {
 
 	    if(err) {
 			console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
@@ -79,7 +79,7 @@ function criarDescritorRaiz(db, lom, callback)
   }
   
 //Cria um novo DescritorDeArquivoExecutavel, criando também o DescritorDeComponents ao qual ele o referencia
-function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jsonExec, jsonComp, callback)
+function criarDescritorDeArquivoExecutavel(mongoConnection, zip, element, qualified_name, jsonExec, jsonComp, callback)
 {
   var count = 0;
 
@@ -99,7 +99,7 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
 	  	}
   	});
   });
-  db.collection('DescritoresDeComponentes').insert(jsonComp, function(err, data) {
+  mongoConnection.collection('DescritoresDeComponentes').insert(jsonComp, function(err, data) {
     
     if(err) {
       console.error(new Date() + " Erro ao Inserir DescritorDeComponente: " + err);
@@ -117,7 +117,7 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
   //Cria a lista "locations" no JSON que resultará no Descritor de Arquivo Executável,
   //contendo o path de onde ficará o Arquivo Executável.
   jsonExec.locations = [diretorioDestinoExecutavel + '/' + path.basename(element)];
-  db.collection('DescritoresDeArquivosExecutaveis').insert(jsonExec, function(err, data) {
+  mongoConnection.collection('DescritoresDeArquivosExecutaveis').insert(jsonExec, function(err, data) {
     if(err) {
       console.error(new Date() + " Erro ao Inserir DescritorDeArquivoExecutavel: " + err);
 	  callback(err, data)
@@ -133,7 +133,7 @@ function criarDescritorDeArquivoExecutavel(db, zip, element, qualified_name, jso
 }
 
 //Realiza a busca de OACs cujo metadados correspondam com os campos passados como parâmetro
-var buscarOAC = function(db, title, callback)
+var buscarOAC = function(mongoConnection, title, callback)
 {
 	//Monta Regex para consulta pelo campo Título do OAC
 	var titleRegex = new RegExp(".*" + title + ".*", "i");
@@ -142,7 +142,7 @@ var buscarOAC = function(db, title, callback)
 
 	//Pesquisa os Descritores Raízes passando os campos utilizados como filtro e 
 	//limitando o retorno aos campos que serão utilizados
-	var cursorDescritoresRaizes = db.collection("DescritoresRaizes").find({"title.value": titleRegex}, {"qualified_name": 1, "title.value": 1});
+	var cursorDescritoresRaizes = mongoConnection.collection("DescritoresRaizes").find({"title.value": titleRegex}, {"qualified_name": 1, "title.value": 1});
 
 	cursorDescritoresRaizes.count(function(err, count) {			
 
@@ -168,7 +168,7 @@ var buscarOAC = function(db, title, callback)
 
 			//Pesquisa os Descritores de Arquivos Executáveis referente ao Descritor Raiz,
 			//limitando o retorno aos campos que serão utilizados
-			var cursorDescritoresDeArqExec = db.collection("DescritoresDeArquivosExecutaveis").find({"clo_id" : descritorRaiz._id}, {"locations": 1});
+			var cursorDescritoresDeArqExec = mongoConnection.collection("DescritoresDeArquivosExecutaveis").find({"clo_id" : descritorRaiz._id}, {"locations": 1});
 
 			cursorDescritoresDeArqExec.count(function(err, count) {
 
@@ -195,7 +195,7 @@ var buscarOAC = function(db, title, callback)
 					});
 
 					//Obtem a quantidade de Versões Customizadas do DescritorDeArquivoExecutavel
-					db.collection("DescritoresDeVersoes").count({"id_root_version" : descritorDeArqExec._id}, function(err, qtyCustomizedVersion) {
+					mongoConnection.collection("DescritoresDeVersoes").count({"id_root_version" : descritorDeArqExec._id}, function(err, qtyCustomizedVersion) {
 
 						if (err) {
 						    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -227,9 +227,9 @@ var buscarOAC = function(db, title, callback)
 }
 
 //Realiza a busca dos metadados do OAC cujo DescritorRaiz tem o mesmo id passado como parâmetro
-function buscarMetadadosOAC(db, idDescritorRaiz, callback) {
+function buscarMetadadosOAC(mongoConnection, idDescritorRaiz, callback) {
     
-	db.collection("DescritoresRaizes").findOne({_id: new mongodb.ObjectID(idDescritorRaiz)}, function(err, descritorRaiz) {
+	mongoConnection.collection("DescritoresRaizes").findOne({_id: new mongodb.ObjectID(idDescritorRaiz)}, function(err, descritorRaiz) {
 
 	    if(err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritorRaiz: " + err);
@@ -249,7 +249,7 @@ function buscarMetadadosOAC(db, idDescritorRaiz, callback) {
 }
 
 //Gera e retorna um arquivo compactado representando o OAC compatível com os parâmetros informados
-var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExecutavel, callback)
+var gerarPacoteOAC = function(mongoConnection, idDescritorDeArquivoExecutavel, pathArquivoExecutavel, callback)
 {
 	//Gera, temporariamente, números aleatórios para representar o id e o Grau de Liberdade do Usuário  que faz o download
 	//TODO: setar corretamente quando a Plataforma possuir autenticação. Caso o usuário não esteja autenticado, setar 'null'
@@ -257,7 +257,7 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 	var grauDeLiberdade = Math.floor(Math.random() * 5);
 
 	//Pesquisa o DescritorDeArquivoExecutavel do OAC que se deseja baixar
-	db.collection("DescritoresDeArquivosExecutaveis").findOne({_id : new mongodb.ObjectID(idDescritorDeArquivoExecutavel)}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
+	mongoConnection.collection("DescritoresDeArquivosExecutaveis").findOne({_id : new mongodb.ObjectID(idDescritorDeArquivoExecutavel)}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
 		
 		if (err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
@@ -265,7 +265,7 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 		}
 
 		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel
-		db.collection('DescritoresDeComponentes').findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentes) {
+		mongoConnection.collection('DescritoresDeComponentes').findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentes) {
 
 			if (err) {	
 				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
@@ -281,11 +281,11 @@ var gerarPacoteOAC = function(db, idDescritorDeArquivoExecutavel, pathArquivoExe
 }
 
 //Realiza a busca das Versões Customizadas do DescritorDeVersao ou DescritorDeArquivoExecutavel que tem o mesmo id passado como parâmetro
-var buscarVersoesCustomizadas = function(db, idSourceVersion, filePath, callback) {
+var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, filePath, callback) {
 	var result = [];
 
 	//Pesquisa as Versões Customizadas oriundas do DescritorDeVersao ou do DescritorDeArquivoExecutavel com o id passado como parâmetro
-	var cursorDescritoresDeVersoes = db.collection("DescritoresDeVersoes").find({"id_source_version" : new mongodb.ObjectID(idSourceVersion)});
+	var cursorDescritoresDeVersoes = mongoConnection.collection("DescritoresDeVersoes").find({"id_source_version" : new mongodb.ObjectID(idSourceVersion)});
 
 	cursorDescritoresDeVersoes.count(function(err, cursorSize) {			
 
@@ -304,7 +304,7 @@ var buscarVersoesCustomizadas = function(db, idSourceVersion, filePath, callback
 		cursorDescritoresDeVersoes.forEach(function(descritorDeVersao)	{
 
 			//Obtem a quantidade de Versões Customizadas do DescritorDeVersao ou do DescritorDeArquivoExecutavel
-			db.collection("DescritoresDeVersoes").count({"id_source_version" : descritorDeVersao._id}, function(err, qtyCustomizedVersion) {
+			mongoConnection.collection("DescritoresDeVersoes").count({"id_source_version" : descritorDeVersao._id}, function(err, qtyCustomizedVersion) {
 
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -348,7 +348,7 @@ var buscarVersoesCustomizadas = function(db, idSourceVersion, filePath, callback
 }
 
 //Gera e retorna um arquivo compactado representando a Versão Customizada compatível com os parâmetros informados
-var gerarPacoteVersao = function(db, idVersion, idRootVersion, pathArquivoExecutavel, callback)
+var gerarPacoteVersao = function(mongoConnection, idVersion, idRootVersion, pathArquivoExecutavel, callback)
 {
 	//Gera, temporariamente, números aleatórios para representar o id e o Grau de Liberdade do Usuário que faz o download
 	//TODO: setar corretamente quando a Plataforma possuir autenticação. Caso o usuário não esteja autenticado, setar 'null'
@@ -356,7 +356,7 @@ var gerarPacoteVersao = function(db, idVersion, idRootVersion, pathArquivoExecut
 	var grauDeLiberdade = Math.floor(Math.random() * 5);
 
 	//Pesquisa o DescritorDeArquivoExecutavel raiz da hierarquia em que a Versão está inserida
-	db.collection("DescritoresDeArquivosExecutaveis").findOne({_id : new mongodb.ObjectID(idRootVersion)}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
+	mongoConnection.collection("DescritoresDeArquivosExecutaveis").findOne({_id : new mongodb.ObjectID(idRootVersion)}, {'id_components': 1}, function(err, descritorDeArquivoExecutavel) {
 		
 		if (err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
@@ -368,7 +368,7 @@ var gerarPacoteVersao = function(db, idVersion, idRootVersion, pathArquivoExecut
 		}
 
 		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel raiz da hierarquia em que a Versão está inserida
-		db.collection("DescritoresDeComponentes").findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentesRaiz) {
+		mongoConnection.collection("DescritoresDeComponentes").findOne({_id : descritorDeArquivoExecutavel.id_components}, function(err, descritorDeComponentesRaiz) {
 			
 			if (err) {
 				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
@@ -381,7 +381,7 @@ var gerarPacoteVersao = function(db, idVersion, idRootVersion, pathArquivoExecut
 
 
 			//Pesquisa o DescritorDeVersao referente à versão que se deseja fazer o download
-			db.collection('DescritoresDeVersoes').findOne({_id : new mongodb.ObjectID(idVersion)}, function(err, descritorDeVersao) {
+			mongoConnection.collection('DescritoresDeVersoes').findOne({_id : new mongodb.ObjectID(idVersion)}, function(err, descritorDeVersao) {
 
 				if (err) {
 					console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -403,10 +403,10 @@ var gerarPacoteVersao = function(db, idVersion, idRootVersion, pathArquivoExecut
 
 //Retorna as informações referentes à versão de um novo DescritorDeVersao deve assumir, 
 //com base no identificador da versão de origem passado como parâmetro
-var getVersion = function(db, id, callback) {
+var getVersion = function(mongoConnection, id, callback) {
 
 	//Pesquisa um DescritorDeArquivoExecutavel que possua o identificador passado como parâmetro
-	db.collection("DescritoresDeArquivosExecutaveis").findOne({"_id": id}, {"_id": 1}, function(err, resultDescDeArqExec) {				
+	mongoConnection.collection("DescritoresDeArquivosExecutaveis").findOne({"_id": id}, {"_id": 1}, function(err, resultDescDeArqExec) {				
 
 		if (err) {
 		    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
@@ -423,7 +423,7 @@ var getVersion = function(db, id, callback) {
 			ret.id_source_version = id;
 
 			//Pesquisa os DescritoresDeVersoes cuja versão de origem seja o próprio DescritorDeArquivoExecutavel retornado
-			db.collection("DescritoresDeVersoes").find({"id_source_version" : id}, {'version': 1}).toArray(function(err, resultDescDeVerPrimeiroNivel) {
+			mongoConnection.collection("DescritoresDeVersoes").find({"id_source_version" : id}, {'version': 1}).toArray(function(err, resultDescDeVerPrimeiroNivel) {
 
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -445,7 +445,7 @@ var getVersion = function(db, id, callback) {
 		} else {
 			//Não sendo encontrado um DescritorDeArquivoExecutavel com o identificador passado como parâmetro,
 			//busca-se DescritoresDeVersoes com esse id e, simultaneamente, suas Versões Customizadas
-			db.collection("DescritoresDeVersoes").find({$or: [{"_id" : id}, {"id_source_version": id}]}, {"id_root_version": 1, "id_source_version": 1, "version": 1}).toArray(function(err, resultDescDeVers) {
+			mongoConnection.collection("DescritoresDeVersoes").find({$or: [{"_id" : id}, {"id_source_version": id}]}, {"id_root_version": 1, "id_source_version": 1, "version": 1}).toArray(function(err, resultDescDeVers) {
 				
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -502,7 +502,7 @@ var getVersion = function(db, id, callback) {
 
 //Cria um novo documento na Collection DescritoresDeVersoes ou realiza uma incorporação,
 //para a representação da nova Versão Customizada no banco de dados
-var criarVersaoCustomizada = function(db, oac, title, description, languages, callback) {
+var criarVersaoCustomizada = function(mongoConnection, oac, title, description, languages, callback) {
 	
 	//Novo DescritorDeVersao
 	var descritorDeVersao = {};
@@ -533,7 +533,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 	});
 	
 	//Obtêm as informações referentes à versão para o novo DescritorDeVersao
-	getVersion(db, idDescritorOrigem, function(err, result) {		
+	getVersion(mongoConnection, idDescritorOrigem, function(err, result) {		
 
 		if (err) {
 		    console.error(new Date() + " Erro ao Obter Número de Versão para novo DescritorDeVersao: " + err);
@@ -554,7 +554,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 			}
 
 			//Pesquisa o DescritorDeArquivoExecutavel raiz da hierarquia onde o novo DescritorDeVersao será inserido
-			db.collection("DescritoresDeArquivosExecutaveis").findOne({_id: descritorDeVersao.id_root_version}, {'id_components': 1, 'locations': 1}, function(err, descritorDeArqExec) {
+			mongoConnection.collection("DescritoresDeArquivosExecutaveis").findOne({_id: descritorDeVersao.id_root_version}, {'id_components': 1, 'locations': 1}, function(err, descritorDeArqExec) {
 			
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
@@ -564,7 +564,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 				diretorioArquivoExecutavel = descritorDeArqExec.locations;
 
 				//Pesquisa o DescritorDeComponente referenciado pelo DescritorDeArquivoExecutavel raiz da hierarquia
-				db.collection("DescritoresDeComponentes").findOne({_id : descritorDeArqExec.id_components}, function(error, descritorDeComponente) {
+				mongoConnection.collection("DescritoresDeComponentes").findOne({_id : descritorDeArqExec.id_components}, function(error, descritorDeComponente) {
 
 				    if(error) {
 				      console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + error);
@@ -584,7 +584,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 						descritorDeVersao.hash = shasum.update(JSON.stringify(delta)).digest('hex');
 
 						//Pesquisa DescritorDeVersao com o mesmo Hash na hierarquia
-						db.collection("DescritoresDeVersoes").findOne({id_root_version: new mongodb.ObjectID(descritorDeVersao.id_root_version), hash: descritorDeVersao.hash}, function(err, descDeVersParaIncorporacao) {
+						mongoConnection.collection("DescritoresDeVersoes").findOne({id_root_version: new mongodb.ObjectID(descritorDeVersao.id_root_version), hash: descritorDeVersao.hash}, function(err, descDeVersParaIncorporacao) {
 
 							if(err) {						      
 						    	console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
@@ -608,7 +608,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 								if(!exists) {
 									metadata.push(descritorDeVersao.metadata[0]);
 									//Atualiza o DescritorDeVersao
-									db.collection("DescritoresDeVersoes").update({_id : descDeVersParaIncorporacao._id}, {$set: {metadata: metadata}}, function(err, descDeVersAtualizado) {
+									mongoConnection.collection("DescritoresDeVersoes").update({_id : descDeVersParaIncorporacao._id}, {$set: {metadata: metadata}}, function(err, descDeVersAtualizado) {
 										if(err) {						      
 									    	console.error(new Date() + " Erro ao Atualizar DescritorDeVersao: " + err);
 									    	callback(err, null);
@@ -641,7 +641,7 @@ var criarVersaoCustomizada = function(db, oac, title, description, languages, ca
 								});
 
 								//Inclui um novo DescritorDeVersao
-								db.collection("DescritoresDeVersoes").insert(descritorDeVersao, function(err, data) {
+								mongoConnection.collection("DescritoresDeVersoes").insert(descritorDeVersao, function(err, data) {
 									
 									if(err) {						      
 								    	console.error(new Date() + " Erro ao Inserir DescritorDeVersao: " + err);

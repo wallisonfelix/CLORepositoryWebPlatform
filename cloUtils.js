@@ -29,8 +29,8 @@ var lerManifest = function(zip)
 //Gera, a partir dos dados informados, o arquivo compactado que representará o OAC
 var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, grauDeLiberdade, callback) {
 	//Monta o arquivo compactado que representará o OAC
-	var oac =  new ZIP();
-	s
+	var oac =  new zip();
+	
 	//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes do OAC
 	descritorDeComponentes.scenes.forEach(function(scene) {
 	  	scene.components.forEach(function(component) {
@@ -56,7 +56,7 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 //Gera, a partir dos dados informados, o arquivo compactado que representará a Versão Customizada
 var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, grauDeLiberdade, callback) {
 	//Monta o arquivo compactado que representará a Versão Customizada
-	var versaoCustomizada =  new ZIP();
+	var versaoCustomizada =  new zip();
 	var idSourceVersion = descritorDeVersao._id;
 	
 	mergeCustomizations(descritorDeVersao, descritorDeComponentesRaiz, function(descritorDeComponentes) {

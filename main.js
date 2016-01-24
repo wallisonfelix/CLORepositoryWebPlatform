@@ -3,7 +3,7 @@ var cloUtils = require('./cloUtils.js');
 var db = require('./config/database/db.js');
 var path = require('path');
 var fs = require('fs');
-var admzip = require('adm-zip');
+var zip = require('adm-zip');
 var express = require('express');
 var app = express();
 var http = require('http');
@@ -45,7 +45,7 @@ app.get('/incluir_versao_customizada', function (req, res) {
 app.get('/pesquisarOAC', function (req, res)
 {
 	var title = req.query.title;
-	db.mongo.open(function(err, db)
+	db.mongo.open(function(err, mongoConnection)
 	{
 		if(err)
 		{
@@ -54,7 +54,7 @@ app.get('/pesquisarOAC', function (req, res)
 			db.mongo.close();
 		}
 
-		cloRepository.buscarOAC(db, title, function(err, result) {
+		cloRepository.buscarOAC(mongoConnection, title, function(err, result) {
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Pesquisar OAC: " + err);
@@ -62,6 +62,7 @@ app.get('/pesquisarOAC', function (req, res)
 				db.mongo.close();
 			}
 
+			mongoConnection.close();
 			res.render('pages/pesquisar_oac', {'result' : result, 'title' : title});
 		});
 	});
@@ -70,14 +71,14 @@ app.get('/pesquisarOAC', function (req, res)
 app.get('/visualizarMetadadosOAC', function (req, res) {
 	
 	var idOAC = req.query.id;
-	db.mongo.open(function(err, db) {
+	db.mongo.open(function(err, mongoConnection) {
 		if(err) { 
 			console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Visualizar Metadados de OAC: " + err], 'messagesTypes': ["danger"]});
 			db.mongo.close();
 		}
 
-		cloRepository.buscarMetadadosOAC(db, idOAC, function(err, metadados) {
+		cloRepository.buscarMetadadosOAC(mongoConnection, idOAC, function(err, metadados) {
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
@@ -85,6 +86,7 @@ app.get('/visualizarMetadadosOAC', function (req, res) {
 				db.mongo.close();
 			}
 
+			mongoConnection.close();
 			res.render('pages/visualizar_metadados_oac', {'metadados' : metadados});
 		});
 	});
@@ -97,7 +99,7 @@ app.get("/baixarOAC", function(res, req)
 	var id = req.req.query.id
 	var filePath = req.req.query.filePath
 
-	db.mongo.open(function(err, db)
+	db.mongo.open(function(err, mongoConnection)
 	{
 		if(err)
 		{
@@ -107,7 +109,7 @@ app.get("/baixarOAC", function(res, req)
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando o OAC
-		cloRepository.gerarPacoteOAC(db, id, filePath, function(err, oac)
+		cloRepository.gerarPacoteOAC(mongoConnection, id, filePath, function(err, oac)
 		{			
 			if(err) {
 				console.error(new Date() + " Erro ao Baixar OAC: " + err);
@@ -124,7 +126,7 @@ app.get("/baixarOAC", function(res, req)
 			//Envia o arquivo em forma de bytes.
 			res.res.send(oac.toBuffer());
 
-			db.close();
+			mongoConnection.close();
 		});
 	});
 });
@@ -134,14 +136,14 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 	var idSourceVersion = req.query.id;
 	var filePath = req.query.filePath;
 
-	db.mongo.open(function(err, db) {
+	db.mongo.open(function(err, mongoConnection) {
 		if(err) { 
 			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
 			db.mongo.close();
 		}
 
-		cloRepository.buscarVersoesCustomizadas(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
+		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
@@ -149,6 +151,7 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 				db.mongo.close();
 			}
 
+			mongoConnection.close();
 			res.render('pages/listar_versoes_customizadas', {'versoesCustomizadas' : versoesCustomizadas});
 		});
 	});
@@ -159,23 +162,25 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 	var idSourceVersion = req.query.id;
 	var filePath = req.query.filePath;
 
-	db.mongo.open(function(err, db) {
+	db.mongo.open(function(err, mongoConnection) {
 		if(err) { 
 			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
 			db.mongo.close();
 		}
 
-		cloRepository.buscarVersoesCustomizadas(db, idSourceVersion, filePath, function(err, versoesCustomizadas) {
+		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
 				db.mongo.close();
 			}
-
+			
 			res.setHeader('Content-Type', 'application/json');
     		res.send(JSON.stringify(versoesCustomizadas));
+
+    		mongoConnection.close();
 		});
 	});
 });
@@ -187,7 +192,7 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 	var idRootVersion = req.req.query.idRootVersion;
 	var filePath = req.req.query.filePath;
 
-	db.mongo.open(function(err, db)
+	db.mongo.open(function(err, mongoConnection)
 	{
 		if(err)
 		{
@@ -197,7 +202,7 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando a Versão Customizada
-		cloRepository.gerarPacoteVersao(db, id, idRootVersion, filePath, function(err, versaoCustomizada)
+		cloRepository.gerarPacoteVersao(mongoConnection, id, idRootVersion, filePath, function(err, versaoCustomizada)
 		{			
 			if(err) {
 				console.error(new Date() + " Erro ao Baixar Versão Customizada: " + err);
@@ -214,18 +219,18 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 			//Envia o arquivo em forma de bytes.
 			res.res.send(versaoCustomizada.toBuffer());
 
-			db.close();
+			mongoConnection.close();
 		});
 	});
 });
 
 app.post("/incluirOAC", function(req, res)
 {
-	var oac = new admzip(req.files.fileInput.path);
+	var oac = new zip(req.files.fileInput.path);
 	var manifestData = cloUtils.lerManifest(oac);
 	console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
 
-	db.mongo.open(function(err, db) {
+	db.mongo.open(function(err, mongoConnection) {
 		
 		if(err) {
 			console.error(new Date() + " Erro ao Incluir OAC: " + err);
@@ -233,7 +238,7 @@ app.post("/incluirOAC", function(req, res)
 			db.mongo.close();
 		}
 
-		cloRepository.criarOAC(db, oac, manifestData.fileNames, function(err) {
+		cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
 
 			if(err) {
 				console.error(new Date() + " Erro ao Incluir OAC: " + err);
@@ -248,7 +253,8 @@ app.post("/incluirOAC", function(req, res)
 				}
 				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 			});
-			db.mongo.close();
+
+			mongoConnection.close();
 			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
 		});
 	});
@@ -259,9 +265,9 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 	var title = req.body.title;
 	var description = req.body.description;
 	var languages = req.body.languages.split(";");
-	var oac = new admzip(req.files.fileInput.path);
+	var oac = new zip(req.files.fileInput.path);
 
-	db.mongo.open(function(err, db)
+	db.mongo.open(function(err, mongoConnection)
 	{
 		if(err) {
 			console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
@@ -269,7 +275,7 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 			db.mongo.close();
 		}
 
-		cloRepository.criarVersaoCustomizada(db, oac, title, description, languages, function(err, result) {				
+		cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
 			
 			if(err) {
 				console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
@@ -284,7 +290,7 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 			});
 			
-			db.close();
+			mongoConnection.close();
 			res.render('pages/index', {'messages': ["Versão Customizada incluída com sucesso"], 'messagesTypes': ["success"]});
 		});
 	});
