@@ -31,3 +31,10 @@ function hasOperation(operationCode) {
 user.getOperations({ where: 'operationCode = "abc..."', attributes: ['operationCode'] }).then(function(operation) {
   
 })
+
+
+
+
+--- 
+Tudo vai no body
+Atribui e inclui no lado do servidor

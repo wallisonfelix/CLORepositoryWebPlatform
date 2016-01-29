@@ -1,6 +1,7 @@
+var db = require('./config/database/db.js');
 var cloRepository = require('./cloRepository.js');
 var cloUtils = require('./cloUtils.js');
-var db = require('./config/database/db.js');
+var administration = require('./administration.js');
 var path = require('path');
 var fs = require('fs');
 var zip = require('adm-zip');
@@ -35,11 +36,43 @@ app.get('/incluir_oac', function (req, res) {
 });
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.render('pages/pesquisar_oac', {'result' : null, 'title' : ""});
+	res.render('pages/pesquisar_oac', {'result' : null, 'title' : ''});
 });
 
 app.get('/incluir_versao_customizada', function (req, res) {
 	res.render('pages/incluir_versao_customizada');
+});
+
+app.get('/pesquisar_usuario', function (req, res) {
+	res.render('pages/pesquisar_usuario');
+});
+
+app.get('/incluir_usuario', function (req, res) {
+	res.render('pages/manter_usuario', {'user' : {}});
+});
+
+app.get('/pesquisar_papel', function (req, res) {
+	res.render('pages/pesquisar_papel');
+});
+
+app.get('/incluir_papel', function (req, res) {
+	administration.buscarOperacoes(function (err, operations) {
+		
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
+		}
+
+		res.render('pages/manter_papel', {'role' : {}, 'operations': operations});
+	});
+});
+
+app.get('/pesquisar_operacao', function (req, res) {
+	res.render('pages/pesquisar_operacao');
+});
+
+app.get('/incluir_operacao', function (req, res) {
+	res.render('pages/manter_operacao', {'operation' : {}});
 });
 
 app.get('/pesquisarOAC', function (req, res)

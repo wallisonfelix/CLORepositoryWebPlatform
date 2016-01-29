@@ -19,15 +19,29 @@
 	    <div class="col-sm-9">
 	    	<ol class="breadcrumb">
 			  <li>Home</li>
-			  <li class="active">Pesquisar OAC</li>
+			  <li class="active">Pesquisar Usuário</li>
 			</ol>
 
-			<form action="/pesquisarOAC" role="form" class="form-horizontal" accept-charset="UTF-8">
+			<form action="/pesquisarUsuario" role="form" class="form-horizontal" accept-charset="UTF-8">
 				<div class="form-group">
-					<label for="title" class="control-label col-sm-3">Título do OAC:</label>
+					<label for="title" class="control-label col-sm-3">Nome:</label>
 					<div class="col-sm-9">
 						<input id="title" name="title" type="text" value='<%= title %>' class="form-control"/>
-						<span class="help-block">Informe o título do OAC desejado</span>
+						<span class="help-block">Informe o nome do Usuário desejado</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="title" class="control-label col-sm-3">Email:</label>
+					<div class="col-sm-9">
+						<input id="title" name="title" type="text" value='<%= title %>' class="form-control"/>
+						<span class="help-block">Informe o email do Usuário desejado</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="title" class="control-label col-sm-3">Login:</label>
+					<div class="col-sm-9">
+						<input id="title" name="title" type="text" value='<%= title %>' class="form-control"/>
+						<span class="help-block">Informe o login do Usuário desejado</span>
 					</div>
 				</div>
 				<div class="form-group">

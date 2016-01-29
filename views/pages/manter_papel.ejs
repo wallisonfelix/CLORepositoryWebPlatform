@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+	    	<ol class="breadcrumb">
+			  <li>Home</li>
+			  <li>Administração</li>
+			  <li>Gerenciar Papéis</li>
+			  <li class="active">Incluir Papel</li>
+			</ol>
+
+			<form action="<% if(role.id) { %>/incluirPapel<% } else { %>/editarPapel<% } %>" method="post" role="form" class="form-horizontal" accept-charset="UTF-8">
+				<div class="form-group">
+					<label for="name" class="control-label col-sm-3">Nome:</label>
+					<div class="col-sm-9">
+						<input id="name" name="name" type="text" value="<%= role.name %>" class="form-control"/>
+						<span class="help-block">Informe o nome do Papel</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="code" class="control-label col-sm-3">Código:</label>
+					<div class="col-sm-9">
+						<input id="code" name="code" type="text" value="<%= role.code %>" class="form-control"/>
+						<span class="help-block">Informe o código que identificará o Papel unicamente</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label col-sm-3">Descrição:</label>
+					<div class="col-sm-9">
+						<textarea id="description" name="description" rows="5" value="<%= role.description %>" class="form-control"></textarea>
+						<span class="help-block">Informe uma descrição que contenha o objetivo do Papel e a qual tipo de Usuário se destina</span>
+					</div>
+				</div>
+
+				<div id="operations">
+					<h4>Operações:</h4>
+					<table class="table table-striped table-responsive">
+					    <thead>
+					      	<tr>
+					        	<th class="text-center">Nome</th>
+					        	<th class="text-center">Código</th>
+					        	<th class="text-center">Descrição</th>
+					      	</tr>
+					    </thead>
+					    <tbody>
+					    <% if(operations) {
+							for(var i = 0; i < operations.length; i++) { %>
+					      		<tr>
+						        	<td class="text-left"><%= operations[i].name %></td>
+						        	<td class="text-center"><%= operations[i].code %></td>
+						        	<td class="text-left"><%= operations[i].description %></td>
+				      			</tr>
+					      	<%	}
+							} %>
+					    </tbody>
+					</table>
+
+					<% if(!operations || operations.length == 0) { %>
+						<div class="alert alert-warning fade in">
+							Nenhuma Operação retornada
+						</div>
+					<% } %>	
+
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<input type="submit" name="btnSalvar" class="btn btn-info" value="Salvar"/>
+					</div>	
+				</div>
+			</form>
+	    </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>
