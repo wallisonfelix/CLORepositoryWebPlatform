@@ -19,94 +19,118 @@
 	    <div class="col-sm-9">
 	    	<ol class="breadcrumb">
 			  <li>Home</li>
-			  <li class="active">Pesquisar Usuário</li>
+			  <li>Administração</li>
+			  <li>Gerenciar Papéis</li>
+			  <li class="active">Pesquisar Papel</li>
 			</ol>
 
-			<form action="/pesquisarUsuario" role="form" class="form-horizontal" accept-charset="UTF-8">
+			<% include ../partials/messages %>
+			
+			<form action="/pesquisarPapel" role="form" class="form-horizontal" accept-charset="UTF-8">
+							
 				<div class="form-group">
-					<label for="title" class="control-label col-sm-3">Nome:</label>
+					<label for="name" class="control-label col-sm-3">Nome :</label>
 					<div class="col-sm-9">
-						<input id="title" name="title" type="text" value='<%= title %>' class="form-control"/>
-						<span class="help-block">Informe o nome do Usuário desejado</span>
+						<input id="name" name="name" type="text" value="<%= name %>" class="form-control"/>
+						<span class="help-block">Informe o nome do Papel desejado</span>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="title" class="control-label col-sm-3">Email:</label>
+					<label for="code" class="control-label col-sm-3">Código :</label>
 					<div class="col-sm-9">
-						<input id="title" name="title" type="text" value='<%= title %>' class="form-control"/>
-						<span class="help-block">Informe o email do Usuário desejado</span>
+						<input id="code" name="code" type="text" value="<%= code %>" class="form-control"/>
+						<span class="help-block">Informe o código do Papel desejado</span>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="title" class="control-label col-sm-3">Login:</label>
+					<label for="description" class="control-label col-sm-3">Descrição :</label>
 					<div class="col-sm-9">
-						<input id="title" name="title" type="text" value='<%= title %>' class="form-control"/>
-						<span class="help-block">Informe o login do Usuário desejado</span>
+						<textarea id="description" name="description" rows="5" class="form-control"><%= description %></textarea>
+						<span class="help-block">Informe a descrição do Papel desejado</span>
 					</div>
 				</div>
+
 				<div class="form-group">
 					<div class="col-sm-offset-3 col-sm-9">
 						<input type="submit" name="btnPesquisar" class="btn btn-info" value="Pesquisar"/>
 					</div>	
 				</div>
-			</form>
 
+				<div class="form-group">
+					<div class="col-sm-12">
+						<a href="/incluir_papel" class="btn btn-info" role="button"><span class="glyphicon glyphicon-plus"></span>  Incluir</a>
+					</div>	
+				</div>
+			</form>
+					
 			<div id="results">
 				<h4>Resultados:</h4>
 				<table class="table table-striped table-responsive">
 				    <thead>
-				      	<tr>
-				        	<th class="text-center">Título</th>
-				        	<th class="text-center">Detalhes</th>
-				        	<th class="text-center">Arquivos Executáveis</th>
-				        	<th class="text-center">Versões Customizadas</th>
+				      	<tr>					      		
+				        	<th class="text-center">Nome</th>
+				        	<th class="text-center">Código</th>
+				        	<th class="text-center">Descrição</th>
+				        	<th class="text-center"></th>
 				      	</tr>
 				    </thead>
 				    <tbody>
 				    <% if(result) {
 						for(var i = 0; i < result.length; i++) { %>
 				      		<tr>
-					        	<td style="vertical-align: middle;"><%= result[i].title %></td>
-					        	<td class="text-center" style="vertical-align: middle;">
-					        		<a href="/visualizarMetadadosOAC?id=<%= result[i]._id %>">
-						        		<span class="glyphicon glyphicon-search" />
-						        	</a>
-						        </td>
-						        <td class="text-center">
-						        	<table class="table">
-							        	<% 	for(var j = 0; j < result[i].files.length; j++) { %>
-							        			<tr>
-												<% for(var k = 0; k < result[i].files[j].locations.length; k++) { %>			
-								        			<td class="text-center">
-										        		<a href="/baixarOAC?id=<%= result[i].files[j]._id %>&filePath=<%= result[i].files[j].locations[k].path %>" target="_blank">
-										        			<%= result[i].files[j].locations[k].ext %>
-										        		</a>
-										        	<td>
-										   		 <%	} %>
-										    	</tr>
-										<% } %>	
-									</table>    
-						        </td>
-						        <td class="text-center">
-						        	<table class="table">
-							        	<% 	for(var j = 0; j < result[i].files.length; j++) { %>
-							        			<tr>
-							        			<% for(var k = 0; k < result[i].files[j].locations.length; k++) { %>
-									        			<td class="text-center" style="text-align: center;">
-										        			<% if(result[i].files[j].qtyCustomizedVersion > 0) { %>
-										        				<a href="/listarVersoesCustomizadas?id=<%= result[i].files[j]._id %>&filePath=<%= result[i].files[j].locations[k].path %>">
-										        					<span class="glyphicon glyphicon-folder-open" />
-										        					<span class="badge"><%= result[i].files[j].qtyCustomizedVersion %></span>
-										        				</a>
-										        			<% } else { %>
-										        				<span class="badge"><%= result[i].files[j].qtyCustomizedVersion %></span>
-										        			<% } %>	
-											        	<td>
-											  	<%	} %>		
-										    	</tr>
-										<% } %>	
-									</table> 	
-						        </td>
+				      			<td class="text-left"><%= result[i].name %></td>
+					        	<td class="text-center"><%= result[i].code %></td>
+					        	<td class="text-left"><%= result[i].description %></td>
+					        	<td class="text-center">
+					        		<a href="/editar_papel?idRole=<%=result[i].id%>" class="btn btn-link" role="button">
+					        			<span class="glyphicon glyphicon-edit"></span>
+					        		</a>
+					        		<button type="button" class="btn btn-link" data-toggle="modal" data-target="#role_<%= result[i].id %>">
+					        			<span class="glyphicon glyphicon-remove"></span>
+					        		</button>
+					        		<div id="role_<%= result[i].id %>" class="modal fade text-left" role="dialog">
+										<div class="modal-dialog">
+										    <div class="modal-content">
+										    											    
+										      	<div class="modal-body">										        	
+										        	<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formRole_<%= result[i].id %>">
+											      		
+											      		<div class="form-group">
+											      			<div class="col-sm-offset-1 col-sm-11">
+										    					<p class="form-control-static"><strong>Tem certeza que deseja remover o Papel ?</strong></p>
+										    				</div>
+										    			</div>
+											      		<div class="form-group">
+										    				<label class="control-label col-sm-4">Nome :</label>
+										    				<div class="col-sm-8">
+										    					<p class="form-control-static"><%= result[i].name %></p>
+										    				</div>
+											      		</div>
+											      		<div class="form-group">
+										    				<label class="control-label col-sm-4">Código :</label>
+										    				<div class="col-sm-8">
+										    					<p class="form-control-static"><%= result[i].code %></p>
+										    				</div>
+											      		</div>
+											      		<div class="form-group">
+										    				<label class="control-label col-sm-4">Descrição :</label>
+										    				<div class="col-sm-8">
+										    					<p class="form-control-static"><%= result[i].description %></p>
+										    				</div>
+											      		</div>
+
+											      	</form>	
+										      	</div>
+
+										    	<div class="modal-footer">										        	
+										        	<a href="/excluirPapel?idRole=<%=result[i].id%>&roleCode=<%=result[i].code%>" class="btn btn-info" role="button">Sim</a>
+										        	<button type="button" class="btn btn-info" data-dismiss="modal">Não</button>
+										    	</div>
+
+										    </div>
+										</div>
+									</div>
+					        	</td>
 			      			</tr>
 				      	<%	}
 						} %>
@@ -115,7 +139,7 @@
 
 				<% if(!result || result.length == 0) { %>
 					<div class="alert alert-warning fade in">
-						Nenhum OAC retornado
+						Nenhum Papel retornado
 					</div>
 				<% } %>	
 

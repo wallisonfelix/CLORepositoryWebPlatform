@@ -1,4 +1,5 @@
 var db = require('./config/database/db.js');
+var model = require('./model/models.js');
 var cloRepository = require('./cloRepository.js');
 var cloUtils = require('./cloUtils.js');
 var administration = require('./administration.js');
@@ -31,6 +32,8 @@ app.get('/', function(req, res) {
   res.render('pages/index', {'messages': null});
 });
 
+// ***** Gerenciamento dos Objetos de Aprendizagem Customizáveis *****
+
 app.get('/incluir_oac', function (req, res) {
 	res.render('pages/incluir_oac');
 });
@@ -41,38 +44,6 @@ app.get('/pesquisar_oac', function (req, res) {
 
 app.get('/incluir_versao_customizada', function (req, res) {
 	res.render('pages/incluir_versao_customizada');
-});
-
-app.get('/pesquisar_usuario', function (req, res) {
-	res.render('pages/pesquisar_usuario');
-});
-
-app.get('/incluir_usuario', function (req, res) {
-	res.render('pages/manter_usuario', {'user' : {}});
-});
-
-app.get('/pesquisar_papel', function (req, res) {
-	res.render('pages/pesquisar_papel');
-});
-
-app.get('/incluir_papel', function (req, res) {
-	administration.buscarOperacoes(function (err, operations) {
-		
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		res.render('pages/manter_papel', {'role' : {}, 'operations': operations});
-	});
-});
-
-app.get('/pesquisar_operacao', function (req, res) {
-	res.render('pages/pesquisar_operacao');
-});
-
-app.get('/incluir_operacao', function (req, res) {
-	res.render('pages/manter_operacao', {'operation' : {}});
 });
 
 app.get('/pesquisarOAC', function (req, res)
@@ -329,6 +300,158 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 	});
 });
 
+// ***** Administração do Repositório *****
+
+app.get('/pesquisar_papel', function (req, res) {
+	res.render('pages/pesquisar_papel', {'result': null, name: '', code: '', description: '', 'messages': null });
+});
+
+app.get('/pesquisarPapel', function (req, res) {
+
+	var name = req.query.name;
+	var code = req.query.code;
+	var description = req.query.description;
+
+	administration.buscarPapeis(name, code, description, function(err, roles) {
+
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
+		}
+
+		res.render('pages/pesquisar_papel', {'result': roles, name: name, code: code, description: description, 'messages': null });
+	});
+});
+
+app.get('/incluir_papel', function (req, res) {
+	administration.buscarTodasOperacoes(function (err, operations) {
+		
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
+		}
+
+		var role = model.Role.build({});
+		res.render('pages/manter_papel', {'role' : role, 'roleOperations': null, 'operations': operations});
+	});
+});
+
+app.post('/incluirPapel', function (req, res) {
+
+	var name = req.body.name;
+	var code = req.body.code;
+	var description = req.body.description;
+	//Um array é retornado apenas quando mais de uma Operação é selecionada
+	var operationCodes;
+	if ( Array.isArray(req.body.checkOperation) ) {
+		operationCodes = req.body.checkOperation;
+	} else {
+		operationCodes = new Array(req.body.checkOperation);
+	}
+
+	administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
+		
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
+		}
+
+		administration.incluirPapel(name, code, description, operations, function (err, role) {
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Incluir Papel: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Incluir Papel: " + err], 'messagesTypes': ["danger"]});			
+			}
+
+			role.getOperations().then(function (roleOperations) {			
+				res.render('pages/visualizar_papel', {'role' : role, 'roleOperations': roleOperations, 'messages': ["Papel " + role.id + " - " + role.code + " incluído com sucesso"], 'messagesTypes': ["success"] } );
+			});
+		});		
+	});
+});
+
+app.get('/editar_papel', function (req, res) {
+
+	var idRole = req.query.idRole;
+
+	administration.buscarPapelPorId(idRole, function (err, role) {
+		
+		if(!err && !role) {
+			err = new Error(" Papel " + idRole + " não encontrado.");
+		}
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Papel: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Papel: " + err], 'messagesTypes': ["danger"]});
+		} 
+
+		administration.buscarTodasOperacoes(function (err, operations) {
+		
+			if(err) {
+				console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
+			}
+
+			role.getOperations().then(function (roleOperations) {			
+				res.render('pages/manter_papel', {'role' : role, 'roleOperations': roleOperations, 'operations': operations});
+			});			
+		});
+	});
+});
+
+app.post('/editarPapel', function (req, res) {
+
+	var idRole = req.body.idRole;
+	var name = req.body.name;
+	var code = req.body.code;
+	var description = req.body.description;
+	//Um array é retornado apenas quando mais de uma Operação é selecionada
+	var operationCodes;
+	if ( Array.isArray(req.body.checkOperation) ) {
+		operationCodes = req.body.checkOperation;
+	} else {
+		operationCodes = new Array(req.body.checkOperation);
+	}
+
+	administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
+		
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
+		}
+	
+		administration.editarPapel(idRole, name, code, description, operations, function (err, role) {
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Editar Papel: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Editar Papel: " + err], 'messagesTypes': ["danger"]});			
+			}
+
+			role.getOperations().then(function (roleOperations) {			
+				res.render('pages/visualizar_papel', {'role' : role, 'roleOperations': roleOperations, 'messages': ["Papel " + idRole + " atualizado com sucesso"], 'messagesTypes': ["success"] } );
+			});
+		});		
+	});
+});
+
+app.get('/excluirPapel', function (req, res) {
+
+	var idRole = req.query.idRole;
+	var roleCode = req.query.roleCode;
+	
+	administration.excluirPapel(idRole, roleCode, function(err) {
+
+		if(err) {
+			console.error(new Date() + " Erro ao Excluir Papel: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Excluir Papel: " + err], 'messagesTypes': ["danger"]});			
+		}
+
+		res.render('pages/pesquisar_papel', {'result': null, name: '', code: '', description: '', 'messages': ["Papel " + idRole + " - " + roleCode + " excluído com sucesso"], 'messagesTypes': ["success"] });
+	});
+});
+
+// ***** Inicialização do Servidor *****
+
 app.use(express.static(__dirname + '/views/images'));
+app.use(express.static(__dirname + '/views/styles'));
 //Servidor fica ouvindo a porta 80.
 server.listen(80);

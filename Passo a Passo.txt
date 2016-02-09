@@ -19,22 +19,9 @@ user.getRoles({ where: 'roleCode = "abc..."', attributes: ['roleCode'] }).then(f
   
 })
 
-//Carregar Operation no Role
-operations = {};
-function carregarOperacoes(operationCode, operation) {
-	map[operationCode] = operation; 
-}
-function hasOperation(operationCode) {
-	return (operationCode in operations); 
-}
-//Com Sequelize, apenas será necessário chamar o get da lista de Operations passando um parâmetro
-user.getOperations({ where: 'operationCode = "abc..."', attributes: ['operationCode'] }).then(function(operation) {
-  
-})
-
-
-
 
 --- 
-Tudo vai no body
-Atribui e inclui no lado do servidor
+Remover papel
+Verificação do encontro nos casos de edição
+Informação de campo obrigatório
+Replicar tudo para operações

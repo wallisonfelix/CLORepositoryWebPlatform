@@ -24,12 +24,17 @@
 	      	
 	      	<form action="/incluirOAC" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8">
 	      		<div class="form-group">
-    				<label for="fileInput" class="control-label col-sm-3">Pacote de Implantação :</label>
+    				<label for="fileInput" class="control-label col-sm-3">Pacote de Implantação <span class="required">*</span> :</label>
     				<div class="col-sm-9">
-    					<input id="fileInput" name="fileInput" type="file" class="form-control">
+    					<input id="fileInput" name="fileInput" type="file" class="form-control" required>
     					<span class="help-block">Informe o arquivo .CLO gerado pelo <em>CLOStudio</em></span>
     				</div>
 	      		</div>
+	      		<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<span class="required"><small>* Campos Obrigatórios</small></span>
+					</div>
+				</div>
 	      		<div class="form-group">
     				<div class="col-sm-offset-3 col-sm-9">
     					<input type="submit" name="btnEnviar" class="btn btn-info" value="Enviar">

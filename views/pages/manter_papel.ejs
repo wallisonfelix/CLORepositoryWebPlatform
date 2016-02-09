@@ -21,29 +21,37 @@
 			  <li>Home</li>
 			  <li>Administração</li>
 			  <li>Gerenciar Papéis</li>
-			  <li class="active">Incluir Papel</li>
+			  <li class="active"><% if(role.id) { %>Editar<% } else { %>Incluir<% } %> Papel</li>
 			</ol>
 
-			<form action="<% if(role.id) { %>/incluirPapel<% } else { %>/editarPapel<% } %>" method="post" role="form" class="form-horizontal" accept-charset="UTF-8">
+			<form action="<% if(role.id) { %>/editarPapel<% } else { %>/incluirPapel<% } %>" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8">
+				
+				<input id="idRole" name="idRole" type="hidden" value="<%= role.id %>" />
+
 				<div class="form-group">
-					<label for="name" class="control-label col-sm-3">Nome:</label>
+					<label for="name" class="control-label col-sm-3">Nome <span class="required">*</span> :</label>
 					<div class="col-sm-9">
-						<input id="name" name="name" type="text" value="<%= role.name %>" class="form-control"/>
+						<input id="name" name="name" type="text" value="<%= role.name %>" class="form-control" required/>
 						<span class="help-block">Informe o nome do Papel</span>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="code" class="control-label col-sm-3">Código:</label>
+					<label for="code" class="control-label col-sm-3">Código <span class="required">*</span> :</label>
 					<div class="col-sm-9">
-						<input id="code" name="code" type="text" value="<%= role.code %>" class="form-control"/>
+						<input id="code" name="code" type="text" value="<%= role.code %>" class="form-control" required/>
 						<span class="help-block">Informe o código que identificará o Papel unicamente</span>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="description" class="control-label col-sm-3">Descrição:</label>
+					<label for="description" class="control-label col-sm-3">Descrição <span class="required">*</span> :</label>
 					<div class="col-sm-9">
-						<textarea id="description" name="description" rows="5" value="<%= role.description %>" class="form-control"></textarea>
+						<textarea id="description" name="description" rows="5" class="form-control" required><%= role.description %></textarea>
 						<span class="help-block">Informe uma descrição que contenha o objetivo do Papel e a qual tipo de Usuário se destina</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<span class="required"><small>* Campos Obrigatórios</small></span>
 					</div>
 				</div>
 
@@ -52,6 +60,7 @@
 					<table class="table table-striped table-responsive">
 					    <thead>
 					      	<tr>
+					      		<th class="text-center"></th>
 					        	<th class="text-center">Nome</th>
 					        	<th class="text-center">Código</th>
 					        	<th class="text-center">Descrição</th>
@@ -61,6 +70,13 @@
 					    <% if(operations) {
 							for(var i = 0; i < operations.length; i++) { %>
 					      		<tr>
+					      			<td align="center"><input type="checkbox" name="checkOperation" value="<%= operations[i].code %>" <% 
+					      				if(roleOperations) {
+						      				for(var j = 0; j < roleOperations.length; j++) { 
+						      					if (operations[i].code == roleOperations[j].code) { %> checked <% break; } 
+						      				}
+						      			} %> />
+					      			</td>
 						        	<td class="text-left"><%= operations[i].name %></td>
 						        	<td class="text-center"><%= operations[i].code %></td>
 						        	<td class="text-left"><%= operations[i].description %></td>
@@ -79,7 +95,7 @@
 				</div>
 
 				<div class="form-group">
-					<div class="col-sm-offset-3 col-sm-9">
+					<div class="col-sm-12">
 						<input type="submit" name="btnSalvar" class="btn btn-info" value="Salvar"/>
 					</div>	
 				</div>

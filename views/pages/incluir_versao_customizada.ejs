@@ -24,33 +24,38 @@
 
 	      	<form action="/incluirVersaoCustomizada" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8" id="formData">
 	      		<div class="form-group">
-    				<label for="title" class="control-label col-sm-3">Título :</label>
+    				<label for="title" class="control-label col-sm-3">Título <span class="required">*</span> :</label>
     				<div class="col-sm-9">
-    					<input id="title" name="title" type="text" class="form-control">
+    					<input id="title" name="title" type="text" class="form-control" required>
     					<span class="help-block">Informe o título que identificará a sua Versão Customizada</span>
     				</div>
 	      		</div>
 	      		<div class="form-group">
-    				<label for="languages" class="control-label col-sm-3">Idiomas :</label>
+    				<label for="languages" class="control-label col-sm-3">Idiomas <span class="required">*</span> :</label>
     				<div class="col-sm-9">
-    					<input id="languages" name="languages" type="text" class="form-control">
+    					<input id="languages" name="languages" type="text" class="form-control" required>
     					<span class="help-block">Informe para quais idiomas a Versão Customizada estará disponível (informe-os separados por ";")</span>
     				</div>
 	      		</div>
 	      		<div class="form-group">
-    				<label for="description" class="control-label col-sm-3">Descrição :</label>
+    				<label for="description" class="control-label col-sm-3">Descrição <span class="required">*</span> :</label>
     				<div class="col-sm-9">
-    					<textarea id="description" name="description" rows="5" class="form-control"></textarea>
+    					<textarea id="description" name="description" rows="5" class="form-control" required></textarea>
     					<span class="help-block">Informe uma descrição detalhada das customizações que originaram esta nova Versão</span>
     				</div>
 	      		</div>
 	      		<div class="form-group">
-    				<label for="fileInput" class="control-label col-sm-3">Pacote de Versão Customizada :</label>
+    				<label for="fileInput" class="control-label col-sm-3">Pacote de Versão Customizada <span class="required">*</span>:</label>
     				<div class="col-sm-9">
-    					<input id="file" type="file" class="form-control" name="fileInput">
+    					<input id="file" type="file" class="form-control" name="fileInput" required>
     					<span class="help-block">Informe o arquivo .CLO resultante do processo de customização</span>
     				</div>
 	      		</div>
+	      		<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<span class="required"><small>* Campos Obrigatórios</small></span>
+					</div>
+				</div>
 	      		<div class="form-group">
     				<div class="col-sm-offset-3 col-sm-9">
     					<input type="submit" name="btnEnviar" class="btn btn-info" value="Enviar">
