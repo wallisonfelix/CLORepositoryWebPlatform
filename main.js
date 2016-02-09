@@ -449,6 +449,101 @@ app.get('/excluirPapel', function (req, res) {
 	});
 });
 
+app.get('/pesquisar_operacao', function (req, res) {
+	res.render('pages/pesquisar_operacao', {'result': null, name: '', code: '', description: '', 'messages': null });
+});
+
+app.get('/pesquisarOperacao', function (req, res) {
+
+	var name = req.query.name;
+	var code = req.query.code;
+	var description = req.query.description;
+
+	administration.buscarOperacoes(name, code, description, function(err, operations) {
+
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});
+		}
+
+		res.render('pages/pesquisar_operacao', {'result': operations, name: name, code: code, description: description, 'messages': null });
+	});
+});
+
+app.get('/incluir_operacao', function (req, res) {	
+	var operation = model.Operation.build({});
+	res.render('pages/manter_operacao', {'operation' : operation});	
+});
+
+app.post('/incluirOperacao', function (req, res) {
+
+	var name = req.body.name;
+	var code = req.body.code;
+	var description = req.body.description;
+	
+	administration.incluirOperacao(name, code, description, function (err, operation) {
+		
+		if(err) {
+			console.error(new Date() + " Erro ao Incluir Operação: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Incluir Operação: " + err], 'messagesTypes': ["danger"]});			
+		}
+		
+		res.render('pages/visualizar_operacao', {'operation' : operation, 'messages': ["Operação " + operation.id + " - " + operation.code + " incluída com sucesso"], 'messagesTypes': ["success"] } );		
+	});		
+});
+
+app.get('/editar_operacao', function (req, res) {
+
+	var idOperation = req.query.idOperation;
+
+	administration.buscarOperacaoPorId(idOperation, function (err, operation) {
+		
+		if(!err && !operation) {
+			err = new Error(" Operação " + idOperation + " não encontrada.");
+		}
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Operação: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operação: " + err], 'messagesTypes': ["danger"]});
+		} 
+		
+		res.render('pages/manter_operacao', {'operation' : operation});	
+	});
+});
+
+app.post('/editarOperacao', function (req, res) {
+
+	var idOperation = req.body.idOperation;
+	var name = req.body.name;
+	var code = req.body.code;
+	var description = req.body.description;	
+
+	administration.editarOperacao(idOperation, name, code, description, function (err, operation) {
+		
+		if(err) {
+			console.error(new Date() + " Erro ao Editar Operação: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Editar Operação: " + err], 'messagesTypes': ["danger"]});			
+		}
+
+		res.render('pages/visualizar_operacao', {'operation' : operation, 'messages': ["Operação " + idOperation + " atualizada com sucesso"], 'messagesTypes': ["success"] } );
+	});			
+});
+
+app.get('/excluirOperacao', function (req, res) {
+
+	var idOperation = req.query.idOperation;
+	var operationCode = req.query.operationCode;
+	
+	administration.excluirOperacao(idOperation, operationCode, function(err) {
+
+		if(err) {
+			console.error(new Date() + " Erro ao Excluir Operação: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Excluir Operação: " + err], 'messagesTypes': ["danger"]});			
+		}
+
+		res.render('pages/pesquisar_operacao', {'result': null, name: '', code: '', description: '', 'messages': ["Operação " + idOperation + " - " + operationCode + " excluída com sucesso"], 'messagesTypes': ["success"] });
+	});
+});
+
 // ***** Inicialização do Servidor *****
 
 app.use(express.static(__dirname + '/views/images'));

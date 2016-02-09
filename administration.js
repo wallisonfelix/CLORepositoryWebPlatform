@@ -172,8 +172,58 @@ var buscarOperacoes = function(name, code, description, callback) {
 		}
 		callback(null, operations);
 	}).catch(function (err) {		
-		console.error(new Date() + " Erro ao Pesquisar Õperações: " + err);
+		console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
 		callback(err, null);
+	});
+
+}
+
+//Inclui uma nova Operação no banco de dados, com base nos valores passados como parametro
+var incluirOperacao = function(name, code, description, callback) {
+
+	model.Operation.create( { name: name, code: code, description: description } ).then(function (operation) {
+		console.log(new Date() + " Nova Operação inserida: " + operation.id + " - " + operation.code + ".");
+		callback(null, operation);
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Incluir Operação: " + err);
+		callback(err, null);
+	});
+
+}
+
+//Edita uma Operação no banco de dados, com base nos valores passados como parametro
+var editarOperacao = function(idOperation, name, code, description, callback) {
+
+	model.Operation.update( { name: name, code: code, description: description }, { where: { id: idOperation }, returning: true } ).then(function (updatedOperations) {
+		
+		if(updatedOperations[0] == 1) {
+			operation = updatedOperations[1][0];
+			console.log(new Date() + " Operação atualizada: " + operation.id + " - " + operation.code + ".");
+			callback(null, operation);			
+		} else {
+			callback(new Error(" Operação " + idOperation + " não encontrada."), null);
+		}	
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Editar Operação: " + err);
+		callback(err, null);
+	});
+
+}
+
+//Exclui uma Operação no banco de dados, com base nos valores passados como parâmetro
+var excluirOperacao = function(idOperation, operationCode, callback) {
+
+	model.Operation.destroy( { where: { id: idOperation, code: operationCode } } ).then(function (qtyDeletedOperation) {
+		
+		if(qtyDeletedOperation == 1) {			
+			console.log(new Date() + " Operação excluída: " + idOperation + " - " + operationCode + ".");
+			callback(null);				
+		} else {
+			callback(new Error(" Operação " + idOperation + " - " + operationCode + " não encontrada."));
+		}	
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Excluir Operação: " + err);
+		callback(err);
 	});
 
 }
@@ -189,3 +239,6 @@ module.exports.buscarTodasOperacoes = buscarTodasOperacoes;
 module.exports.buscarOperacaoPorId = buscarOperacaoPorId;
 module.exports.buscarOperacoesPorCodigos = buscarOperacoesPorCodigos;
 module.exports.buscarOperacoes = buscarOperacoes;	
+module.exports.incluirOperacao = incluirOperacao;
+module.exports.editarOperacao = editarOperacao;
+module.exports.excluirOperacao = excluirOperacao;

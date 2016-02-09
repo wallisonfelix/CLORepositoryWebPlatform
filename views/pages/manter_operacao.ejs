@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+	    	<ol class="breadcrumb">
+			  <li>Home</li>
+			  <li>Administração</li>
+			  <li>Gerenciar Operações</li>
+			  <li class="active"><% if(operation.id) { %>Editar<% } else { %>Incluir<% } %> Operação</li>
+			</ol>
+
+			<form action="<% if(operation.id) { %>/editarOperacao<% } else { %>/incluirOperacao<% } %>" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8">
+				
+				<input id="idOperation" name="idOperation" type="hidden" value="<%= operation.id %>" />
+
+				<div class="form-group">
+					<label for="name" class="control-label col-sm-3">Nome <span class="required">*</span> :</label>
+					<div class="col-sm-9">
+						<input id="name" name="name" type="text" value="<%= operation.name %>" class="form-control" required/>
+						<span class="help-block">Informe o nome da Operação</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="code" class="control-label col-sm-3">Código <span class="required">*</span> :</label>
+					<div class="col-sm-9">
+						<input id="code" name="code" type="text" value="<%= operation.code %>" class="form-control" required/>
+						<span class="help-block">Informe o código que identificará a Operação unicamente</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label col-sm-3">Descrição <span class="required">*</span> :</label>
+					<div class="col-sm-9">
+						<textarea id="description" name="description" rows="5" class="form-control" required><%= operation.description %></textarea>
+						<span class="help-block">Informe uma descrição que contenha o objetivo da Operação</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<span class="required"><small>* Campos Obrigatórios</small></span>
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<div class="col-sm-12">
+						<input type="submit" name="btnSalvar" class="btn btn-info" value="Salvar"/>
+					</div>	
+				</div>
+			</form>
+	    </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+	    	<ol class="breadcrumb">
+			  <li>Home</li>
+			  <li>Administração</li>
+			  <li>Gerenciar Operações</li>
+			  <li class="active">Visualizar Operação</li>
+			</ol>
+
+			<% include ../partials/messages %>
+
+			<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formData">
+	      		
+	      		<div class="form-group">
+    				<label class="control-label col-sm-3">Nome :</label>
+    				<div class="col-sm-9">
+    					<p class="form-control-static"><%= operation.name %></span>
+    				</div>
+	      		</div>
+
+				<div class="form-group">
+    				<label class="control-label col-sm-3">Código :</label>
+    				<div class="col-sm-9">
+    					<p class="form-control-static"><%= operation.code %></span>
+    				</div>
+	      		</div>
+
+	      		<div class="form-group">
+    				<label class="control-label col-sm-3">Descrição :</label>
+    				<div class="col-sm-9">
+    					<p class="form-control-static"><%= operation.description %></span>
+    				</div>
+	      		</div>
+				
+				<div class="form-group">
+					<div class="col-sm-12">
+						<a href="/editar_operacao?idOperation=<%=operation.id%>" class="btn btn-info" role="button">Editar</a>
+						<a href="/pesquisar_operacao" class="btn btn-link" role="button">Pesquisar</a>
+					</div>	
+				</div>
+			</form>
+	      	
+	    </div>
+	  </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>
