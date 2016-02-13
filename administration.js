@@ -1,10 +1,125 @@
 var model = require('./model/models.js');
+var mail = require('./config/mail/mail.js');
 var console = require('console');
+var bcrypt = require('bcrypt-nodejs');
+
+//Inclui um novo Usuário no banco de dados, com base nos valores passados como parametro
+var incluirUsuario = function(name, email, profile, degreeOfFreedom, login, password, roles, callback) {
+	
+	var hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(8));
+	var emailValidated = false;
+	var userValidated = false;
+
+	model.User.create( { userValidated: userValidated, name: name, email: email, emailValidated: emailValidated, profile: profile, degree_of_freedom: degreeOfFreedom, login: login, password: hashPassword } ).then(function (user) {
+		console.log(new Date() + " Novo Usuário inserido: " + user.login + ".");
+		
+		user.setRoles(roles).then(function (roles) {
+			console.log(new Date() + " Atualizados os Papéis do Usuário: " + user.login + ".");
+			callback(null, user);
+		}).catch(function (err) {		
+			console.error(new Date() + " Erro ao Atualizar os Papéis do Usuário: " + err);
+			callback(err, null);
+		});	
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Incluir Usuário: " + err);
+		callback(err, null);
+	});
+
+}
+
+//Envia um email confirmando a realização de um cadastro de Usuário com o email passado como parametro
+var enviarEmailConfirmacaoCadastroUsuario = function(email, login, urlEmailValidation, callback) {
+
+	var validationCode = bcrypt.hashSync(password, bcrypt.genSaltSync(8));
+	var urlEmailValidation = urlEmailValidation + "?email=" + email + "&code=" + validationCode;
+
+	var mailOptions = {
+	    from: "CLO Web Platform <clowebplatform@gmail.com>",
+	    to: email,
+	    subject: "Confirmação de Cadastro - CLO Web Platform",
+	    html: "<b>Bem-vindo à CLO Web Platform</b><br /><br />" +
+	    		"<p>Foi realizado um cadastro de usuário na CLO Web Platform com este endereço de email.</p><br />" +
+	    		"<p>Para confirmar o cadastro, clique no link a seguir: " + urlEmailValidation + "</p><br /><br /><br />" +
+	    		"<p>Caso não tenha realizado o cadastro, desconsiderar este email</p><br /><br />" +
+	    		"<p>Cordialmente, <br />" +
+	    		"Equipe da CLO Web Platform</p>"
+	};
+
+	mail.sendMail(mailOptions, function(err, info){
+	   
+	    if(err){
+	        console.error(new Date() + " Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err);
+	        callback(err);
+	    }	    
+	    
+	    console.log(new Date() + " Enviado Email de Confirmação de Cadastro de Usuário: " + user.login + ".");
+	    callback(null);
+	});
+}
+
+//Realiza a busca de um Usuário específico, com base no identificador passado como parâmetro
+var buscarUsuarioPorId = function(idUser, callback) {
+
+	model.User.findById( idUser , { attributes: ['id', 'name', 'email', 'profile', 'degree_of_freedom', 'login' ], include: [ { model: model.Operation, as: "Roles"} ] } ).then(function (user) {
+		if (!user) {
+			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
+		}
+		callback(null, user);
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
+		callback(err, null);
+	});
+
+}
+
+//Edita um Usuário no banco de dados, com base nos valores passados como parametro
+var editarUsuario = function(idUser, name, email, profile, degreeOfFreedom, login, roles, callback) {
+
+	model.User.update( { name: name, email: email, profile: profile, degree_of_freedom: degreeOfFreedom, login: login }, { where: { id: idUser }, returning: true } ).then(function (updatedUsers) {
+		
+		if(updatedUsers[0] == 1) {
+			user = updatedUsers[1][0];
+			console.log(new Date() + " Usuário atualizado: " + user.id + " - " + user.login + ".");
+			
+			user.setRoles(roles).then(function (roles) {
+				console.log(new Date() + " Atualizados os Papéis do Usuário: " + user.id + " - " + user.login + ".");			
+				callback(null, user);
+			}).catch(function (err) {		
+				console.error(new Date() + " Erro ao Atualizar os Papéis do Usuário: " + err);
+				callback(err, null);
+			});	
+		} else {
+			callback(new Error(" Usuário " + idUser + " não encontrado."), null);
+		}	
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Editar Usuário: " + err);
+		callback(err, null);
+	});
+
+}
+
+//Exclui um Usuário no banco de dados, com base nos valores passados como parâmetro
+var excluirUsuario = function(idUser, userLogin, callback) {
+
+	model.User.destroy( { where: { id: idUser, login: userLogin } } ).then(function (qtyDeletedUser) {
+		
+		if(qtyDeletedUser == 1) {			
+			console.log(new Date() + " Usuário excluído: " + idUser + " - " + userLogin + ".");
+			callback(null);				
+		} else {
+			callback(new Error(" Usuário " + idUser + " - " + userLogin + " não encontrado."));
+		}	
+	}).catch(function (err) {
+		console.error(new Date() + " Erro ao Excluir Usuário: " + err);
+		callback(err);
+	});
+
+}
 
 //Realiza a busca de todos os Papéis contidos no banco de dados
 var buscarTodosPapeis = function(callback) {
 
-	model.Role.findAll( { attributes: ['id', 'name', 'code', 'description'], include: [ { model: model.Operation, as: "Operations"} ] } ).then(function (roles) {				
+	model.Role.findAll( { attributes: ['id', 'name', 'code', 'description'], include: [ { model: model.Operation, as: "Operations"} ], order: 'code' } ).then(function (roles) {				
 		if (roles.length == 0) {
 			console.log(new Date() + " Pesquisa por Papel com retorno vazio");
 		}
@@ -31,6 +146,21 @@ var buscarPapelPorId = function(idRole, callback) {
 
 }
 
+//Realiza a busca de Papéis cujo código está entre os informados como parâmetros
+var buscarPapeisPorCodigos = function(codes, callback) {
+
+	model.Role.findAll( { where: { code: { $in: codes} }, attributes: ['id', 'name', 'code', 'description'], order: 'code' } ).then(function (roles) {
+		if (roles.length == 0) {
+			console.log(new Date() + " Pesquisa por Papéis com retorno vazio");
+		}
+		callback(null, roles);
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
+		callback(err, null);
+	});
+
+}
+
 //Realiza a busca de Papéis cujo atributos correspondam com os valores repassados como parâmetro
 var buscarPapeis = function(name, code, description, callback) {
 
@@ -38,7 +168,7 @@ var buscarPapeis = function(name, code, description, callback) {
 	var code = "%" + code + "%";
 	var description = "%" + description + "%";
 
-	model.Role.findAll( { where: { name: { $iLike: name }, code: { $iLike: code }, description: { $iLike: description } }, attributes: ['id', 'name', 'code', 'description'] } ).then(function (roles) {				
+	model.Role.findAll( { where: { name: { $iLike: name }, code: { $iLike: code }, description: { $iLike: description } }, attributes: ['id', 'name', 'code', 'description'], order: 'code' } ).then(function (roles) {				
 		if (roles.length == 0) {
 			console.log(new Date() + " Pesquisa por Papel com retorno vazio");
 		}
@@ -117,7 +247,7 @@ var excluirPapel = function(idRole, roleCode, callback) {
 //Realiza a busca de todas as Operações contidas no banco de dados
 var buscarTodasOperacoes = function(callback) {
 
-	model.Operation.findAll( { attributes: ['id', 'name', 'code', 'description'] } ).then(function (operations) {				
+	model.Operation.findAll( { attributes: ['id', 'name', 'code', 'description'], order: 'code' } ).then(function (operations) {				
 		if (operations.length == 0) {
 			console.log(new Date() + " Pesquisa por Operações com retorno vazio");
 		}
@@ -147,7 +277,7 @@ var buscarOperacaoPorId = function(idOperation, callback) {
 //Realiza a busca de Operações cujo código está entre os informados como parâmetros
 var buscarOperacoesPorCodigos = function(codes, callback) {
 
-	model.Operation.findAll( { where: { code: { $in: codes} }, attributes: ['id', 'name', 'code', 'description'] } ).then(function (operations) {
+	model.Operation.findAll( { where: { code: { $in: codes} }, attributes: ['id', 'name', 'code', 'description'], order: 'code' } ).then(function (operations) {
 		if (operations.length == 0) {
 			console.log(new Date() + " Pesquisa por Operações com retorno vazio");
 		}
@@ -166,7 +296,7 @@ var buscarOperacoes = function(name, code, description, callback) {
 	var code = "%" + code + "%";
 	var description = "%" + description + "%";
 
-	model.Operation.findAll( { where: { name: { $iLike: name }, code: { $iLike: code }, description: { $iLike: description } }, attributes: ['id', 'name', 'code', 'description'] } ).then(function (operations) {				
+	model.Operation.findAll( { where: { name: { $iLike: name }, code: { $iLike: code }, description: { $iLike: description } }, attributes: ['id', 'name', 'code', 'description'], order: 'code' } ).then(function (operations) {				
 		if (operations.length == 0) {
 			console.log(new Date() + " Pesquisa por Operação com retorno vazio");
 		}
@@ -228,8 +358,12 @@ var excluirOperacao = function(idOperation, operationCode, callback) {
 
 }
 
+module.exports.incluirUsuario = incluirUsuario;
+module.exports.enviarEmailConfirmacaoCadastroUsuario = enviarEmailConfirmacaoCadastroUsuario;
+
 module.exports.buscarTodosPapeis = buscarTodosPapeis;
 module.exports.buscarPapelPorId = buscarPapelPorId;
+module.exports.buscarPapeisPorCodigos = buscarPapeisPorCodigos;
 module.exports.buscarPapeis = buscarPapeis;
 module.exports.incluirPapel = incluirPapel;
 module.exports.editarPapel = editarPapel;

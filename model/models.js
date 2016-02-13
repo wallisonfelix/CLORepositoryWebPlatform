@@ -8,12 +8,15 @@ var User = db.sequelize.define('user', {
 	id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
 	name: { type: Sequelize.STRING(255), allowNull: false, validate: { notEmpty: { args: true, msg: "Preencha o campo Nome do Usuário"} } }, 
 	email: { type: Sequelize.STRING(255), allowNull: false, unique: true, validate: { isEmail: { args: true, msg: "E-mail inválido"} } },
+	emailValidated: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
 	profile: { type: Sequelize.STRING(1024), defaultValue: null },
 	login: { type: Sequelize.STRING(32), allowNull: false, unique: true, validate: { notEmpty: { args: true, msg: "Preencha o campo Login do Usuário"} } },
-	password: { type: Sequelize.STRING(40), allowNull: false, validate: { notEmpty: { args: true, msg: "Preencha o campo Senha do Usuário"} } },
-	degree_of_fredom: { type: Sequelize.INTEGER(1), defaultValue: 0, validate: { min: { args: 0, msg: "O Grau de Liberdade do Usuário deve ser no mínimo 0"},  min: { args: 4, msg: "O Grau de Liberdade do Usuário deve ser no máximo 4"} } },
+	password: { type: Sequelize.STRING(64), allowNull: false, validate: { notEmpty: { args: true, msg: "Preencha o campo Senha do Usuário"} } },
+	degree_of_freedom: { type: Sequelize.INTEGER(1), allowNull: false, defaultValue: 0, 
+		validate: { isNumeric: { args: true, msg: "O Grau de Liberdade do Usuário deve ser um número"}, min: 0, max: 4 } },
+	userValidated: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
 }, {
-	tableName: "usuarios",
+	tableName: "users",
 	timestamps: true,
 	underscored: true,
 	indexes: [ {
@@ -68,7 +71,7 @@ Role.belongsToMany(Operation, { constraints: true, as: 'Operations', through: 'r
 User.belongsToMany(Role, { constraints: true, as: 'Roles', through: 'user_roles', foreignKey: 'user_id', otherKey: 'role_id', timestamps: false, onDelete: 'cascade', onUpdate: 'cascade'});
 
 //Deleta e Recria o Banco de Dados - Apenas para o ambiente de DESENVOLVIMENTO.
-//db.sequelize.sync( { force: true } );
+db.sequelize.sync( { force: true } );
 db.sequelize.sync();
 
 module.exports.User = User;

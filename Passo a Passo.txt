@@ -1,8 +1,7 @@
 - Implementar a autenticação com passport
-- Criar página de cadastro de usuário
 - Criar página de login
-- Adicionar um fluxo de administrador para validar o papel solicitado pelo usuário
-- Adicionar as validações para cada página
+- Criar página de recuperação de senha
+- Adicionar as validações de acesso para cada página (tratadores de request no main.js - sempre ter um if no início - Acesso negado...)
 
 //Para verificar se um usuário possui uma permissão (operação)
 
@@ -21,7 +20,10 @@ user.getRoles({ where: 'roleCode = "abc..."', attributes: ['roleCode'] }).then(f
 
 
 --- 
-Remover papel
-Verificação do encontro nos casos de edição
-Informação de campo obrigatório
-Replicar tudo para operações
+
+Falta implementar
+- Validação de email
+- Carregar apenas emails validados na pesquisa de Usuário
+- Pesquisa de usuário para a validação (na pesquisa aparece se foi ou não validado - Não um X em vermelho) - Incluir opção de validar
+- Edição de usuário validando-o (email informando o usuário no final - falar dos dados dele).
+- Troca de senha
