@@ -67,26 +67,26 @@
 					      	</tr>
 					    </thead>
 					    <tbody>
-					    <% if(roles) {
-							for(var i = 0; i < roles.length; i++) { %>
+					    <% if(operations) {
+							for(var i = 0; i < operations.length; i++) { %>
 					      		<tr>
-					      			<td align="center"><input type="checkbox" name="checkOperation" value="<%= roles[i].code %>" <% 
-					      				if(userRoles) {
-						      				for(var j = 0; j < userRoles.length; j++) { 
-						      					if (roles[i].code == userRoles[j].code) { %> checked <% break; } 
+					      			<td align="center"><input type="checkbox" name="checkOperation" value="<%= operations[i].code %>" <% 
+					      				if(roleOperations) {
+						      				for(var j = 0; j < roleOperations.length; j++) { 
+						      					if (operations[i].code == roleOperations[j].code) { %> checked <% break; } 
 						      				}
 						      			} %> />
 					      			</td>
-						        	<td class="text-left"><%= roles[i].name %></td>
-						        	<td class="text-center"><%= roles[i].code %></td>
-						        	<td class="text-left"><%= roles[i].description %></td>
+						        	<td class="text-left"><%= operations[i].name %></td>
+						        	<td class="text-center"><%= operations[i].code %></td>
+						        	<td class="text-left"><%= operations[i].description %></td>
 				      			</tr>
 					      	<%	}
 							} %>
 					    </tbody>
 					</table>
 
-					<% if(!roles || roles.length == 0) { %>
+					<% if(!operations || operations.length == 0) { %>
 						<div class="alert alert-warning fade in">
 							Nenhum Papel retornado
 						</div>

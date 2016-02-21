@@ -304,67 +304,57 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 // ***** Auto-cadastro *****
 
 app.get('/incluir_usuario', function (req, res) {
-	administration.buscarTodosPapeis(function (err, roles) {
-		
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		res.render('pages/incluir_usuario', {'roles': roles});
-	});	
+	res.render('pages/incluir_usuario');	
 });
 
 app.post('/incluirUsuario', function (req, res) {
 
 	var name = req.body.name;
 	var email = req.body.email;
-	var profile = req.body.profile;
-	var degreeOfFreedom = req.body.degreeOfFreedom;
+	var profile = req.body.profile;	
 	var login = req.body.login;
 	var password = req.body.password;
-	//Um array é retornado apenas quando mais de um Papel é selecionado
-	var roleCodes;
-	if ( Array.isArray(req.body.checkRole) ) {
-		roleCodes = req.body.checkRole;
-	} else {
-		roleCodes = new Array(req.body.checkRole);
-	}
 
-	administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
+	administration.incluirUsuario(name, email, profile, login, password, function (err, user) {
 		
 		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
+			console.error(new Date() + " Erro ao Incluir Usuário: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Incluir Usuário: " + err], 'messagesTypes': ["danger"]});			
 		}
 
-		administration.incluirUsuario(name, email, profile, degreeOfFreedom, login, password, roles, function (err, user) {
-			
+		var urlEmailValidation = serverAddress + "/validarEmail";
+		administration.enviarEmailConfirmacaoCadastroUsuario(user.email, user.login, urlEmailValidation, function (err) {
+
 			if(err) {
-				console.error(new Date() + " Erro ao Incluir Usuário: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Incluir Usuário: " + err], 'messagesTypes': ["danger"]});			
+				console.error(new Date() + " Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err], 'messagesTypes': ["danger"]});
 			}
+	
+			res.render('pages/visualizar_usuario', {'user' : user, 'userRoles': null, 'messages': ["Usuário " + user.login + " incluído com sucesso", "Você receberá um email para confirmação do cadastro"], 'messagesTypes': ["success", "warning"] } );
+		});
+	});		
+});
 
-			var urlEmailValidation = serverAddress + "/validarEmail";
-			administration.enviarEmailConfirmacaoCadastroUsuario(user.email, user.login, urlEmailValidation).then(function (err) {
+app.get('/validarEmail', function (req, res) {
 
-				if(err) {
-					console.error(new Date() + " Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err);
-					res.render('pages/index', {'messages': ["Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err], 'messagesTypes': ["danger"]});
-				}
+	var email = req.query.email;
+	var code = req.query.code;
 
-				user.getRoles().then(function (userRoles) {			
-					res.render('pages/visualizar_usuario', {'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + user.login + " incluído com sucesso", "Você receberá um email para confirmação do cadastro"], 'messagesTypes': ["success", "warning"] } );
-				});
-			});
-		});		
+	administration.validarEmailConfirmacaoCadastroUsuario(email, code, function (err) {
+
+		if(err) {
+			console.error(new Date() + " Erro ao Validar Email de Confirmação de Cadastro de Usuário: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Validar Email de Confirmação de Cadastro de Usuário: " + err], 'messagesTypes': ["danger"]});
+		}
+			
+		res.render('pages/index', { 'messages': ["Email validado com sucesso", "Em breve você receberá um email com o resultado da análise do seu cadastro"], 'messagesTypes': ["success", "warning"] } );
 	});
 });
 
 // ***** Administração do Repositório *****
 
 app.get('/pesquisar_usuario', function (req, res) {
-	res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', 'messages': null });
+	res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': null });
 });
 
 app.get('/pesquisarUsuario', function (req, res) {
@@ -373,15 +363,17 @@ app.get('/pesquisarUsuario', function (req, res) {
 	var email = req.query.email;
 	var login = req.query.login;
 	var degreeOfFreedom = req.query.degreeOfFreedom;
+	var emailValidated = req.query.checkEmailValidated;
+	var userValidated = req.query.checkUserValidated;
 
-	administration.buscarUsuarios(name, email, login, degreeOfFreedom, function(err, users) {
+	administration.buscarUsuarios(name, email, login, degreeOfFreedom, emailValidated, userValidated, function(err, users) {
 
 		if(err) {
 			console.error(new Date() + " Erro ao Pesquisar Usuários: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Pesquisar Usuários: " + err], 'messagesTypes': ["danger"]});			
 		}
 
-		res.render('pages/pesquisar_usuario', {'result': users, name: name, login: login, degreeOfFreedom: degreeOfFreedom, 'messages': null });
+		res.render('pages/pesquisar_usuario', {'result': users, name: name, email: email, login: login, degreeOfFreedom: degreeOfFreedom, emailValidated: emailValidated, userValidated: userValidated, 'messages': null });
 	});
 });
 
@@ -389,28 +381,82 @@ app.get('/editar_usuario', function (req, res) {
 
 	var idUser = req.query.idUser;
 
-	administration.buscarUserPorId(idUser, function (err, role) {
-		
-		if(!err && !user) {
-			err = new Error(" Usuário " + idUser + " não encontrado.");
+	administration.buscarUsuarioPorId(idUser, function (err, user) {		
+
+		if (!err && !user) {		
+			err = new Error(" Usuário " + idUser + " não encontrado.");			
+		} else if (!err && !user.emailValidated) {		
+			err = new Error(" Usuário " + idUser + " com email validado não encontrado.");			
 		}
+
 		if(err) {
 			console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
 			res.render('pages/index', {'messages': ["Erro ao Pesquisar Usuário: " + err], 'messagesTypes': ["danger"]});
 		} 
 
 		administration.buscarTodosPapeis(function (err, roles) {
-		
+
 			if(err) {
 				console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
 				res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
 			}
 
-			user.getRoles().then(function (userRoles) {			
+			user.getRoles().then(function (userRoles) {		
 				res.render('pages/editar_usuario', {'user' : user, 'userRoles': userRoles, 'roles': roles});
 			});			
 		});
 	});
+});
+
+app.post('/validarUsuario', function (req, res) {
+
+	var idUser = req.body.idUser;
+	var userValidated = req.body.checkUserValidated;
+
+	if (userValidated) {		
+		var name = req.body.name;
+		var email = req.body.email;
+		var profile = req.body.profile;
+		var degreeOfFreedom = req.body.degreeOfFreedom;
+		var login = req.body.login;
+		//Um array é retornado apenas quando mais de um Papel é selecionado
+		var roleCodes;
+		if ( Array.isArray(req.body.checkRole) ) {
+			roleCodes = req.body.checkRole;
+		} else {
+			roleCodes = new Array(req.body.checkRole);
+		}
+
+		administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
+			
+			if(err) {
+				console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
+			}
+		
+			administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
+				
+				if(err) {
+					console.error(new Date() + " Erro ao Editar Usuário: " + err);
+					res.render('pages/index', {'messages': ["Erro ao Editar Usuário: " + err], 'messagesTypes': ["danger"]});			
+				}
+
+				administration.enviarEmailValidacaoCadastroUsuario(user.email, user, function (err) {
+
+					if(err) {
+						console.error(new Date() + " Erro ao Enviar Email de Validação de Cadastro de Usuário: " + err);
+						res.render('pages/index', {'messages': ["Erro ao Enviar Email de Validação de Cadastro de Usuário: " + err], 'messagesTypes': ["danger"]});
+					}
+
+					user.getRoles().then(function (userRoles) {			
+						res.render('pages/visualizar_usuario', {'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + idUser + " validado com sucesso", "Um email com o resultado da análise do cadastro foi enviado ao Usuário"], 'messagesTypes': ["success", "warning"] } );
+					});
+				});
+			});		
+		});
+	} else {
+		res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': ["Validação do Usuário " + idUser + " não confirmada.", "Atualização do Usuário " + idUser + " não realizada."], 'messagesTypes': ["danger", "warning"] } );
+	}
 });
 
 app.post('/editarUsuario', function (req, res) {
@@ -462,7 +508,7 @@ app.get('/excluirUsuario', function (req, res) {
 			res.render('pages/index', {'messages': ["Erro ao Excluir Usuário: " + err], 'messagesTypes': ["danger"]});			
 		}
 
-		res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', 'messages': ["Usuário " + idUser + " - " + userLogin + " excluído com sucesso"], 'messagesTypes': ["success"] });
+		res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': ["Usuário " + idUser + " - " + userLogin + " excluído com sucesso"], 'messagesTypes': ["success"] });
 	});
 });
 

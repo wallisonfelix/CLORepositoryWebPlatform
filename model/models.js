@@ -71,7 +71,7 @@ Role.belongsToMany(Operation, { constraints: true, as: 'Operations', through: 'r
 User.belongsToMany(Role, { constraints: true, as: 'Roles', through: 'user_roles', foreignKey: 'user_id', otherKey: 'role_id', timestamps: false, onDelete: 'cascade', onUpdate: 'cascade'});
 
 //Deleta e Recria o Banco de Dados - Apenas para o ambiente de DESENVOLVIMENTO.
-db.sequelize.sync( { force: true } );
+//db.sequelize.sync( { force: true } );
 db.sequelize.sync();
 
 module.exports.User = User;
