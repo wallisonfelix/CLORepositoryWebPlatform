@@ -1,6 +1,15 @@
 - Implementar a autenticação com passport
-- Criar página de login
-- Criar página de recuperação de senha
+- Criar página de login 
+(pede usuário e senha 
+linkar para o cadastro e para a recuperação de senha 
+redirecionará o usuário para o index informando que foi autenticado com sucesso
+caso não tenha sido autenticado, informará usuário e/ou senha inválidos na própria tela de login)
+- Criar página de recuperação de senha 
+(pede o email cadastrado 
+envia um email para o usuário para ele fazer a recuperação
+o email, nos moldes do email de validação de email
+ao clicar no link, irá para uma tela, caso esteja o link correto, nela ele irá alterar a senha
+caso o link esteja errado, redireciona para a área de trabalho informando que o link está errado)
 - Adicionar as validações de acesso para cada página (tratadores de request no main.js - sempre ter um if no início - Acesso negado...)
 
 //Para verificar se um usuário possui uma permissão (operação)

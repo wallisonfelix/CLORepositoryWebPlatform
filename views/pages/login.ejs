@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+	    	<ol class="breadcrumb">
+			  <li>Home</li>
+			  <li>Realizar Login</li>			  
+			</ol>
+
+			<% include ../partials/messages %>
+
+			<form action="/realizarLogin" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8">		
+
+				<div class="form-group">
+					<label for="login" class="control-label col-sm-3">Login <span class="required">*</span> :</label>
+					<div class="col-sm-4">
+						<input id="login" name="login" type="text" class="form-control" required/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="password" class="control-label col-sm-3">Senha <span class="required">*</span> :</label>
+					<div class="col-sm-4">
+						<input id="password" name="password" type="password" class="form-control" required/>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<span class="required"><small>* Campos Obrigatórios</small></span>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<input type="submit" name="btnRealizarLogin" class="btn btn-info" value="Realizar Login"/>
+					</div>	
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<a href="/recuperar_senha" class="btn btn-link" role="button">Esqueceu a Senha ?</a>
+					</div>	
+					<div class="col-sm-offset-3 col-sm-9">
+						<a href="/incluir_usuario" class="btn btn-link" role="button">Não possui Cadastro ?</a>
+					</div>
+				</div>				
+			</form>
+	    </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>

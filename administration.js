@@ -66,9 +66,9 @@ var buscarUsuarioPorId = function(idUser, callback) {
 }
 
 //Realiza a busca de um Usuário específico que não esteja com o seu email validado, com base no email passado como parâmetro
-var buscarUsuarioPorEmailNaoValidado = function(email, callback) {
+var buscarUsuarioPorEmail = function(email, emailValidated, callback) {
 
-	model.User.findOne( { where: { email: email, emailValidated: false }, attributes: ['id', 'name', 'email', 'emailValidated', 'profile', 'degree_of_freedom', 'login', 'userValidated' ], include: [ { model: model.Role, as: "Roles"} ] } ).then(function (user) {
+	model.User.findOne( { where: { email: email, emailValidated: emailValidated }, attributes: ['id', 'name', 'email', 'emailValidated', 'profile', 'degree_of_freedom', 'login', 'userValidated' ], include: [ { model: model.Role, as: "Roles"} ] } ).then(function (user) {
 		if (!user) {
 			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
 		}
@@ -113,7 +113,7 @@ var buscarUsuarios = function(name, email, login, degreeOfFreedom, emailValidate
 //Valida email de confirmação da realização de cadastro de Usuário, com base no email e no código passados como parâmetro
 var validarEmailConfirmacaoCadastroUsuario = function(email, code, callback) {
 
-	buscarUsuarioPorEmailNaoValidado(email, function(err, user) {
+	buscarUsuarioPorEmail(email, false, function(err, user) {
 
 		if(err){
 	        console.error(new Date() + " Erro ao Validar Email de Confirmação de Cadastro de Usuário: " + err);
@@ -475,11 +475,83 @@ var excluirOperacao = function(idOperation, operationCode, callback) {
 
 }
 
+//Envia um email informando que foi solicitada a redefinição de senha para o usuário cujo email e login são passados como parâmetro
+//O email também inclui a URL para a redefinição da senha
+var enviarEmailRedefinicaoSenha = function(email, login, urlPasswordRedefine, callback) {
+
+	var validationCode = bcrypt.hashSync(login, bcrypt.genSaltSync(8));
+	var urlPasswordRedefine = urlPasswordRedefine + "?email=" + email + "&code=" + validationCode;
+
+	var mailOptions = {
+	    from: "CLO Web Platform <clowebplatform@gmail.com>",
+	    to: email,
+	    subject: "Solicitação de Redefinição de Senha - CLO Web Platform",
+	    html: "<b>Seguem abaixo as instruções para a redefinição de sua senha na CLO Web Platform</b><br /><br />" +
+	    		"<p>Foi realizada uma solicitação de redefinição de senha na CLO Web Platform para o usuário com este endereço de email.</p>" +
+	    		"<p>Para proceder com a redefinição de senha, clique no link a seguir: " + urlPasswordRedefine + "</p><br />" +
+	    		"<p>Caso não tenha realizado essa solicitação de redefinição, desconsiderar este email.</p><br />" +
+	    		"<p>Atenciosamente, <br />" +
+	    		"Equipe da CLO Web Platform</p>"
+	};
+
+	mail.sendMail(mailOptions, function(err, info){
+	   
+	    if(err){
+	        console.error(new Date() + " Erro ao Enviar Email para Redefinição de Senha: " + err);
+	        callback(err);
+	    }	    
+	    
+	    console.log(new Date() + " Enviado Email para Redefinição de Senha: " + login + ".");
+	    callback(null);
+	});
+}
+
+//Redefine a senha do usuário cujo email foi passado como parâmetro, considerando que o código de validação passado como parâmetro está correto
+var redefinirSenha = function(newPassword, email, code, callback) {
+
+	buscarUsuarioPorEmail(email, true, function(err, user) {
+
+		if(err){
+	        console.error(new Date() + " Erro ao Redefinir Senha: " + err);
+	        callback(err);
+	    }	    
+
+		if (user) {
+			var codeValidated = bcrypt.compareSync(user.login, code);
+			
+			if (codeValidated) {
+				var hashPassword = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(8));
+
+				model.User.update( { password: hashPassword }, { where: { id: user.id }, returning: true } ).then(function (updatedUsers) {										
+			
+					if(updatedUsers[0] == 1) {
+						user = updatedUsers[1][0];
+						console.log(new Date() + " Usuário atualizado: " + user.id + " - " + user.login + ".");											
+						console.log(new Date() + " Senha de Usuário Redefinida: " + user.login + ".");
+	    				callback(null);
+					} else {
+						callback(new Error(" Erro ao Atualizar Campo Senha do Usuário."));
+					}	
+
+				}).catch(function (err) {		
+					console.error(new Date() + " Erro ao Atualizar Campo Senha do Usuário: " + err);
+					callback(err);
+				});			
+			} else {
+				callback(new Error(" Código de validação não corresponde."));	
+			}
+
+		} else {
+			callback(new Error(" Usuário com o email validado " + email + " não encontrado."));
+		}	
+	});
+}
+
 module.exports.incluirUsuario = incluirUsuario;
 module.exports.enviarEmailConfirmacaoCadastroUsuario = enviarEmailConfirmacaoCadastroUsuario;
 module.exports.validarEmailConfirmacaoCadastroUsuario = validarEmailConfirmacaoCadastroUsuario;
 module.exports.buscarUsuarioPorId = buscarUsuarioPorId;
-module.exports.buscarUsuarioPorEmailNaoValidado = buscarUsuarioPorEmailNaoValidado;
+module.exports.buscarUsuarioPorEmail = buscarUsuarioPorEmail;
 module.exports.buscarUsuarios = buscarUsuarios;
 module.exports.enviarEmailValidacaoCadastroUsuario = enviarEmailValidacaoCadastroUsuario;
 module.exports.editarUsuario = editarUsuario;
@@ -500,3 +572,6 @@ module.exports.buscarOperacoes = buscarOperacoes;
 module.exports.incluirOperacao = incluirOperacao;
 module.exports.editarOperacao = editarOperacao;
 module.exports.excluirOperacao = excluirOperacao;
+
+module.exports.enviarEmailRedefinicaoSenha = enviarEmailRedefinicaoSenha;
+module.exports.redefinirSenha = redefinirSenha;

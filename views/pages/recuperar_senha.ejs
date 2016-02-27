@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+	    	<ol class="breadcrumb">
+			  <li>Home</li>
+			  <li>Recuperar Senha</li>			  
+			</ol>	
+
+			<form action="/recuperarSenha" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8">		
+
+				<div class="form-group">
+					<label for="email" class="control-label col-sm-3">Email <span class="required">*</span> :</label>
+					<div class="col-sm-9">
+						<input id="email" name="email" type="email" class="form-control" required/>
+						<span class="help-block">Informe o seu email cadastrado</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<span class="required"><small>* Campos Obrigatórios</small></span>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<input type="submit" name="btnRecuperarSenha" class="btn btn-info" value="Recuperar Senha"/>
+					</div>	
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<a href="/login" class="btn btn-link" role="button">Já possui Cadastro ?</a>
+					</div>	
+				</div>
+			</form>
+	    </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>

@@ -6,6 +6,7 @@ var administration = require('./administration.js');
 var path = require('path');
 var fs = require('fs');
 var zip = require('adm-zip');
+var cookieParser = require('cookie-parser');
 var express = require('express');
 var app = express();
 var http = require('http');
@@ -24,9 +25,17 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 };
 
-app.use(multer({dest:"./sent"}))
+app.use(multer({dest:"./sent"}));
 
-app.set('views', './views')
+// Confirgurações para Autenticação e Autorização
+//require('./config/auth/passport')(passport);
+
+//app.user(cookieParser());
+//app.use(session({ secret: '12345' }));
+//app.use(passport.initialize());
+//app.use(passport.session());
+
+app.set('views', './views');
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {  
@@ -298,6 +307,101 @@ app.post("/incluirVersaoCustomizada", function(req, res)
 			mongoConnection.close();
 			res.render('pages/index', {'messages': ["Versão Customizada incluída com sucesso"], 'messagesTypes': ["success"]});
 		});
+	});
+});
+
+// ***** Autenticação *****
+
+//Verifica se o Usuário que acessa está logado
+function isLoggedIn(req, res, next) {
+
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    //Caso o Usuário não esteja autenticado na plataforma, ele é redirecionado para tela inicial e é informado da exigência da autenticação
+    res.render('pages/index', {'messages': ["Acesso negado! Esta funcionalidade demanda autenticação no sistema"], 'messagesTypes': ["danger"] });
+}
+
+
+
+app.get('/login', function (req, res) {
+	res.render('pages/login', {'messages': null});	
+});
+
+app.post('/realizarLogin', function (req, res) {
+
+	//usar callback aqui...
+	passport.authenticate('local-login', {
+        successRedirect : '/profile', // redirect to the secure profile section
+        failureRedirect : '/login', // redirect back to the signup page if there is an error
+        failureFlash : true // allow flash messages
+    });
+
+	
+});
+
+app.post('/realizarLogout', function (req, res) {
+		
+	//Descobrir como se faz o logout
+
+});
+
+
+
+app.get('/recuperar_senha', function (req, res) {
+	res.render('pages/recuperar_senha');	
+});
+
+app.post('/recuperarSenha', function (req, res) {
+	
+	var email = req.body.email;
+	
+	administration.buscarUsuarioPorEmail(email, true, function (err, user) {
+		
+		if (!err && !user) {		
+			err = new Error(" Usuário com email validado " + email + " não encontrado.");			
+		}
+
+		if(err) {
+			console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Pesquisar Usuário: " + err], 'messagesTypes': ["danger"]});
+		} 
+
+		var urlPasswordRedefine = serverAddress + "/redefinir_senha";
+		administration.enviarEmailRedefinicaoSenha(user.email, user.login, urlPasswordRedefine, function (err) {
+
+			if(err) {
+				console.error(new Date() + " Erro ao Enviar Email para Redefinição de Senha: " + err);
+				res.render('pages/index', {'messages': ["Erro ao Enviar Email para Redefinição de Senha: " + err], 'messagesTypes': ["danger"]});
+			}
+	
+			res.render('pages/index', {'messages': ["Você receberá um email para a redefinição de senha"], 'messagesTypes': ["warning"] } );
+		});
+	});	
+});
+
+app.get('/redefinir_senha', function (req, res) {
+
+	var email = req.query.email;
+	var code = req.query.code;
+
+	res.render('pages/redefinir_senha', { email: email, code: code });	
+});
+
+app.post('/redefinirSenha', function (req, res) {
+	
+	var email = req.body.email;
+	var code = req.body.code;
+	var newPassword = req.body.newPassword;
+
+	administration.redefinirSenha(newPassword, email, code, function (err) {
+
+		if(err) {
+			console.error(new Date() + " Erro ao Redefinir Senha de Usuário: " + err);
+			res.render('pages/index', {'messages': ["Erro ao Redefinir Senha de Usuário: " + err], 'messagesTypes': ["danger"]});
+		}
+			
+		res.render('pages/login', { 'messages': ["Senha redefinda com sucesso"], 'messagesTypes': ["success", "success"] } );
 	});
 });
 
