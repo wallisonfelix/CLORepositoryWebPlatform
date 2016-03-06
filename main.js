@@ -1,4 +1,5 @@
 var db = require('./config/database/db.js');
+var passport = require('./config/auth/passport.js');
 var model = require('./model/models.js');
 var cloRepository = require('./cloRepository.js');
 var cloUtils = require('./cloUtils.js');
@@ -7,6 +8,7 @@ var path = require('path');
 var fs = require('fs');
 var zip = require('adm-zip');
 var cookieParser = require('cookie-parser');
+var session = require('express-session');
 var express = require('express');
 var app = express();
 var http = require('http');
@@ -28,56 +30,80 @@ if (typeof String.prototype.startsWith != 'function') {
 app.use(multer({dest:"./sent"}));
 
 // Confirgurações para Autenticação e Autorização
-//require('./config/auth/passport')(passport);
-
-//app.user(cookieParser());
-//app.use(session({ secret: '12345' }));
-//app.use(passport.initialize());
-//app.use(passport.session());
+app.use(cookieParser());
+app.use(session({ secret: '12345' }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.set('views', './views');
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {  
-  res.render('pages/index', {'messages': null});
+	if (req.user) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': null});
+		});
+	} else {
+		res.render('pages/index', { authenticatedUser: null, 'messages': null});
+	}
 });
 
 // ***** Gerenciamento dos Objetos de Aprendizagem Customizáveis *****
 
-app.get('/incluir_oac', function (req, res) {
-	res.render('pages/incluir_oac');
-});
+app.get('/incluir_oac', isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_oac', req, res, next);
+	}, function (req, res) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/incluir_oac', { authenticatedUser: req.user, operationCodes: operationCodes });
+		});
+	}
+);
 
 app.get('/pesquisar_oac', function (req, res) {
-	res.render('pages/pesquisar_oac', {'result' : null, 'title' : ''});
+	if (req.user) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/pesquisar_oac', { authenticatedUser: req.user, operationCodes: operationCodes, 'result' : null, 'title' : ''});
+		});
+	} else {
+		res.render('pages/pesquisar_oac', { authenticatedUser: null, 'result' : null, 'title' : ''});	
+	}
 });
 
-app.get('/incluir_versao_customizada', function (req, res) {
-	res.render('pages/incluir_versao_customizada');
-});
+app.get('/incluir_versao_customizada', isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_versao_customizada', req, res, next);
+	}, function (req, res) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/incluir_versao_customizada', { authenticatedUser: req.user, operationCodes: operationCodes });
+		});	
+	}
+);
 
-app.get('/pesquisarOAC', function (req, res)
-{
+app.get('/pesquisarOAC', function (req, res) {
+	
 	var title = req.query.title;
-	db.mongo.open(function(err, mongoConnection)
-	{
-		if(err)
-		{
-			console.error(new Date() + " Erro ao Pesquisar OAC: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
+
+	db.mongo.open(function(err, mongoConnection) {
+
+		if (err) {
+			redirectError("Erro ao Pesquisar OAC", err, req, res);
 			db.mongo.close();
 		}
 
 		cloRepository.buscarOAC(mongoConnection, title, function(err, result) {
 			
 			if(err) {
-				console.error(new Date() + " Erro ao Pesquisar OAC: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Pesquisar OAC: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Pesquisar OAC", err, req, res);
 				db.mongo.close();
 			}
 
 			mongoConnection.close();
-			res.render('pages/pesquisar_oac', {'result' : result, 'title' : title});
+			if (req.user) {
+				req.user.operationCodes(function(operationCodes) {
+					res.render('pages/pesquisar_oac', { authenticatedUser: req.user, operationCodes: operationCodes, 'result' : result, 'title' : title});
+				});
+			} else {
+				res.render('pages/pesquisar_oac', { authenticatedUser: null, 'result' : result, 'title' : title});
+			}
 		});
 	});
 });
@@ -85,49 +111,51 @@ app.get('/pesquisarOAC', function (req, res)
 app.get('/visualizarMetadadosOAC', function (req, res) {
 	
 	var idOAC = req.query.id;
+
 	db.mongo.open(function(err, mongoConnection) {
 		if(err) { 
-			console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Visualizar Metadados de OAC: " + err], 'messagesTypes': ["danger"]});
+			redirectError("Erro ao Visualizar Metadados de OAC", err, req, res);			
 			db.mongo.close();
 		}
 
 		cloRepository.buscarMetadadosOAC(mongoConnection, idOAC, function(err, metadados) {
 			
 			if(err) {
-				console.error(new Date() + " Erro ao Visualizar Metadados de OAC: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Visualizar Metadados de OAC: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Visualizar Metadados de OAC", err, req, res);
 				db.mongo.close();
 			}
 
 			mongoConnection.close();
-			res.render('pages/visualizar_metadados_oac', {'metadados' : metadados});
+			
+			if (req.user) {
+				req.user.operationCodes(function(operationCodes) {
+					res.render('pages/visualizar_metadados_oac', { authenticatedUser: req.user, operationCodes: operationCodes, 'metadados' : metadados});
+				});
+			} else {
+				res.render('pages/visualizar_metadados_oac', { authenticatedUser: null, 'metadados' : metadados});
+			}
 		});
 	});
 });
 
-app.get("/baixarOAC", function(res, req)
-{
+app.get("/baixarOAC", function(res, req) {
 	//Lê a identificação do DescritorDeArquivoExecutável e o diretório em que 
 	//o arquivo executável está localizado no servidor
 	var id = req.req.query.id
 	var filePath = req.req.query.filePath
 
-	db.mongo.open(function(err, mongoConnection)
-	{
-		if(err)
-		{
-			console.error(new Date() + " Erro ao Baixar OAC: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Baixar OAC: " + err], 'messagesTypes': ["danger"]});
+	db.mongo.open(function(err, mongoConnection) {
+		
+		if (err) {
+			redirectError("Erro ao Baixar OAC", err, req, res);
 			db.mongo.close();
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando o OAC
-		cloRepository.gerarPacoteOAC(mongoConnection, id, filePath, function(err, oac)
-		{			
+		cloRepository.gerarPacoteOAC(mongoConnection, id, filePath, function(err, oac) {			
+			
 			if(err) {
-				console.error(new Date() + " Erro ao Baixar OAC: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Baixar OAC: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Baixar OAC", err, req, res);
 				db.mongo.close();
 			}
 
@@ -152,21 +180,25 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 
 	db.mongo.open(function(err, mongoConnection) {
 		if(err) { 
-			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+			redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 			db.mongo.close();
 		}
 
 		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
-				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 				db.mongo.close();
 			}
 
-			mongoConnection.close();
-			res.render('pages/listar_versoes_customizadas', {'versoesCustomizadas' : versoesCustomizadas});
+			mongoConnection.close();			
+			if (req.user) {
+				req.user.operationCodes(function(operationCodes) {
+					res.render('pages/listar_versoes_customizadas', { authenticatedUser: req.user, operationCodes: operationCodes, 'versoesCustomizadas' : versoesCustomizadas});
+				});
+			} else {
+				res.render('pages/listar_versoes_customizadas', { authenticatedUser: null, 'versoesCustomizadas' : versoesCustomizadas});
+			}
 		});
 	});
 });
@@ -177,17 +209,16 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 	var filePath = req.query.filePath;
 
 	db.mongo.open(function(err, mongoConnection) {
+		
 		if(err) { 
-			console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+			redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 			db.mongo.close();
 		}
 
 		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
-				console.error(new Date() + " Erro ao Listar Versões Customizadas: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Listar Versões Customizadas: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 				db.mongo.close();
 			}
 			
@@ -206,21 +237,18 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 	var idRootVersion = req.req.query.idRootVersion;
 	var filePath = req.req.query.filePath;
 
-	db.mongo.open(function(err, mongoConnection)
-	{
-		if(err)
-		{
-			console.error(new Date() + " Erro ao Baixar Versão Customizada: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Versão Customizada OAC: " + err], 'messagesTypes': ["danger"]});
+	db.mongo.open(function(err, mongoConnection) {
+		
+		if(err) {
+			redirectError("Erro ao Baixar Versão Customizada", err, req, res);			
 			db.mongo.close();
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando a Versão Customizada
-		cloRepository.gerarPacoteVersao(mongoConnection, id, idRootVersion, filePath, function(err, versaoCustomizada)
-		{			
+		cloRepository.gerarPacoteVersao(mongoConnection, id, idRootVersion, filePath, function(err, versaoCustomizada) {			
+			
 			if(err) {
-				console.error(new Date() + " Erro ao Baixar Versão Customizada: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Baixar Versão Customizada: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Baixar Versão Customizada", err, req, res);
 				db.mongo.close();
 			}
 
@@ -238,121 +266,186 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 	});
 });
 
-app.post("/incluirOAC", function(req, res)
-{
-	var oac = new zip(req.files.fileInput.path);
-	var manifestData = cloUtils.lerManifest(oac);
-	console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
+app.post("/incluirOAC", isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_oac', req, res, next);
+	}, function(req, res) {
 
-	db.mongo.open(function(err, mongoConnection) {
-		
-		if(err) {
-			console.error(new Date() + " Erro ao Incluir OAC: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
-			db.mongo.close();
-		}
+		var oac = new zip(req.files.fileInput.path);
+		var manifestData = cloUtils.lerManifest(oac);
+		console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
 
-		cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
-
+		db.mongo.open(function(err, mongoConnection) {
+			
 			if(err) {
-				console.error(new Date() + " Erro ao Incluir OAC: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Incluir OAC", err, req, res);
 				db.mongo.close();
 			}
 
-			fs.unlink(req.files.fileInput.path, function(err) {
+			cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
+
 				if(err) {
-					console.error(new Date() + " Erro ao Incluir OAC: " + err);
-					res.render('pages/index', {'messages': ["Erro ao Incluir OAC: " + err], 'messagesTypes': ["danger"]});
+					redirectError("Erro ao Incluir OAC", err, req, res);
+					db.mongo.close();
 				}
-				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+
+				fs.unlink(req.files.fileInput.path, function(err) {
+					if(err) {
+						redirectError("Erro ao Incluir OAC", err, req, res);
+					}
+					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+				});
+
+				mongoConnection.close();				
+				req.user.operationCodes(function(operationCodes) {
+					res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
+				});				
 			});
-
-			mongoConnection.close();
-			res.render('pages/index', {'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
 		});
-	});
-});
+	}
+);
 
-app.post("/incluirVersaoCustomizada", function(req, res)
-{
-	var title = req.body.title;
-	var description = req.body.description;
-	var languages = req.body.languages.split(";");
-	var oac = new zip(req.files.fileInput.path);
+app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_versao_customizada', req, res, next);
+	}, function(req, res) {
 
-	db.mongo.open(function(err, mongoConnection)
-	{
-		if(err) {
-			console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Incluir Versão Customizada: " + err], 'messagesTypes': ["danger"]});
-			db.mongo.close();
-		}
+		var title = req.body.title;
+		var description = req.body.description;
+		var languages = req.body.languages.split(";");
+		var oac = new zip(req.files.fileInput.path);
 
-		cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
+		db.mongo.open(function(err, mongoConnection) {
 			
 			if(err) {
-				console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Incluir Versão Customizada: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Incluir Versão Customizada", err, req, res);			
+				db.mongo.close();
 			}
 
-			fs.unlink(req.files.fileInput.path, function(err) {
+			cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
+				
 				if(err) {
-					console.error(new Date() + " Erro ao Incluir Versão Customizada: " + err);
-					res.render('pages/index', {'messages': ["Erro ao Incluir Versão Customizada: " + err], 'messagesTypes': ["danger"]});
+					redirectError("Erro ao Incluir Versão Customizada", err, req, res);
 				}
-				console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+
+				fs.unlink(req.files.fileInput.path, function(err) {
+					if(err) {
+						redirectError("Erro ao Incluir Versão Customizada", err, req, res);
+					}
+					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+				});
+				
+				mongoConnection.close();								
+				req.user.operationCodes(function(operationCodes) {
+					res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Versão Customizada incluída com sucesso"], 'messagesTypes': ["success"]});
+				});				
 			});
-			
-			mongoConnection.close();
-			res.render('pages/index', {'messages': ["Versão Customizada incluída com sucesso"], 'messagesTypes': ["success"]});
 		});
-	});
-});
+	}
+);
 
 // ***** Autenticação *****
 
 //Verifica se o Usuário que acessa está logado
 function isLoggedIn(req, res, next) {
 
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    //Caso o Usuário não esteja autenticado na plataforma, ele é redirecionado para tela inicial e é informado da exigência da autenticação
-    res.render('pages/index', {'messages': ["Acesso negado! Esta funcionalidade demanda autenticação no sistema"], 'messagesTypes': ["danger"] });
+   	if (req.isAuthenticated()) {
+       	return next();
+   	}
+    redirectNotLoggedIn(req, res);
 }
 
+//Verifica se o Usuário que acessa não está logado
+function isLoggedOut(req, res, next) {
 
+    if (!req.isAuthenticated()) {
+        return next();
+    }
+    redirectNotLoggedOut(req, res);
+}
 
-app.get('/login', function (req, res) {
-	res.render('pages/login', {'messages': null});	
-});
+//Verifica se o Usuário que acessa possui a permissão para a Operação passada como parâmetro
+function hasPermission(operationCode, req, res, next) {
+	req.user.operationCodes(function(operationCodes) {
+       	if (operationCodes.indexOf(operationCode) != -1) {
+       		return next();		
+       	} else {
+			redirectNotHasOperation(req, res);				
+		}
+	});
+}
 
-app.post('/realizarLogin', function (req, res) {
+//Redireciona para tela inicial com mensagem padrão de que deve estar autenticado
+function redirectNotLoggedIn(req, res) { 
+    res.render('pages/index', { authenticatedUser: null, 'messages': ["Acesso negado! Esta funcionalidade demanda autenticação no sistema"], 'messagesTypes': ["danger"] });
+}
 
-	//usar callback aqui...
-	passport.authenticate('local-login', {
-        successRedirect : '/profile', // redirect to the secure profile section
-        failureRedirect : '/login', // redirect back to the signup page if there is an error
-        failureFlash : true // allow flash messages
+//Redireciona para tela inicial com mensagem padrão de que deve não estar autenticado
+function redirectNotLoggedOut(req, res) { 
+	req.user.operationCodes(function(operationCodes) {
+    	res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Acesso negado! Esta funcionalidade está disponível apenas para não autenticados no sistema"], 'messagesTypes': ["danger"] });
     });
+}
 
+//Redireciona para tela inicial com mensagem padrão de que não possui permissão
+function redirectNotHasOperation(req, res) { 
+	if (req.user) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Acesso negado! Você não possui autorização para esta funcionalidade"], 'messagesTypes': ["danger"] });
+		});
+	} else {
+		res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Acesso negado! Você não possui autorização para esta funcionalidade"], 'messagesTypes': ["danger"] });
+	}
+}
+
+//Loga o erro e redireciona para tela inicial com a mensagem de erro passada como parâmetro
+function redirectError(errorMessage, error, req, res) { 
+	console.error(new Date() + " " + errorMessage + ": " + error);
+	if (req.user) {
+		req.user.operationCodes(function(operationCodes) {			
+			res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error], 'messagesTypes': ["danger"]});
+		});
+	} else {
+		res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error], 'messagesTypes': ["danger"]});
+	}
+}
+
+app.get('/login', isLoggedOut, function (req, res) {
+	res.render('pages/login', { authenticatedUser: req.user, 'messages': null});	
+});
+
+app.post('/realizarLogin', isLoggedOut, function (req, res) {
 	
+	passport.authenticate('local-login', function (err, user) {
+
+		if(err) {			
+			console.error(new Date() + " Erro ao Realizar Login: " + err);
+			res.render('pages/login', { authenticatedUser: null, 'messages': [err], 'messagesTypes': ["danger"]});
+		} else {
+			req.logIn(user, function(err) {
+		      
+		      	if(err) {
+					console.error(new Date() + " Erro ao Realizar Login: " + err);
+					res.render('pages/login', { authenticatedUser: null, 'messages': [err], 'messagesTypes': ["danger"]});
+				} 
+
+				req.user.operationCodes(function(operationCodes) {
+					res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Login realizado com sucesso"], 'messagesTypes': ["success"] });	
+				});				
+		    });		
+		}
+	})(req, res);
 });
 
-app.post('/realizarLogout', function (req, res) {
-		
-	//Descobrir como se faz o logout
+app.get('/realizarLogout', isLoggedIn, function (req, res) {
+	 req.logout();
 
+	 res.render('pages/index', { authenticatedUser: null, 'messages': ["Logout realizado com sucesso"], 'messagesTypes': ["warning"] });
 });
 
-
-
-app.get('/recuperar_senha', function (req, res) {
-	res.render('pages/recuperar_senha');	
+app.get('/recuperar_senha', isLoggedOut, function (req, res) {
+	res.render('pages/recuperar_senha', { authenticatedUser: null }); 	
 });
 
-app.post('/recuperarSenha', function (req, res) {
+app.post('/recuperarSenha', isLoggedOut, function (req, res) {
 	
 	var email = req.body.email;
 	
@@ -363,32 +456,30 @@ app.post('/recuperarSenha', function (req, res) {
 		}
 
 		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Usuário: " + err], 'messagesTypes': ["danger"]});
+			redirectError("Erro ao Pesquisar Usuário", err, req, res);			
 		} 
 
 		var urlPasswordRedefine = serverAddress + "/redefinir_senha";
 		administration.enviarEmailRedefinicaoSenha(user.email, user.login, urlPasswordRedefine, function (err) {
 
 			if(err) {
-				console.error(new Date() + " Erro ao Enviar Email para Redefinição de Senha: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Enviar Email para Redefinição de Senha: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Enviar Email para Redefinição de Senha", err, req, res);				
 			}
 	
-			res.render('pages/index', {'messages': ["Você receberá um email para a redefinição de senha"], 'messagesTypes': ["warning"] } );
+			res.render('pages/index', { authenticatedUser: null, 'messages': ["Você receberá um email para a redefinição de senha"], 'messagesTypes': ["warning"] } );
 		});
 	});	
 });
 
-app.get('/redefinir_senha', function (req, res) {
+app.get('/redefinir_senha', isLoggedOut, function (req, res) {
 
 	var email = req.query.email;
 	var code = req.query.code;
 
-	res.render('pages/redefinir_senha', { email: email, code: code });	
+	res.render('pages/redefinir_senha', { authenticatedUser: null,  email: email, code: code });	
 });
 
-app.post('/redefinirSenha', function (req, res) {
+app.post('/redefinirSenha', isLoggedOut, function (req, res) {
 	
 	var email = req.body.email;
 	var code = req.body.code;
@@ -397,21 +488,20 @@ app.post('/redefinirSenha', function (req, res) {
 	administration.redefinirSenha(newPassword, email, code, function (err) {
 
 		if(err) {
-			console.error(new Date() + " Erro ao Redefinir Senha de Usuário: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Redefinir Senha de Usuário: " + err], 'messagesTypes': ["danger"]});
+			redirectError("Erro ao Redefinir Senha de Usuário", err, req, res);				
 		}
 			
-		res.render('pages/login', { 'messages': ["Senha redefinda com sucesso"], 'messagesTypes': ["success", "success"] } );
+		res.render('pages/login', { authenticatedUser: null,  'messages': ["Senha redefinda com sucesso"], 'messagesTypes': ["success", "success"] } );
 	});
 });
 
 // ***** Auto-cadastro *****
 
-app.get('/incluir_usuario', function (req, res) {
-	res.render('pages/incluir_usuario');	
+app.get('/incluir_usuario', isLoggedOut, function (req, res) {
+	res.render('pages/incluir_usuario', { authenticatedUser: null }); 	
 });
 
-app.post('/incluirUsuario', function (req, res) {
+app.post('/incluirUsuario', isLoggedOut, function (req, res) {
 
 	var name = req.body.name;
 	var email = req.body.email;
@@ -422,24 +512,22 @@ app.post('/incluirUsuario', function (req, res) {
 	administration.incluirUsuario(name, email, profile, login, password, function (err, user) {
 		
 		if(err) {
-			console.error(new Date() + " Erro ao Incluir Usuário: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Incluir Usuário: " + err], 'messagesTypes': ["danger"]});			
+			redirectError("Erro ao Incluir Usuário", err, req, res);			
 		}
 
 		var urlEmailValidation = serverAddress + "/validarEmail";
 		administration.enviarEmailConfirmacaoCadastroUsuario(user.email, user.login, urlEmailValidation, function (err) {
 
 			if(err) {
-				console.error(new Date() + " Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err], 'messagesTypes': ["danger"]});
+				redirectError("Erro ao Enviar Email de Confirmação de Cadastro de Usuário", err, req, res);				
 			}
 	
-			res.render('pages/visualizar_usuario', {'user' : user, 'userRoles': null, 'messages': ["Usuário " + user.login + " incluído com sucesso", "Você receberá um email para confirmação do cadastro"], 'messagesTypes': ["success", "warning"] } );
+			res.render('pages/visualizar_usuario', { authenticatedUser: null, 'user' : user, 'userRoles': null, 'messages': ["Usuário " + user.login + " incluído com sucesso", "Você receberá um email para confirmação do cadastro"], 'messagesTypes': ["success", "warning"] } );
 		});
 	});		
 });
 
-app.get('/validarEmail', function (req, res) {
+app.get('/validarEmail', isLoggedOut, function (req, res) {
 
 	var email = req.query.email;
 	var code = req.query.code;
@@ -447,77 +535,142 @@ app.get('/validarEmail', function (req, res) {
 	administration.validarEmailConfirmacaoCadastroUsuario(email, code, function (err) {
 
 		if(err) {
-			console.error(new Date() + " Erro ao Validar Email de Confirmação de Cadastro de Usuário: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Validar Email de Confirmação de Cadastro de Usuário: " + err], 'messagesTypes': ["danger"]});
+			redirectError("Erro ao Validar Email de Confirmação de Cadastro de Usuário", err, req, res);	
 		}
 			
-		res.render('pages/index', { 'messages': ["Email validado com sucesso", "Em breve você receberá um email com o resultado da análise do seu cadastro"], 'messagesTypes': ["success", "warning"] } );
+		res.render('pages/index', { authenticatedUser: null, 'messages': ["Email validado com sucesso", "Em breve você receberá um email com o resultado da análise do seu cadastro"], 'messagesTypes': ["success", "warning"] } );
 	});
 });
 
 // ***** Administração do Repositório *****
 
-app.get('/pesquisar_usuario', function (req, res) {
-	res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': null });
-});
+app.get('/pesquisar_usuario', isLoggedIn, function(req, res, next) {
+		return hasPermission('pesquisar_usuario', req, res, next);
+	}, function (req, res) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/pesquisar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': null });
+		});
+	}
+);
 
-app.get('/pesquisarUsuario', function (req, res) {
+app.get('/pesquisarUsuario', isLoggedIn, function(req, res, next) {
+		return hasPermission('pesquisar_usuario', req, res, next);
+	}, function (req, res) {
 
-	var name = req.query.name;
-	var email = req.query.email;
-	var login = req.query.login;
-	var degreeOfFreedom = req.query.degreeOfFreedom;
-	var emailValidated = req.query.checkEmailValidated;
-	var userValidated = req.query.checkUserValidated;
+		var name = req.query.name;
+		var email = req.query.email;
+		var login = req.query.login;
+		var degreeOfFreedom = req.query.degreeOfFreedom;
+		var emailValidated = req.query.checkEmailValidated;
+		var userValidated = req.query.checkUserValidated;
 
-	administration.buscarUsuarios(name, email, login, degreeOfFreedom, emailValidated, userValidated, function(err, users) {
-
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Usuários: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Usuários: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		res.render('pages/pesquisar_usuario', {'result': users, name: name, email: email, login: login, degreeOfFreedom: degreeOfFreedom, emailValidated: emailValidated, userValidated: userValidated, 'messages': null });
-	});
-});
-
-app.get('/editar_usuario', function (req, res) {
-
-	var idUser = req.query.idUser;
-
-	administration.buscarUsuarioPorId(idUser, function (err, user) {		
-
-		if (!err && !user) {		
-			err = new Error(" Usuário " + idUser + " não encontrado.");			
-		} else if (!err && !user.emailValidated) {		
-			err = new Error(" Usuário " + idUser + " com email validado não encontrado.");			
-		}
-
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Usuário: " + err], 'messagesTypes': ["danger"]});
-		} 
-
-		administration.buscarTodosPapeis(function (err, roles) {
+		administration.buscarUsuarios(name, email, login, degreeOfFreedom, emailValidated, userValidated, function(err, users) {
 
 			if(err) {
-				console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
+				redirectError("Erro ao Pesquisar Usuários", err, req, res);				
 			}
 
-			user.getRoles().then(function (userRoles) {		
-				res.render('pages/editar_usuario', {'user' : user, 'userRoles': userRoles, 'roles': roles});
-			});			
+			req.user.operationCodes(function(operationCodes) {
+				res.render('pages/pesquisar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': users, name: name, email: email, login: login, degreeOfFreedom: degreeOfFreedom, emailValidated: emailValidated, userValidated: userValidated, 'messages': null });
+			});
 		});
-	});
-});
+	}
+);
 
-app.post('/validarUsuario', function (req, res) {
+app.get('/editar_usuario', isLoggedIn, function(req, res, next) {
+		return hasPermission('editar_usuario', req, res, next);
+	}, function (req, res) {
 
-	var idUser = req.body.idUser;
-	var userValidated = req.body.checkUserValidated;
+		var idUser = req.query.idUser;
 
-	if (userValidated) {		
+		administration.buscarUsuarioPorId(idUser, function (err, user) {		
+
+			if (!err && !user) {		
+				err = new Error(" Usuário " + idUser + " não encontrado.");			
+			} else if (!err && !user.emailValidated) {		
+				err = new Error(" Usuário " + idUser + " com email validado não encontrado.");			
+			}
+
+			if(err) {
+				redirectError("Erro ao Pesquisar Usuários", err, req, res);				
+			} 
+
+			administration.buscarTodosPapeis(function (err, roles) {
+
+				if(err) {
+					redirectError("Erro ao Pesquisar Papéis", err, req, res);
+				}
+
+				user.getRoles().then(function (userRoles) {		
+					req.user.operationCodes(function(operationCodes) {
+						res.render('pages/editar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'roles': roles});
+					});
+				});			
+			});
+		});
+	}
+);
+
+app.post('/validarUsuario', isLoggedIn, function(req, res, next) {
+		return hasPermission('validar_usuario', req, res, next);
+	}, function (req, res) {
+
+		var idUser = req.body.idUser;
+		var userValidated = req.body.checkUserValidated;
+
+		if (userValidated) {		
+			var name = req.body.name;
+			var email = req.body.email;
+			var profile = req.body.profile;
+			var degreeOfFreedom = req.body.degreeOfFreedom;
+			var login = req.body.login;
+			//Um array é retornado apenas quando mais de um Papel é selecionado
+			var roleCodes;
+			if ( Array.isArray(req.body.checkRole) ) {
+				roleCodes = req.body.checkRole;
+			} else {
+				roleCodes = new Array(req.body.checkRole);
+			}
+
+			administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
+				
+				if(err) {
+					redirectError("Erro ao Pesquisar Papéis", err, req, res);
+				}
+			
+				administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
+					
+					if(err) {
+						redirectError("Erro ao Editar Usuário", err, req, res);
+					}
+
+					administration.enviarEmailValidacaoCadastroUsuario(user.email, user, function (err) {
+
+						if(err) {
+							redirectError("Erro ao Enviar Email de Validação de Cadastro de Usuário", err, req, res);
+						}
+
+						user.getRoles().then(function (userRoles) {
+							req.user.operationCodes(function(operationCodes) {			
+								res.render('pages/visualizar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + idUser + " validado com sucesso", "Um email com o resultado da análise do cadastro foi enviado ao Usuário"], 'messagesTypes': ["success", "warning"] } );
+							});
+						});
+					});
+				});		
+			});
+		} else {
+			req.user.operationCodes(function(operationCodes) {			
+				res.render('pages/pesquisar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': ["Validação do Usuário " + idUser + " não confirmada.", "Atualização do Usuário " + idUser + " não realizada."], 'messagesTypes': ["danger", "warning"] } );
+			});
+		}
+	}
+);
+
+app.post('/editarUsuario', isLoggedIn, function(req, res, next) {
+		return hasPermission('editar_usuario', req, res, next);
+	}, function (req, res) {
+
+		var idUser = req.body.idUser;
 		var name = req.body.name;
 		var email = req.body.email;
 		var profile = req.body.profile;
@@ -534,329 +687,342 @@ app.post('/validarUsuario', function (req, res) {
 		administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
 			
 			if(err) {
-				console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
+				redirectError("Erro ao Pesquisar Papéis", err, req, res);				
 			}
 		
 			administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
 				
 				if(err) {
-					console.error(new Date() + " Erro ao Editar Usuário: " + err);
-					res.render('pages/index', {'messages': ["Erro ao Editar Usuário: " + err], 'messagesTypes': ["danger"]});			
+					redirectError("Erro ao Editar Usuário", err, req, res);					
 				}
 
-				administration.enviarEmailValidacaoCadastroUsuario(user.email, user, function (err) {
+				user.getRoles().then(function (userRoles) {
+					req.user.operationCodes(function(operationCodes) {	
+						res.render('pages/visualizar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + idUser + " atualizado com sucesso"], 'messagesTypes': ["success"] } );
+					});		
+				});
+			});		
+		});
+	}
+);
 
-					if(err) {
-						console.error(new Date() + " Erro ao Enviar Email de Validação de Cadastro de Usuário: " + err);
-						res.render('pages/index', {'messages': ["Erro ao Enviar Email de Validação de Cadastro de Usuário: " + err], 'messagesTypes': ["danger"]});
-					}
+app.get('/excluirUsuario', isLoggedIn, function(req, res, next) {
+		return hasPermission('excluir_usuario', req, res, next);
+	}, function (req, res) {
 
-					user.getRoles().then(function (userRoles) {			
-						res.render('pages/visualizar_usuario', {'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + idUser + " validado com sucesso", "Um email com o resultado da análise do cadastro foi enviado ao Usuário"], 'messagesTypes': ["success", "warning"] } );
+		var idUser = req.query.idUser;
+		var userLogin = req.query.userLogin;
+		
+		administration.excluirUsuario(idUser, userLogin, function(err) {
+
+			if(err) {
+				redirectError("Erro ao Excluir Usuário", err, req, res);					
+			}
+
+			req.user.operationCodes(function(operationCodes) {	
+				res.render('pages/pesquisar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': ["Usuário " + idUser + " - " + userLogin + " excluído com sucesso"], 'messagesTypes': ["success"] });
+			});		
+		});
+	}
+);
+
+app.get('/pesquisar_papel', isLoggedIn, function(req, res, next) {
+		return hasPermission('pesquisar_papel', req, res, next);
+	}, function (req, res) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/pesquisar_papel', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': null, name: '', code: '', description: '', 'messages': null });
+		});	
+	}
+);
+
+app.get('/pesquisarPapel', isLoggedIn, function(req, res, next) {
+		return hasPermission('pesquisar_papel', req, res, next);
+	}, function (req, res) {
+
+		var name = req.query.name;
+		var code = req.query.code;
+		var description = req.query.description;
+
+		administration.buscarPapeis(name, code, description, function(err, roles) {
+
+			if(err) {
+				redirectError("Erro ao Pesquisar Papéis", err, req, res);				
+			}
+
+			req.user.operationCodes(function(operationCodes) {
+				res.render('pages/pesquisar_papel', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': roles, name: name, code: code, description: description, 'messages': null });
+			});		
+		});
+	}
+);
+
+app.get('/incluir_papel', isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_papel', req, res, next);
+	}, function (req, res) {
+		administration.buscarTodasOperacoes(function (err, operations) {
+			
+			if(err) {
+				redirectError("Erro ao Pesquisar Operações", err, req, res);				
+			}
+
+			var role = model.Role.build({});
+			req.user.operationCodes(function(operationCodes) {
+				res.render('pages/manter_papel', { authenticatedUser: req.user, operationCodes: operationCodes, 'role' : role, 'roleOperations': null, 'operations': operations});
+			});		
+		});
+	}
+);
+
+app.post('/incluirPapel', isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_papel', req, res, next);
+	}, function (req, res) {
+
+		var name = req.body.name;
+		var code = req.body.code;
+		var description = req.body.description;
+		//Um array é retornado apenas quando mais de uma Operação é selecionada
+		var operationCodes;
+		if ( Array.isArray(req.body.checkOperation) ) {
+			operationCodes = req.body.checkOperation;
+		} else {
+			operationCodes = new Array(req.body.checkOperation);
+		}
+
+		administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
+			
+			if(err) {
+				redirectError("Erro ao Pesquisar Operações", err, req, res);					
+			}
+
+			administration.incluirPapel(name, code, description, operations, function (err, role) {
+				
+				if(err) {
+					redirectError("Erro ao Incluir Papel", err, req, res);
+				}
+
+				role.getOperations().then(function (roleOperations) {			
+					req.user.operationCodes(function(operationCodes) {
+						res.render('pages/visualizar_papel', { authenticatedUser: req.user, operationCodes: operationCodes, 'role' : role, 'roleOperations': roleOperations, 'messages': ["Papel " + role.id + " - " + role.code + " incluído com sucesso"], 'messagesTypes': ["success"] } );
+					});		
+				});
+			});		
+		});
+	}
+);
+
+app.get('/editar_papel', isLoggedIn, function(req, res, next) {
+		return hasPermission('editar_papel', req, res, next);
+	}, function (req, res) {
+
+		var idRole = req.query.idRole;
+
+		administration.buscarPapelPorId(idRole, function (err, role) {
+			
+			if(!err && !role) {
+				err = new Error(" Papel " + idRole + " não encontrado.");
+			}
+			if(err) {
+				redirectError("Erro ao Pesquisar Papel", err, req, res);				
+			} 
+
+			administration.buscarTodasOperacoes(function (err, operations) {
+			
+				if(err) {
+					redirectError("Erro ao Pesquisar Operações", err, req, res);
+				}
+
+				role.getOperations().then(function (roleOperations) {
+					req.user.operationCodes(function(operationCodes) {
+						res.render('pages/manter_papel', { authenticatedUser: req.user, operationCodes: operationCodes, 'role' : role, 'roleOperations': roleOperations, 'operations': operations});
+					});			
+				});
+			});
+		});
+	}
+);
+
+app.post('/editarPapel', isLoggedIn, function(req, res, next) {
+		return hasPermission('editar_papel', req, res, next);
+	}, function (req, res) {
+
+		var idRole = req.body.idRole;
+		var name = req.body.name;
+		var code = req.body.code;
+		var description = req.body.description;
+		//Um array é retornado apenas quando mais de uma Operação é selecionada
+		var operationCodes;
+		if ( Array.isArray(req.body.checkOperation) ) {
+			operationCodes = req.body.checkOperation;
+		} else {
+			operationCodes = new Array(req.body.checkOperation);
+		}
+
+		administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
+			
+			if(err) {
+				redirectError("Erro ao Pesquisar Operações", err, req, res);				
+			}
+		
+			administration.editarPapel(idRole, name, code, description, operations, function (err, role) {
+				
+				if(err) {
+					redirectError("Erro ao Editar Papel", err, req, res);					
+				}
+
+				role.getOperations().then(function (roleOperations) {	
+					req.user.operationCodes(function(operationCodes) {		
+						res.render('pages/visualizar_papel', { authenticatedUser: req.user, operationCodes: operationCodes, 'role' : role, 'roleOperations': roleOperations, 'messages': ["Papel " + idRole + " atualizado com sucesso"], 'messagesTypes': ["success"] } );
 					});
 				});
 			});		
 		});
-	} else {
-		res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': ["Validação do Usuário " + idUser + " não confirmada.", "Atualização do Usuário " + idUser + " não realizada."], 'messagesTypes': ["danger", "warning"] } );
 	}
-});
+);
 
-app.post('/editarUsuario', function (req, res) {
+app.get('/excluirPapel', isLoggedIn, function(req, res, next) {
+		return hasPermission('excluir_papel', req, res, next);
+	}, function (req, res) {
 
-	var idUser = req.body.idUser;
-	var name = req.body.name;
-	var email = req.body.email;
-	var profile = req.body.profile;
-	var degreeOfFreedom = req.body.degreeOfFreedom;
-	var login = req.body.login;
-	//Um array é retornado apenas quando mais de um Papel é selecionado
-	var roleCodes;
-	if ( Array.isArray(req.body.checkRole) ) {
-		roleCodes = req.body.checkRole;
-	} else {
-		roleCodes = new Array(req.body.checkRole);
-	}
-
-	administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
+		var idRole = req.query.idRole;
+		var roleCode = req.query.roleCode;
 		
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
-		}
-	
-		administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
-			
+		administration.excluirPapel(idRole, roleCode, function(err) {
+
 			if(err) {
-				console.error(new Date() + " Erro ao Editar Usuário: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Editar Usuário: " + err], 'messagesTypes': ["danger"]});			
+				redirectError("Erro ao Excluir Papel", err, req, res);				
 			}
 
-			user.getRoles().then(function (userRoles) {
-				res.render('pages/visualizar_usuario', {'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + idUser + " atualizado com sucesso"], 'messagesTypes': ["success"] } );
-			});
-		});		
-	});
-});
-
-app.get('/excluirUsuario', function (req, res) {
-
-	var idUser = req.query.idUser;
-	var userLogin = req.query.userLogin;
-	
-	administration.excluirUsuario(idUser, userLogin, function(err) {
-
-		if(err) {
-			console.error(new Date() + " Erro ao Excluir Usuário: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Excluir Usuário: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		res.render('pages/pesquisar_usuario', {'result': null, name: '', email: '', login: '', degreeOfFreedom: '', emailValidated: null, userValidated: null, 'messages': ["Usuário " + idUser + " - " + userLogin + " excluído com sucesso"], 'messagesTypes': ["success"] });
-	});
-});
-
-app.get('/pesquisar_papel', function (req, res) {
-	res.render('pages/pesquisar_papel', {'result': null, name: '', code: '', description: '', 'messages': null });
-});
-
-app.get('/pesquisarPapel', function (req, res) {
-
-	var name = req.query.name;
-	var code = req.query.code;
-	var description = req.query.description;
-
-	administration.buscarPapeis(name, code, description, function(err, roles) {
-
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Papéis: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		res.render('pages/pesquisar_papel', {'result': roles, name: name, code: code, description: description, 'messages': null });
-	});
-});
-
-app.get('/incluir_papel', function (req, res) {
-	administration.buscarTodasOperacoes(function (err, operations) {
-		
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		var role = model.Role.build({});
-		res.render('pages/manter_papel', {'role' : role, 'roleOperations': null, 'operations': operations});
-	});
-});
-
-app.post('/incluirPapel', function (req, res) {
-
-	var name = req.body.name;
-	var code = req.body.code;
-	var description = req.body.description;
-	//Um array é retornado apenas quando mais de uma Operação é selecionada
-	var operationCodes;
-	if ( Array.isArray(req.body.checkOperation) ) {
-		operationCodes = req.body.checkOperation;
-	} else {
-		operationCodes = new Array(req.body.checkOperation);
-	}
-
-	administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
-		
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		administration.incluirPapel(name, code, description, operations, function (err, role) {
-			
-			if(err) {
-				console.error(new Date() + " Erro ao Incluir Papel: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Incluir Papel: " + err], 'messagesTypes': ["danger"]});			
-			}
-
-			role.getOperations().then(function (roleOperations) {			
-				res.render('pages/visualizar_papel', {'role' : role, 'roleOperations': roleOperations, 'messages': ["Papel " + role.id + " - " + role.code + " incluído com sucesso"], 'messagesTypes': ["success"] } );
-			});
-		});		
-	});
-});
-
-app.get('/editar_papel', function (req, res) {
-
-	var idRole = req.query.idRole;
-
-	administration.buscarPapelPorId(idRole, function (err, role) {
-		
-		if(!err && !role) {
-			err = new Error(" Papel " + idRole + " não encontrado.");
-		}
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Papel: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Papel: " + err], 'messagesTypes': ["danger"]});
-		} 
-
-		administration.buscarTodasOperacoes(function (err, operations) {
-		
-			if(err) {
-				console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
-			}
-
-			role.getOperations().then(function (roleOperations) {			
-				res.render('pages/manter_papel', {'role' : role, 'roleOperations': roleOperations, 'operations': operations});
-			});			
+			req.user.operationCodes(function(operationCodes) {		
+				res.render('pages/pesquisar_papel', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': null, name: '', code: '', description: '', 'messages': ["Papel " + idRole + " - " + roleCode + " excluído com sucesso"], 'messagesTypes': ["success"] });
+			});		
 		});
-	});
-});
-
-app.post('/editarPapel', function (req, res) {
-
-	var idRole = req.body.idRole;
-	var name = req.body.name;
-	var code = req.body.code;
-	var description = req.body.description;
-	//Um array é retornado apenas quando mais de uma Operação é selecionada
-	var operationCodes;
-	if ( Array.isArray(req.body.checkOperation) ) {
-		operationCodes = req.body.checkOperation;
-	} else {
-		operationCodes = new Array(req.body.checkOperation);
 	}
+);
 
-	administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
-		
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});			
-		}
-	
-		administration.editarPapel(idRole, name, code, description, operations, function (err, role) {
-			
+app.get('/pesquisar_operacao', isLoggedIn, function(req, res, next) {
+		return hasPermission('pesquisar_operacao', req, res, next);
+	}, function (req, res) {
+		req.user.operationCodes(function(operationCodes) {		
+			res.render('pages/pesquisar_operacao', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': null, name: '', code: '', description: '', 'messages': null });
+		});		
+	}
+);
+
+app.get('/pesquisarOperacao', isLoggedIn, function(req, res, next) {
+		return hasPermission('pesquisar_operacao', req, res, next);
+	}, function (req, res) {
+
+		var name = req.query.name;
+		var code = req.query.code;
+		var description = req.query.description;
+
+		administration.buscarOperacoes(name, code, description, function(err, operations) {
+
 			if(err) {
-				console.error(new Date() + " Erro ao Editar Papel: " + err);
-				res.render('pages/index', {'messages': ["Erro ao Editar Papel: " + err], 'messagesTypes': ["danger"]});			
+				redirectError("Erro ao Pesquisar Operações", err, req, res);					
 			}
 
-			role.getOperations().then(function (roleOperations) {			
-				res.render('pages/visualizar_papel', {'role' : role, 'roleOperations': roleOperations, 'messages': ["Papel " + idRole + " atualizado com sucesso"], 'messagesTypes': ["success"] } );
-			});
+			req.user.operationCodes(function(operationCodes) {	
+				res.render('pages/pesquisar_operacao', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': operations, name: name, code: code, description: description, 'messages': null });
+			});		
+		});
+	}
+);
+
+app.get('/incluir_operacao', isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_operacao', req, res, next);
+	}, function (req, res) {
+		var operation = model.Operation.build({});
+		req.user.operationCodes(function(operationCodes) {	
+			res.render('pages/manter_operacao', { authenticatedUser: req.user, operationCodes: operationCodes, 'operation' : operation});	
+		});	
+	}
+);
+
+app.post('/incluirOperacao', isLoggedIn, function(req, res, next) {
+		return hasPermission('incluir_operacao', req, res, next);
+	}, function (req, res) {
+
+		var name = req.body.name;
+		var code = req.body.code;
+		var description = req.body.description;
+		
+		administration.incluirOperacao(name, code, description, function (err, operation) {
+			
+			if(err) {
+				redirectError("Erro ao Incluir Operação", err, req, res);					
+			}
+			
+			req.user.operationCodes(function(operationCodes) {				
+				res.render('pages/visualizar_operacao', { authenticatedUser: req.user, operationCodes: operationCodes, 'operation' : operation, 'messages': ["Operação " + operation.id + " - " + operation.code + " incluída com sucesso"], 'messagesTypes': ["success"] } );		
+			});		
 		});		
-	});
-});
+	}
+);
 
-app.get('/excluirPapel', function (req, res) {
+app.get('/editar_operacao', isLoggedIn, function(req, res, next) {
+		return hasPermission('editar_operacao', req, res, next);
+	}, function (req, res) {
 
-	var idRole = req.query.idRole;
-	var roleCode = req.query.roleCode;
-	
-	administration.excluirPapel(idRole, roleCode, function(err) {
+		var idOperation = req.query.idOperation;
 
-		if(err) {
-			console.error(new Date() + " Erro ao Excluir Papel: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Excluir Papel: " + err], 'messagesTypes': ["danger"]});			
-		}
+		administration.buscarOperacaoPorId(idOperation, function (err, operation) {
+			
+			if(!err && !operation) {
+				err = new Error(" Operação " + idOperation + " não encontrada.");
+			}
+			if(err) {
+				redirectError("Erro ao Pesquisar Operação", err, req, res);				
+			} 
+			
+			req.user.operationCodes(function(operationCodes) {	
+				res.render('pages/manter_operacao', { authenticatedUser: req.user, operationCodes: operationCodes, 'operation' : operation});	
+			});
+		});
+	}
+);
 
-		res.render('pages/pesquisar_papel', {'result': null, name: '', code: '', description: '', 'messages': ["Papel " + idRole + " - " + roleCode + " excluído com sucesso"], 'messagesTypes': ["success"] });
-	});
-});
+app.post('/editarOperacao', isLoggedIn, function(req, res, next) {
+		return hasPermission('editar_operacao', req, res, next);
+	}, function (req, res) {
 
-app.get('/pesquisar_operacao', function (req, res) {
-	res.render('pages/pesquisar_operacao', {'result': null, name: '', code: '', description: '', 'messages': null });
-});
+		var idOperation = req.body.idOperation;
+		var name = req.body.name;
+		var code = req.body.code;
+		var description = req.body.description;	
 
-app.get('/pesquisarOperacao', function (req, res) {
+		administration.editarOperacao(idOperation, name, code, description, function (err, operation) {
+			
+			if(err) {
+				redirectError("Erro ao Editar Operação", err, req, res);				
+			}
 
-	var name = req.query.name;
-	var code = req.query.code;
-	var description = req.query.description;
+			req.user.operationCodes(function(operationCodes) {	
+				res.render('pages/visualizar_operacao', { authenticatedUser: req.user, operationCodes: operationCodes, 'operation' : operation, 'messages': ["Operação " + idOperation + " atualizada com sucesso"], 'messagesTypes': ["success"] } );
+			});				
+		});			
+	}
+);
 
-	administration.buscarOperacoes(name, code, description, function(err, operations) {
+app.get('/excluirOperacao', isLoggedIn, function(req, res, next) {
+		return hasPermission('excluir_operacao', req, res, next);
+	}, function (req, res) {
 
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operações: " + err], 'messagesTypes': ["danger"]});
-		}
-
-		res.render('pages/pesquisar_operacao', {'result': operations, name: name, code: code, description: description, 'messages': null });
-	});
-});
-
-app.get('/incluir_operacao', function (req, res) {	
-	var operation = model.Operation.build({});
-	res.render('pages/manter_operacao', {'operation' : operation});	
-});
-
-app.post('/incluirOperacao', function (req, res) {
-
-	var name = req.body.name;
-	var code = req.body.code;
-	var description = req.body.description;
-	
-	administration.incluirOperacao(name, code, description, function (err, operation) {
+		var idOperation = req.query.idOperation;
+		var operationCode = req.query.operationCode;
 		
-		if(err) {
-			console.error(new Date() + " Erro ao Incluir Operação: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Incluir Operação: " + err], 'messagesTypes': ["danger"]});			
-		}
-		
-		res.render('pages/visualizar_operacao', {'operation' : operation, 'messages': ["Operação " + operation.id + " - " + operation.code + " incluída com sucesso"], 'messagesTypes': ["success"] } );		
-	});		
-});
+		administration.excluirOperacao(idOperation, operationCode, function(err) {
 
-app.get('/editar_operacao', function (req, res) {
+			if(err) {
+				redirectError("Erro ao Excluir Operação", err, req, res);				
+			}
 
-	var idOperation = req.query.idOperation;
-
-	administration.buscarOperacaoPorId(idOperation, function (err, operation) {
-		
-		if(!err && !operation) {
-			err = new Error(" Operação " + idOperation + " não encontrada.");
-		}
-		if(err) {
-			console.error(new Date() + " Erro ao Pesquisar Operação: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Pesquisar Operação: " + err], 'messagesTypes': ["danger"]});
-		} 
-		
-		res.render('pages/manter_operacao', {'operation' : operation});	
-	});
-});
-
-app.post('/editarOperacao', function (req, res) {
-
-	var idOperation = req.body.idOperation;
-	var name = req.body.name;
-	var code = req.body.code;
-	var description = req.body.description;	
-
-	administration.editarOperacao(idOperation, name, code, description, function (err, operation) {
-		
-		if(err) {
-			console.error(new Date() + " Erro ao Editar Operação: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Editar Operação: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		res.render('pages/visualizar_operacao', {'operation' : operation, 'messages': ["Operação " + idOperation + " atualizada com sucesso"], 'messagesTypes': ["success"] } );
-	});			
-});
-
-app.get('/excluirOperacao', function (req, res) {
-
-	var idOperation = req.query.idOperation;
-	var operationCode = req.query.operationCode;
-	
-	administration.excluirOperacao(idOperation, operationCode, function(err) {
-
-		if(err) {
-			console.error(new Date() + " Erro ao Excluir Operação: " + err);
-			res.render('pages/index', {'messages': ["Erro ao Excluir Operação: " + err], 'messagesTypes': ["danger"]});			
-		}
-
-		res.render('pages/pesquisar_operacao', {'result': null, name: '', code: '', description: '', 'messages': ["Operação " + idOperation + " - " + operationCode + " excluída com sucesso"], 'messagesTypes': ["success"] });
-	});
-});
+			req.user.operationCodes(function(operationCodes) {	
+				res.render('pages/pesquisar_operacao', { authenticatedUser: req.user, operationCodes: operationCodes, 'result': null, name: '', code: '', description: '', 'messages': ["Operação " + idOperation + " - " + operationCode + " excluída com sucesso"], 'messagesTypes': ["success"] });
+			});	
+		});
+	}
+);
 
 // ***** Inicialização do Servidor *****
 

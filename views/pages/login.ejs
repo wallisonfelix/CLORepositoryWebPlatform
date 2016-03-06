@@ -44,19 +44,21 @@
 					</div>
 				</div>
 
-				<div class="form-group">
-					<div class="col-sm-offset-3 col-sm-9">
-						<input type="submit" name="btnRealizarLogin" class="btn btn-info" value="Realizar Login"/>
-					</div>	
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-3 col-sm-9">
-						<a href="/recuperar_senha" class="btn btn-link" role="button">Esqueceu a Senha ?</a>
-					</div>	
-					<div class="col-sm-offset-3 col-sm-9">
-						<a href="/incluir_usuario" class="btn btn-link" role="button">Não possui Cadastro ?</a>
+				<% if (!authenticatedUser) { %>
+					<div class="form-group">
+						<div class="col-sm-offset-3 col-sm-9">
+							<input type="submit" name="btnRealizarLogin" class="btn btn-info" value="Realizar Login"/>
+						</div>	
 					</div>
-				</div>				
+					<div class="form-group">
+						<div class="col-sm-offset-3 col-sm-9">
+							<a href="/recuperar_senha" class="btn btn-link" role="button">Esqueceu a Senha ?</a>
+						</div>	
+						<div class="col-sm-offset-3 col-sm-9">
+							<a href="/incluir_usuario" class="btn btn-link" role="button">Não possui Cadastro ?</a>
+						</div>
+					</div>				
+				<% } %>
 			</form>
 	    </div>
 

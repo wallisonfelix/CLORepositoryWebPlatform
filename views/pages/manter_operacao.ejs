@@ -55,11 +55,13 @@
 					</div>
 				</div>
 				
-				<div class="form-group">
-					<div class="col-sm-12">
-						<input type="submit" name="btnSalvar" class="btn btn-info" value="Salvar"/>
-					</div>	
-				</div>
+				<% if (authenticatedUser && operationCodes.indexOf('incluir_operacao') != -1 && operationCodes.indexOf('editar_operacao') != -1) { %>
+					<div class="form-group">
+						<div class="col-sm-12">
+							<input type="submit" name="btnSalvar" class="btn btn-info" value="Salvar"/>
+						</div>	
+					</div>
+				<% } %>
 			</form>
 	    </div>
 

@@ -65,10 +65,25 @@ var buscarUsuarioPorId = function(idUser, callback) {
 
 }
 
-//Realiza a busca de um Usuário específico que não esteja com o seu email validado, com base no email passado como parâmetro
+//Realiza a busca de um Usuário específico, com base no email e no status de validação deste endereço de email, ambos passados como parâmetro
 var buscarUsuarioPorEmail = function(email, emailValidated, callback) {
 
 	model.User.findOne( { where: { email: email, emailValidated: emailValidated }, attributes: ['id', 'name', 'email', 'emailValidated', 'profile', 'degree_of_freedom', 'login', 'userValidated' ], include: [ { model: model.Role, as: "Roles"} ] } ).then(function (user) {
+		if (!user) {
+			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
+		}
+		callback(null, user);
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
+		callback(err, null);
+	});
+
+}
+
+//Realiza a busca de um Usuário específico, com base no login e no status de validação do cadastro, ambos passados como parâmetro
+var buscarUsuarioPorLogin = function(login, userValidated, callback) {
+
+	model.User.findOne( { where: { login: login, userValidated: userValidated }, attributes: ['id', 'name', 'email', 'emailValidated', 'profile', 'degree_of_freedom', 'login', 'userValidated', 'password' ] } ).then(function (user) {
 		if (!user) {
 			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
 		}
@@ -128,7 +143,7 @@ var validarEmailConfirmacaoCadastroUsuario = function(email, code, callback) {
 			
 					if(updatedUsers[0] == 1) {
 						user = updatedUsers[1][0];
-						console.log(new Date() + " Usuário atualizado: " + user.id + " - " + user.login + ".");											
+						console.log(new Date() + " Usuário atualizado: " + user.id + " - " + user.login + ".");
 						console.log(new Date() + " Email de Confirmação de Cadastro de Usuário Validado: " + user.login + ".");
 	    				callback(null);
 					} else {
@@ -552,6 +567,7 @@ module.exports.enviarEmailConfirmacaoCadastroUsuario = enviarEmailConfirmacaoCad
 module.exports.validarEmailConfirmacaoCadastroUsuario = validarEmailConfirmacaoCadastroUsuario;
 module.exports.buscarUsuarioPorId = buscarUsuarioPorId;
 module.exports.buscarUsuarioPorEmail = buscarUsuarioPorEmail;
+module.exports.buscarUsuarioPorLogin = buscarUsuarioPorLogin;
 module.exports.buscarUsuarios = buscarUsuarios;
 module.exports.enviarEmailValidacaoCadastroUsuario = enviarEmailValidacaoCadastroUsuario;
 module.exports.editarUsuario = editarUsuario;

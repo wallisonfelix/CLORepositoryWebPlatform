@@ -51,8 +51,12 @@
 				
 				<div class="form-group">
 					<div class="col-sm-12">
-						<a href="/editar_operacao?idOperation=<%=operation.id%>" class="btn btn-info" role="button">Editar</a>
-						<a href="/pesquisar_operacao" class="btn btn-link" role="button">Pesquisar</a>
+						<% if (authenticatedUser && operationCodes.indexOf('editar_operacao') != -1) { %>
+							<a href="/editar_operacao?idOperation=<%=operation.id%>" class="btn btn-info" role="button">Editar</a>
+						<% } %>	
+						<% if (authenticatedUser && operationCodes.indexOf('pesquisar_operacao') != -1) { %>	
+							<a href="/pesquisar_operacao" class="btn btn-link" role="button">Pesquisar</a>
+						<% } %>	
 					</div>	
 				</div>
 			</form>

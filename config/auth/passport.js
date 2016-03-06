@@ -1,5 +1,7 @@
 var model = require('../../model/models.js');
 var administration = require('../../administration.js');
+var console = require('console');
+var bcrypt = require('bcrypt-nodejs');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
@@ -10,44 +12,36 @@ passport.serializeUser(function(user, done) {
 
 //Deserializa Usuário
 passport.deserializeUser(function(id, done) {
-
     administration.buscarUsuarioPorId(id, function(err, user) {
         done(err, user);
     });    
 });
 
-
-
- passport.use('local-login', new LocalStrategy({
-        // by default, local strategy uses username and password, we will override with email
-        usernameField : 'email',
+//Realiza a validação das credenciais de acesso de um Usuário e, caso permitido, realiza a autenticação
+passport.use('local-login', new LocalStrategy({
+        usernameField : 'login',
         passwordField : 'password',
-        passReqToCallback : true // allows us to pass back the entire request to the callback
-    },
-    function(req, email, password, done) { // callback with email and password from our form
+    }, function(login, password, done) {
 
-        // find a user whose email is the same as the forms email
-        // we are checking to see if the user trying to login already exists
-        User.findOne({ 'local.email' :  email }, function(err, user) {
-            // if there are any errors, return the error before anything else
-            if (err)
+        administration.buscarUsuarioPorLogin(login, true, function(err, user) {
+            
+            if(err){
+                console.error(new Date() + " Erro ao Realizar Login: " + err);
                 return done(err);
+            }
 
-            // if no user is found, return the message
-            if (!user)
-                return done(null, false, req.flash('loginMessage', 'No user found.')); // req.flash is the way to set flashdata using connect-flash
-
-            // if the user is found but the password is wrong
-            if (!user.validPassword(password))
-                return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
-
-            // all is well, return successful user
-            return done(null, user);
+            if (user) {
+                if ( bcrypt.compareSync(password, user.password) ) {
+                    console.log(new Date() + " Login de Usuário realizado com sucesso: " + user.login + ".");
+                    done(null, user);        
+                } else {
+                    return done(new Error(" Senha Inválida."));    
+                }
+            } else {
+                return done(new Error(" Usuário com o login " + login + " não encontrado."));
+            }
         });
-
-    }));
-
-
-
+    })
+);
 
 module.exports = passport;

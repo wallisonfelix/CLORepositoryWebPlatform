@@ -56,11 +56,13 @@
 					</div>	
 				</div>
 
-				<div class="form-group">
-					<div class="col-sm-12">
-						<a href="/incluir_papel" class="btn btn-info" role="button"><span class="glyphicon glyphicon-plus"></span>  Incluir</a>
-					</div>	
-				</div>
+				<% if (authenticatedUser && operationCodes.indexOf('incluir_papel') != -1) { %>
+					<div class="form-group">
+						<div class="col-sm-12">
+							<a href="/incluir_papel" class="btn btn-info" role="button"><span class="glyphicon glyphicon-plus"></span>  Incluir</a>
+						</div>	
+					</div>
+				<% } %>
 			</form>
 					
 			<div id="results">
@@ -82,54 +84,58 @@
 					        	<td class="text-center"><%= result[i].code %></td>
 					        	<td class="text-left"><%= result[i].description %></td>
 					        	<td class="text-center">
-					        		<a href="/editar_papel?idRole=<%=result[i].id%>" class="btn btn-link" role="button">
-					        			<span class="glyphicon glyphicon-edit"></span>
-					        		</a>
-					        		<button type="button" class="btn btn-link" data-toggle="modal" data-target="#role_<%= result[i].id %>">
-					        			<span class="glyphicon glyphicon-remove"></span>
-					        		</button>
-					        		<div id="role_<%= result[i].id %>" class="modal fade text-left" role="dialog">
-										<div class="modal-dialog">
-										    <div class="modal-content">
-										    											    
-										      	<div class="modal-body">										        	
-										        	<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formRole_<%= result[i].id %>">
-											      		
-											      		<div class="form-group">
-											      			<div class="col-sm-offset-1 col-sm-11">
-										    					<p class="form-control-static"><strong>Tem certeza que deseja remover o Papel ?</strong></p>
-										    				</div>
-										    			</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Nome :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].name %></p>
-										    				</div>
-											      		</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Código :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].code %></p>
-										    				</div>
-											      		</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Descrição :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].description %></p>
-										    				</div>
-											      		</div>
+					        		<% if (authenticatedUser && operationCodes.indexOf('editar_papel') != -1) { %>
+						        		<a href="/editar_papel?idRole=<%=result[i].id%>" class="btn btn-link" role="button">
+						        			<span class="glyphicon glyphicon-edit"></span>
+						        		</a>
+					        		<% } %>
+					        		<% if (authenticatedUser && operationCodes.indexOf('excluir_papel') != -1) { %>
+						        		<button type="button" class="btn btn-link" data-toggle="modal" data-target="#role_<%= result[i].id %>">
+						        			<span class="glyphicon glyphicon-remove"></span>
+						        		</button>
+						        		<div id="role_<%= result[i].id %>" class="modal fade text-left" role="dialog">
+											<div class="modal-dialog">
+											    <div class="modal-content">
+											    											    
+											      	<div class="modal-body">										        	
+											        	<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formRole_<%= result[i].id %>">
+												      		
+												      		<div class="form-group">
+												      			<div class="col-sm-offset-1 col-sm-11">
+											    					<p class="form-control-static"><strong>Tem certeza que deseja remover o Papel ?</strong></p>
+											    				</div>
+											    			</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Nome :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].name %></p>
+											    				</div>
+												      		</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Código :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].code %></p>
+											    				</div>
+												      		</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Descrição :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].description %></p>
+											    				</div>
+												      		</div>
 
-											      	</form>	
-										      	</div>
+												      	</form>	
+											      	</div>
 
-										    	<div class="modal-footer">										        	
-										        	<a href="/excluirPapel?idRole=<%=result[i].id%>&roleCode=<%=result[i].code%>" class="btn btn-info" role="button">Sim</a>
-										        	<button type="button" class="btn btn-info" data-dismiss="modal">Não</button>
-										    	</div>
+											    	<div class="modal-footer">										        	
+											        	<a href="/excluirPapel?idRole=<%=result[i].id%>&roleCode=<%=result[i].code%>" class="btn btn-info" role="button">Sim</a>
+											        	<button type="button" class="btn btn-info" data-dismiss="modal">Não</button>
+											    	</div>
 
-										    </div>
+											    </div>
+											</div>
 										</div>
-									</div>
+									<% } %>
 					        	</td>
 			      			</tr>
 				      	<%	}

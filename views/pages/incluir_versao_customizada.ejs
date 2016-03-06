@@ -56,11 +56,13 @@
 						<span class="required"><small>* Campos Obrigatórios</small></span>
 					</div>
 				</div>
-	      		<div class="form-group">
-    				<div class="col-sm-offset-3 col-sm-9">
-    					<input type="submit" name="btnEnviar" class="btn btn-info" value="Enviar">
-    				</div>
-	      		</div>
+				<% if (authenticatedUser && operationCodes.indexOf('incluir_versao_customizada') != -1) { %>
+		      		<div class="form-group">
+	    				<div class="col-sm-offset-3 col-sm-9">
+	    					<input type="submit" name="btnEnviar" class="btn btn-info" value="Enviar">
+	    				</div>
+		      		</div>
+		      	<% } %>	
 	      		
 	      	</form>	
 	    </div>

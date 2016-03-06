@@ -74,11 +74,13 @@
 					</div>
 				</div>
 
-				<div class="form-group">
-					<div class="col-sm-offset-3 col-sm-9">
-						<input type="submit" name="btnPesquisar" class="btn btn-info" value="Pesquisar"/>
-					</div>	
-				</div>				
+				<% if (authenticatedUser && operationCodes.indexOf('pesquisar_usuario') != -1) { %>
+					<div class="form-group">
+						<div class="col-sm-offset-3 col-sm-9">
+							<input type="submit" name="btnPesquisar" class="btn btn-info" value="Pesquisar"/>
+						</div>	
+					</div>				
+				<% } %>
 			</form>
 					
 			<div id="results">
@@ -104,78 +106,82 @@
 					        	<td class="text-left"><%= result[i].profile %></td>
 					        	<td class="text-center"><%= result[i].degree_of_freedom %></td>
 					        	<td class="text-center">					        		
-					        		<% if (!result[i].emailValidated) { %>
-					        			<a href="#" class="btn btn-link" role="button" data-toggle="tooltip" data-placement="bottom" title="Usuário com email não validado">
-					        				<span class="glyphicon glyphicon-alert" style="color: red;"></span>
-					        			</a>	
-					        		<% } %>
-					        		<% if (result[i].emailValidated && !result[i].userValidated) { %>
-					        			<a href="/editar_usuario?idUser=<%=result[i].id%>" class="btn btn-link" role="button" data-toggle="tooltip" data-placement="bottom" title="Usuário não validado">
-					        				<span class="glyphicon glyphicon-alert" style="color: yellow;"></span>
-					        			</a>					        			
-					        		<% } %>
-					        		<% if (result[i].emailValidated && result[i].userValidated) { %>
-					        			<a href="/editar_usuario?idUser=<%=result[i].id%>" class="btn btn-link" role="button">
-					        				<span class="glyphicon glyphicon-edit"></span>
-					        			</a>
-					        		<% } %>
-					        		<button type="button" class="btn btn-link" data-toggle="modal" data-target="#user_<%= result[i].id %>">
-					        			<span class="glyphicon glyphicon-remove"></span>
-					        		</button>
-					        		<div id="user_<%= result[i].id %>" class="modal fade text-left" role="dialog">
-										<div class="modal-dialog">
-										    <div class="modal-content">
-										    											    
-										      	<div class="modal-body">										        	
-										        	<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formUser_<%= result[i].id %>">
-											      		
-											      		<div class="form-group">
-											      			<div class="col-sm-offset-1 col-sm-11">
-										    					<p class="form-control-static"><strong>Tem certeza que deseja remover o Usuário ?</strong></p>
-										    				</div>
-										    			</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Nome :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].name %></p>
-										    				</div>
-											      		</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Email :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].email %></p>
-										    				</div>
-											      		</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Login :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].login %></p>
-										    				</div>
-											      		</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Perfil :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].profile %></p>
-										    				</div>
-											      		</div>
-											      		<div class="form-group">
-										    				<label class="control-label col-sm-4">Grau de Liberdade :</label>
-										    				<div class="col-sm-8">
-										    					<p class="form-control-static"><%= result[i].degree_of_freedom %></p>
-										    				</div>
-											      		</div>
+					        		<% if (authenticatedUser && operationCodes.indexOf('editar_usuario') != -1) { %>
+						        		<% if (!result[i].emailValidated) { %>
+						        			<a href="#" class="btn btn-link" role="button" data-toggle="tooltip" data-placement="bottom" title="Usuário com email não validado">
+						        				<span class="glyphicon glyphicon-alert" style="color: red;"></span>
+						        			</a>	
+						        		<% } %>
+						        		<% if (result[i].emailValidated && !result[i].userValidated) { %>
+						        			<a href="/editar_usuario?idUser=<%=result[i].id%>" class="btn btn-link" role="button" data-toggle="tooltip" data-placement="bottom" title="Usuário não validado">
+						        				<span class="glyphicon glyphicon-alert" style="color: yellow;"></span>
+						        			</a>					        			
+						        		<% } %>
+						        		<% if (result[i].emailValidated && result[i].userValidated) { %>
+						        			<a href="/editar_usuario?idUser=<%=result[i].id%>" class="btn btn-link" role="button">
+						        				<span class="glyphicon glyphicon-edit"></span>
+						        			</a>
+						        		<% } %>
+						        	<% } %>	
+					        		<% if (authenticatedUser && operationCodes.indexOf('excluir_usuario') != -1) { %>
+						        		<button type="button" class="btn btn-link" data-toggle="modal" data-target="#user_<%= result[i].id %>">
+						        			<span class="glyphicon glyphicon-remove"></span>
+						        		</button>
+						        		<div id="user_<%= result[i].id %>" class="modal fade text-left" role="dialog">
+											<div class="modal-dialog">
+											    <div class="modal-content">
+											    											    
+											      	<div class="modal-body">										        	
+											        	<form role="form" class="form-horizontal" accept-charset="UTF-8" id="formUser_<%= result[i].id %>">
+												      		
+												      		<div class="form-group">
+												      			<div class="col-sm-offset-1 col-sm-11">
+											    					<p class="form-control-static"><strong>Tem certeza que deseja remover o Usuário ?</strong></p>
+											    				</div>
+											    			</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Nome :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].name %></p>
+											    				</div>
+												      		</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Email :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].email %></p>
+											    				</div>
+												      		</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Login :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].login %></p>
+											    				</div>
+												      		</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Perfil :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].profile %></p>
+											    				</div>
+												      		</div>
+												      		<div class="form-group">
+											    				<label class="control-label col-sm-4">Grau de Liberdade :</label>
+											    				<div class="col-sm-8">
+											    					<p class="form-control-static"><%= result[i].degree_of_freedom %></p>
+											    				</div>
+												      		</div>
 
-											      	</form>	
-										      	</div>
+												      	</form>	
+											      	</div>
 
-										    	<div class="modal-footer">										        	
-										        	<a href="/excluirUsuario?idUser=<%=result[i].id%>&userLogin=<%=result[i].login%>" class="btn btn-info" role="button">Sim</a>
-										        	<button type="button" class="btn btn-info" data-dismiss="modal">Não</button>
-										    	</div>
+											    	<div class="modal-footer">										        	
+											        	<a href="/excluirUsuario?idUser=<%=result[i].id%>&userLogin=<%=result[i].login%>" class="btn btn-info" role="button">Sim</a>
+											        	<button type="button" class="btn btn-info" data-dismiss="modal">Não</button>
+											    	</div>
 
-										    </div>
+											    </div>
+											</div>
 										</div>
-									</div>
+									<% } %>	
 					        	</td>
 			      			</tr>
 				      	<%	}

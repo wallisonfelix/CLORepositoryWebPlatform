@@ -82,10 +82,12 @@
 
 				<div class="form-group">
 					<div class="col-sm-12">
-						<!-- QUANDO LOGADO E COM PERMISSÃO DE EDIÇÃO -->
-						<a href="/editar_usuario?idUser=<%=user.id%>" class="btn btn-info" role="button">Editar</a>
-						<!-- QUANDO LOGADO E COM PERMISSÃO DE EXCLUSÃO -->
-						<a href="/pesquisar_usuario" class="btn btn-link" role="button">Pesquisar</a>
+						<% if (authenticatedUser && operationCodes.indexOf('editar_papel') != -1) { %>	
+							<a href="/editar_papel?idRole=<%=role.id%>" class="btn btn-info" role="button">Editar</a>
+						<% } %>	
+						<% if (authenticatedUser && operationCodes.indexOf('pesquisar_papel') != -1) { %>	
+							<a href="/pesquisar_papel" class="btn btn-link" role="button">Pesquisar</a>
+						<% } %>	
 					</div>	
 				</div>
 			</form>

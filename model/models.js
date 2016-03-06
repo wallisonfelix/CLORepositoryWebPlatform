@@ -26,7 +26,33 @@ var User = db.sequelize.define('user', {
     		unique: true,
     		fields: ["login"]
     	} 
-    ]
+    ],
+    instanceMethods: {
+	   	operationCodes: function(callback) {	  		 
+	    	this.getRoles().then(function(roles) {	   		
+	    		var operationCodes = [];
+
+				if (roles && roles.length > 0) {
+					var i = 0;
+					roles.forEach(function(role) {
+						role.operationCodes(function(codes) {
+				   			if (codes && codes.length > 0) {
+				   				operationCodes = operationCodes.concat(codes);
+				   				i++;
+				   				if (i == roles.length) {				   				
+				   					callback(operationCodes);
+				   				}
+				   			}
+						});
+					});	   					   		
+				} else {				
+					callback(operationCodes);
+				}
+			}).catch(function (err) {
+				callback([]);
+			});  
+	    }
+  	}
 });
 
 //Representação no CLORepository de um Papel que os Usuários da Plataforma podem possuir.
@@ -43,7 +69,23 @@ var Role = db.sequelize.define('role', {
  	   		unique: true,
     		fields: ["code"]
     	}
-    ]
+    ],
+    instanceMethods: {
+	   	operationCodes: function(callback) {
+	   		this.getOperations( { attributes: ['code'] } ).then(function(operations) {	
+	   			var operationCodes = [];
+				if (operations && operations.length > 0) {
+					for (var i = 0; i < operations.length; i++) {
+						operationCodes.push(operations[i].code);
+					}
+
+				} 
+				callback(operationCodes);			
+			}).catch(function (err) {	
+				callback([]);
+			});   
+	    }
+	}
 });
 
 //Representação no CLORepository de uma Operação oferecida na Plataforma,

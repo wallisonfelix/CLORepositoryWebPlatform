@@ -56,11 +56,13 @@
 					</div>
 				</div>
 
-				<div class="form-group">
-					<div class="col-sm-offset-3 col-sm-9">
-						<input type="submit" name="btnRedefinirSenha" class="btn btn-info" value="Redefinir Senha"/>
-					</div>	
-				</div>				
+				<% if (!authenticatedUser) { %>
+					<div class="form-group">
+						<div class="col-sm-offset-3 col-sm-9">
+							<input type="submit" name="btnRedefinirSenha" class="btn btn-info" value="Redefinir Senha"/>
+						</div>	
+					</div>
+				<% } %>	
 			</form>
 	    </div>
 
