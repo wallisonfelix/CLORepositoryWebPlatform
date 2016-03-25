@@ -1,24 +1,25 @@
-  
 {
   "name": "clo-repository-web-platform",
   "version": "0.1.0",
   "description": "Plataforma Web para interfaciar com o CLORepository (Repositório de Objetos de Aprendizagem Customizáveis)",
   "author": "Wallison Félix <wallison.felix@gmail.com>",
-  "contributors": [{
-  "name": "Ruriel Santos",
-  "email": "ruriel.santos@gmail.com"
-}],
+  "contributors": [
+    {
+      "name": "Ruriel Santos",
+      "email": "ruriel.santos@gmail.com"
+    }
+  ],
   "main": "main.js",
   "repository": {
-  "type": "git",
-  "url": "https://github.com/wallisonfelix"
-},
+    "type": "git",
+    "url": "https://github.com/wallisonfelix"
+  },
   "keywords": [
-  "CLO",
-  "Customizable Learning Objects",
-  "CLORepository",
-  "Web Platform"
-],
+    "CLO",
+    "Customizable Learning Objects",
+    "CLORepository",
+    "Web Platform"
+  ],
   "dependencies": {
     "adm-zip": "~0.4.7",
     "express": "~4.13.1",
@@ -30,11 +31,12 @@
     "pg": "~4.4.3",
     "pg-hstore": "~2.3.2",
     "bcrypt-nodejs": "~0.0.3",
-    "nodemailer": "~2.1.0",
     "passport": "~0.3.2",
     "passport-local": "~1.0.0",
     "cookie-parser": "~1.4.1",
-    "express-session": "1.13.0"
+    "express-session": "1.13.0",
+    "nodemailer": "~2.3.0",
+    "nodemailer-smtp-transport": "~2.4.1"   
   },
   "private": true,
   "subdomain": "CLORepositoryWebPlatform"
