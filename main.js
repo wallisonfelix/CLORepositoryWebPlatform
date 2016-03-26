@@ -1039,7 +1039,7 @@ app.post('/obterTokenAcessoAPI', function (req, res) {
 	passport.authenticate('local-login', function (err, user) {
 
 		if(err) {
-			jwt.sendResponse(false, [{'danger', 'Erro ao Obter Token de Acesso à API: ' + err}], null, req, res);
+			jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Obter Token de Acesso à API: ' + err}], null, req, res);
 		} else {
 			jwt.generateToken(user, req, res);
 		}
@@ -1057,26 +1057,26 @@ app.post("/incluirOACAPI", jwt.hasValidToken, function(req, res, next) {
 		db.mongo.open(function(err, mongoConnection) {
 			
 			if(err) {
-				jwt.sendResponse(false, [{'danger', 'Erro ao Incluir AOC: ' + err}], null, req, res);
+				jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
 				db.mongo.close();
 			}
 
 			cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
 
 				if(err) {
-					jwt.sendResponse(false, [{'danger', 'Erro ao Incluir AOC: ' + err}], null, req, res);
+					jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
 					db.mongo.close();
 				}
 
 				fs.unlink(req.files.fileInput.path, function(err) {
 					if(err) {
-						jwt.sendResponse(false, [{'danger', 'Erro ao Incluir AOC: ' + err}], null, req, res);
+						jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
 					}
 					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 				});
 
 				mongoConnection.close();
-				jwt.sendResponse(true, [{'sucess', 'OAC incluído com sucesso'}], null, req, res);
+				jwt.sendResponse(true, [{messageType: 'sucess', message: 'OAC incluído com sucesso'}], null, req, res);
 			});
 		});
 	}
@@ -1094,25 +1094,25 @@ app.post("/incluirVersaoCustomizadaAPI", jwt.hasValidToken, function(req, res, n
 		db.mongo.open(function(err, mongoConnection) {
 			
 			if(err) {
-				jwt.sendResponse(false, [{'danger', 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
+				jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
 				db.mongo.close();
 			}
 
 			cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
 				
 				if(err) {
-					jwt.sendResponse(false, [{'danger', 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
+					jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
 				}
 
 				fs.unlink(req.files.fileInput.path, function(err) {
 					if(err) {
-						jwt.sendResponse(false, [{'danger', 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
+						jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
 					}
 					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 				});
 				
 				mongoConnection.close();
-				jwt.sendResponse(true, [{'sucess', 'Versão Customizada incluída com sucesso'}], null, req, res);				
+				jwt.sendResponse(true, [{messageType: 'sucess', message: 'Versão Customizada incluída com sucesso'}], null, req, res);
 			});
 		});
 	}
