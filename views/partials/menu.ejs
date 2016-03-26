@@ -5,7 +5,10 @@
 		<li id="incluirOACItemMenu"><a href="/incluir_oac"><span class="glyphicon glyphicon-upload"></span>  Incluir OAC</a></li>
 	<% } %>
 	<% if (authenticatedUser && operationCodes.indexOf('incluir_versao_customizada') != -1) { %>
-		<li id="incluirVersaoCustomizad	aItemMenu"><a href="/incluir_versao_customizada"><span class="glyphicon glyphicon-upload"></span>  Incluir Versão Customizada</a></li>
+		<li id="incluirVersaoCustomizadaItemMenu"><a href="/incluir_versao_customizada"><span class="glyphicon glyphicon-upload"></span>  Incluir Versão Customizada</a></li>
+	<% } %>
+	<% if (authenticatedUser && (operationCodes.indexOf('incluir_oac') != -1 || operationCodes.indexOf('incluir_versao_customizada') != -1)) { %>
+		<li id="incluirVersaoCustomizadaItemMenu"><a href="/api"><span class="glyphicon glyphicon-list"></span>  API de Interação com o <em>CLORepository</em></a></li>
 	<% } %>
 	<% if (authenticatedUser && (operationCodes.indexOf('pesquisar_usuario') != -1 || operationCodes.indexOf('pesquisar_papel') != -1 || operationCodes.indexOf('pesquisar_operacao') != -1)) { %>
 		<li id="administracaoItemMenu" class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-menu-down"></span>  Administração</a>

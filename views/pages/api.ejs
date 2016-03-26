@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+	    	<ol class="breadcrumb">
+			  <li>Home</li>
+			  <li class="active">API de Interação com o <em>CLORepository</em></li>
+			</ol>
+
+			<h3>Especificação da API</h3>
+            
+            <strong>POST obterTokenAcessoAPI (req.body.login, req.body.password) <br/>
+                => {resultType , messages[{messageType, message}...], < {token, expires} >}</strong>
+            <br/><br/>
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Observação</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>login</td>
+                        <td>Login do usuário que deseja obter o Token de Acesso à API</td>
+                        <td>String</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                    <tr>
+                        <td>password</td>
+                        <td>Senha do usuário que deseja obter o Token de Acesso à API</td>
+                        <td>String</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                <tbody>
+            </table>
+
+	      	<strong>Retorno:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Observação</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>resultType</td>
+                        <td>Indicação do tipo de retorno</td>
+                        <td>String</td>
+                        <td>Obrigatório: Sucess / Erro</td>
+                    </tr>
+                    <tr>
+                        <td>messages</td>
+                        <td>Lista de mensagens resultantes da operação realizada. Cada item da lista é composto pelos atributos messageType (danger / warning / sucess) e message (mensagem)</td>
+                        <td>Array</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                    <tr>
+                        <td>data</td>
+                        <td>Dados resultantes da operação realizada. É um objeto composto pelos atributos token (Token de Acesso) e expire (momento de expiração do Token)</td>
+                        <td>Object</td>
+                        <td>Opcional: apenas se a autenticação for realizada com sucesso</td>
+                    </tr>
+                <tbody>
+            </table>
+            </br>
+            
+            <strong>POST incluirOACAPI (req.files.fileInput, req.headers.x-access-token) <br/>
+                => {resultType , messages[{messageType, message}...]}</strong>
+            <br/><br/>
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Observação</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>fileInput</td>
+                        <td>Arquivo .CLO gerado pelo <em>CLOStudio</em></td>
+                        <td>File</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                    <tr>
+                        <td>x-access-token</td>
+                        <td>Token de Acesso à API</td>
+                        <td>String</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                <tbody>
+            </table>
+            
+            <strong>Retorno:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Observação</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>resultType</td>
+                        <td>Indicação do tipo de retorno</td>
+                        <td>String</td>
+                        <td>Obrigatório: Sucess / Erro</td>
+                    </tr>
+                    <tr>
+                        <td>messages</td>
+                        <td>Lista de mensagens resultantes da operação realizada. Cada item da lista é composto pelos atributos messageType (danger / warning / sucess) e message (mensagem)</td>
+                        <td>Array</td>
+                        <td>Obrigatório</td>
+                    </tr>                    
+                <tbody>
+            </table>
+            </br>
+
+            <strong>POST incluirVersaoCustomizadaAPI (req.files.fileInput, req.body.title, req.body.description, req.body.languages, req.headers.x-access-token) <br/>
+                => {resultType , messages[{messageType, message}...]}</strong>
+            <br/><br/>
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Observação</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>fileInput</td>
+                        <td>Arquivo .CLO resultante do processo de customização</td>
+                        <td>File</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                    <tr>
+                        <td>title</td>
+                        <td>Título que identificará a Versão Customizada</td>
+                        <td>String</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                    <tr>
+                        <td>description</td>
+                        <td>Descrição detalhada das customizações que originaram a Versão Customizada</td>
+                        <td>String</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                    <tr>
+                        <td>languages</td>
+                        <td>Lista de idiomas para os quais a Versão Customizada estará disponível (conforme o padrão <em>Learning Object Metadata - LOM</em>)</td>
+                        <td>Array</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                    <tr>
+                        <td>x-access-token</td>
+                        <td>Token de Acesso à API</td>
+                        <td>String</td>
+                        <td>Obrigatório</td>
+                    </tr>
+                <tbody>
+            </table>
+            
+            <strong>Retorno:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>resultType</td>
+                        <td>Indicação do tipo de retorno</td>
+                        <td>String</td>
+                        <td>Obrigatório: Sucess / Erro</td>
+                    </tr>
+                    <tr>
+                        <td>messages</td>
+                        <td>Lista de mensagens resultantes da operação realizada. Cada item da lista é composto pelos atributos messageType (danger / warning / sucess) e message (mensagem)</td>
+                        <td>Array</td>
+                        <td>Obrigatório</td>
+                    </tr>                    
+                <tbody>
+            </table>
+            </br>
+
+	    </div>
+	  </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>
