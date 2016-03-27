@@ -18,15 +18,16 @@ var sendResponse = function(sucessResponse, messages, data, req, res) {
 		resultType = "Erro";	
 		logMessageType = "  Mensagem de Erro da API: ";	
 	}
+
 	//Log das mensagens de resposta
 	for (var index = 0; index < messages.length; index++) {
-		console.error(new Date() +  + messages[index].message);	
+		console.error(new Date() + logMessageType + messages[index].message);	
 	}
 
 	//Criação do objeto de resposta
 	var response = { 
-		resultType: resultType;
-		messages: messages;
+		resultType: resultType,
+		messages: messages
 	};	
 	//Adiciona o atributo data ao objeto de resposta apenas se necessário
 	if (data) {
@@ -34,22 +35,19 @@ var sendResponse = function(sucessResponse, messages, data, req, res) {
 	}
 
 	//Envia a resposta
-	res.JSON(response);
+	res.send(response);
 };
 
 //Gera um Token de Acesso com validade de uma hora. Ele inclui o login e as operações do usuário utilizado pelo cliente para a obtenção do Token
 var generateToken = function(user, req, res) {			
-	user.operationCodes(function(operationCodes) {
-		var expires = moment().add('hour', 1).valueOf();
+	var expires = moment().add(1, 'hour').valueOf();
 
-		var token = jwt.encode({ 
-			iss: user.login,	
-			operationCodes: operationCodes,
-			exp: expires
-		}, jwtTokenSecret);
+	var token = jwt.encode({ 
+		iss: user.login,			
+		exp: expires
+	}, jwtTokenSecret);
 
-		sendResponse(true, [{messageType: 'sucess', message: 'Token de Acesso à API obtido com sucesso'}], {token: token, expires: expires}, req, res);
-	});
+	sendResponse(true, [{messageType: 'sucess', message: 'Token de Acesso à API obtido com sucesso'}], {token: token, expires: expires}, req, res);	
 };
 
 //Verifica se a requisição possui um Token de Acesso válido
@@ -81,7 +79,7 @@ var hasValidToken = function(req, res, next) {
 	            } else {
 	            	sendResponse(false, [{messageType: 'danger', message: 'Erro ao validar Token de Acesso à API: Usuário com o login ' + decodedToken.iss + ' não encontrado'}], null, req, res);
 	            }
-			)};
+			});
 	  	} catch (err) {
 	  		sendResponse(false, [{messageType: 'danger', message: 'Token inválido!'}], null, req, res);
 	  	}

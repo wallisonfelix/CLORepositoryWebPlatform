@@ -32,7 +32,7 @@ app.use(multer({dest:"./sent"}));
 
 // Configurações para Autenticação e Autorização
 app.use(cookieParser());
-app.use(session({ secret: '12345' }));
+app.use(session({ secret: '12345', cookie: { maxAge: 600000 }}));
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -121,25 +121,29 @@ app.get('/login', isLoggedOut, function (req, res) {
 
 app.post('/realizarLogin', isLoggedOut, function (req, res) {
 	
-	passport.authenticate('local-login', function (err, user) {
+	if (req.body.login && req.body.password) {
+		passport.authenticate('local-login', function (err, user) {
 
-		if(err) {			
-			console.error(new Date() + " Erro ao Realizar Login: " + err);
-			res.render('pages/login', { authenticatedUser: null, 'messages': [err], 'messagesTypes': ["danger"]});
-		} else {
-			req.logIn(user, function(err) {
-		      
-		      	if(err) {
-					console.error(new Date() + " Erro ao Realizar Login: " + err);
-					res.render('pages/login', { authenticatedUser: null, 'messages': [err], 'messagesTypes': ["danger"]});
-				} 
+			if(err) {			
+				console.error(new Date() + " Erro ao Realizar Login: " + err);
+				res.render('pages/login', { authenticatedUser: null, 'messages': [err], 'messagesTypes': ["danger"]});
+			} else {
+				req.logIn(user, function(err) {
+			      
+			      	if(err) {
+						console.error(new Date() + " Erro ao Realizar Login: " + err);
+						res.render('pages/login', { authenticatedUser: null, 'messages': [err], 'messagesTypes': ["danger"]});
+					} 
 
-				req.user.operationCodes(function(operationCodes) {
-					res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Login realizado com sucesso"], 'messagesTypes': ["success"] });	
-				});				
-		    });		
-		}
-	})(req, res);
+					req.user.operationCodes(function(operationCodes) {
+						res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Login realizado com sucesso"], 'messagesTypes': ["success"] });	
+					});				
+			    });		
+			}
+		})(req, res);
+	} else {
+		console.error(new Date() + " Erro ao Realizar Login: Campos obrigatórios não informados");
+	}
 });
 
 app.get('/realizarLogout', isLoggedIn, function (req, res) {
@@ -1036,49 +1040,58 @@ app.get('/api', isLoggedIn, function (req, res) {
 
 app.post('/obterTokenAcessoAPI', function (req, res) {
 	
-	passport.authenticate('local-login', function (err, user) {
-
-		if(err) {
-			jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Obter Token de Acesso à API: ' + err}], null, req, res);
-		} else {
-			jwt.generateToken(user, req, res);
-		}
-	})(req, res);
+	if (req.body.login && req.body.password) {
+		passport.authenticate('local-login', function (err, user) {
+			if(err) {
+				jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Obter Token de Acesso à API: ' + err}], null, req, res);
+			} else {
+				jwt.generateToken(user, req, res);
+			}
+		})(req, res);
+	} else {
+		jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Obter Token de Acesso à API: Campos obrigatórios não informados'}], null, req, res);
+	}
 });
 
 app.post("/incluirOACAPI", jwt.hasValidToken, function(req, res, next) {
 		return jwt.hasPermission('incluir_oac', req, res, next);
 	}, function(req, res) {
 
-		var oac = new zip(req.files.fileInput.path);
-		var manifestData = cloUtils.lerManifest(oac);
-		console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
+		var filePath = req.files.fileInput.path;		
 
-		db.mongo.open(function(err, mongoConnection) {
-			
-			if(err) {
-				jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
-				db.mongo.close();
-			}
+		if (filePath) {
+			var oac = new zip(filePath);
+			var manifestData = cloUtils.lerManifest(oac);
+			console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
 
-			cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
-
+			db.mongo.open(function(err, mongoConnection) {
+				
 				if(err) {
 					jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
 					db.mongo.close();
 				}
 
-				fs.unlink(req.files.fileInput.path, function(err) {
+				cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
+
 					if(err) {
 						jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
+						db.mongo.close();
 					}
-					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
-				});
 
-				mongoConnection.close();
-				jwt.sendResponse(true, [{messageType: 'sucess', message: 'OAC incluído com sucesso'}], null, req, res);
+					fs.unlink(req.files.fileInput.path, function(err) {
+						if(err) {
+							jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
+						}
+						console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+					});
+
+					mongoConnection.close();
+					jwt.sendResponse(true, [{messageType: 'sucess', message: 'OAC incluído com sucesso'}], null, req, res);
+				});
 			});
-		});
+		} else {
+			jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir OAC: Campos obrigatórios não informados'}], null, req, res);
+		}	
 	}
 );
 
@@ -1088,33 +1101,39 @@ app.post("/incluirVersaoCustomizadaAPI", jwt.hasValidToken, function(req, res, n
 
 		var title = req.body.title;
 		var description = req.body.description;
-		var languages = req.body.languages;
-		var oac = new zip(req.files.fileInput.path);
+		var languages = req.body.languages;		
+		var filePath = req.files.fileInput.path;
 
-		db.mongo.open(function(err, mongoConnection) {
-			
-			if(err) {
-				jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
-				db.mongo.close();
-			}
+		if (title && description && languages && filePath) {
+			var oac = new zip(filePath);
 
-			cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
+			db.mongo.open(function(err, mongoConnection) {
 				
 				if(err) {
 					jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
+					db.mongo.close();
 				}
 
-				fs.unlink(req.files.fileInput.path, function(err) {
+				cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
+					
 					if(err) {
 						jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
 					}
-					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+
+					fs.unlink(req.files.fileInput.path, function(err) {
+						if(err) {
+							jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
+						}
+						console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+					});
+					
+					mongoConnection.close();
+					jwt.sendResponse(true, [{messageType: 'sucess', message: 'Versão Customizada incluída com sucesso'}], null, req, res);
 				});
-				
-				mongoConnection.close();
-				jwt.sendResponse(true, [{messageType: 'sucess', message: 'Versão Customizada incluída com sucesso'}], null, req, res);
 			});
-		});
+		} else {
+			jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: Campos obrigatórios não informados'}], null, req, res);
+		}
 	}
 );
 
