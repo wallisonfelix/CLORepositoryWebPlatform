@@ -15,6 +15,7 @@ var app = express();
 var http = require('http');
 var server = http.Server(app);
 var multer = require('multer');
+var bodyParser = require('body-parser');
 
 var serverAddress = 'http://localhost';
 
@@ -28,6 +29,8 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 };
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.use(multer({dest:"./sent"}));
 
 // Configurações para Autenticação e Autorização
@@ -108,10 +111,10 @@ function redirectError(errorMessage, error, req, res) {
 	console.error(new Date() + " " + errorMessage + ": " + error);
 	if (req.user) {
 		req.user.operationCodes(function(operationCodes) {			
-			res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error], 'messagesTypes': ["danger"]});
+			res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error.message], 'messagesTypes': ["danger"]});
 		});
 	} else {
-		res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error], 'messagesTypes': ["danger"]});
+		res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error.message], 'messagesTypes': ["danger"]});
 	}
 }
 
@@ -163,7 +166,7 @@ app.post('/recuperarSenha', isLoggedOut, function (req, res) {
 	administration.buscarUsuarioPorEmail(email, true, function (err, user) {
 		
 		if (!err && !user) {		
-			err = new Error(" Usuário com email validado " + email + " não encontrado.");			
+			err = new Error("Usuário com email validado " + email + " não encontrado.");			
 		}
 
 		if(err) {
@@ -297,9 +300,9 @@ app.get('/editar_usuario', isLoggedIn, function(req, res, next) {
 		administration.buscarUsuarioPorId(idUser, function (err, user) {		
 
 			if (!err && !user) {		
-				err = new Error(" Usuário " + idUser + " não encontrado.");			
+				err = new Error("Usuário " + idUser + " não encontrado.");			
 			} else if (!err && !user.emailValidated) {		
-				err = new Error(" Usuário " + idUser + " com email validado não encontrado.");			
+				err = new Error("Usuário " + idUser + " com email validado não encontrado.");			
 			}
 
 			if(err) {
@@ -530,7 +533,7 @@ app.get('/editar_papel', isLoggedIn, function(req, res, next) {
 		administration.buscarPapelPorId(idRole, function (err, role) {
 			
 			if(!err && !role) {
-				err = new Error(" Papel " + idRole + " não encontrado.");
+				err = new Error("Papel " + idRole + " não encontrado.");
 			}
 			if(err) {
 				redirectError("Erro ao Pesquisar Papel", err, req, res);				
@@ -680,7 +683,7 @@ app.get('/editar_operacao', isLoggedIn, function(req, res, next) {
 		administration.buscarOperacaoPorId(idOperation, function (err, operation) {
 			
 			if(!err && !operation) {
-				err = new Error(" Operação " + idOperation + " não encontrada.");
+				err = new Error("Operação " + idOperation + " não encontrada.");
 			}
 			if(err) {
 				redirectError("Erro ao Pesquisar Operação", err, req, res);				
@@ -776,8 +779,8 @@ app.get('/pesquisarOAC', function (req, res) {
 			db.mongo.close();
 		}
 
-		cloRepository.buscarOAC(mongoConnection, title, function(err, result) {
-			
+		cloRepository.buscarOAC(mongoConnection, title, function(err, result) {			
+
 			if(err) {
 				redirectError("Erro ao Pesquisar OAC", err, req, res);
 				db.mongo.close();
@@ -825,11 +828,18 @@ app.get('/visualizarMetadadosOAC', function (req, res) {
 	});
 });
 
-app.get("/baixarOAC", function(res, req) {
+app.get("/baixarOAC", function(req, res) {
 	//Lê a identificação do DescritorDeArquivoExecutável e o diretório em que 
 	//o arquivo executável está localizado no servidor
-	var id = req.req.query.id
-	var filePath = req.req.query.filePath
+	var id = req.query.id
+	var filePath = req.query.filePath
+
+	var userId = 0;
+	var degreeOfFreedom = 0;
+	if (req.user) {
+		userId = req.user.id;
+		degreeOfFreedom = req.user.degree_of_freedom;
+	}
 
 	db.mongo.open(function(err, mongoConnection) {
 		
@@ -839,7 +849,7 @@ app.get("/baixarOAC", function(res, req) {
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando o OAC
-		cloRepository.gerarPacoteOAC(mongoConnection, id, filePath, function(err, oac) {			
+		cloRepository.gerarPacoteOAC(mongoConnection, id, filePath, userId, degreeOfFreedom, function(err, oac) {			
 			
 			if(err) {
 				redirectError("Erro ao Baixar OAC", err, req, res);
@@ -847,13 +857,13 @@ app.get("/baixarOAC", function(res, req) {
 			}
 
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
-			res.res.set('Content-Type', 'application/zip');
+			res.set('Content-Type', 'application/zip');
 			//Informa o nome do arquivo ao navegador.
-			res.res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
+			res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
 			//Informa o tamanho do arquivo ao navegador.
-			res.res.set('Content-Length', oac.toBuffer().length);
+			res.set('Content-Length', oac.toBuffer().length);
 			//Envia o arquivo em forma de bytes.
-			res.res.send(oac.toBuffer());
+			res.send(oac.toBuffer());
 
 			mongoConnection.close();
 		});
@@ -917,12 +927,19 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 	});
 });
 
-app.get("/baixarVersaoCustomizada", function(res, req) {
+app.get("/baixarVersaoCustomizada", function(req, res) {
 	//Lê a identificação do DescritorDeVersao, do DescritorDeArquivoExecutável e o diretório em que 
 	//o arquivo executável está localizado no servidor
-	var id = req.req.query.id;
-	var idRootVersion = req.req.query.idRootVersion;
-	var filePath = req.req.query.filePath;
+	var id = req.query.id;
+	var idRootVersion = req.query.idRootVersion;
+	var filePath = req.query.filePath;
+
+	var userId = 0;
+	var degreeOfFreedom = 0;
+	if (req.user) {
+		userId = req.user.id;
+		degreeOfFreedom = req.user.degree_of_freedom;
+	}
 
 	db.mongo.open(function(err, mongoConnection) {
 		
@@ -932,7 +949,7 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando a Versão Customizada
-		cloRepository.gerarPacoteVersao(mongoConnection, id, idRootVersion, filePath, function(err, versaoCustomizada) {			
+		cloRepository.gerarPacoteVersao(mongoConnection, id, idRootVersion, filePath, userId, degreeOfFreedom, function(err, versaoCustomizada) {			
 			
 			if(err) {
 				redirectError("Erro ao Baixar Versão Customizada", err, req, res);
@@ -940,13 +957,13 @@ app.get("/baixarVersaoCustomizada", function(res, req) {
 			}
 
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
-			res.res.set('Content-Type', 'application/zip');
+			res.set('Content-Type', 'application/zip');
 			//Informa o nome do arquivo ao navegador.
-			res.res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
+			res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
 			//Informa o tamanho do arquivo ao navegador.
-			res.res.set('Content-Length', versaoCustomizada.toBuffer().length);
+			res.set('Content-Length', versaoCustomizada.toBuffer().length);
 			//Envia o arquivo em forma de bytes.
-			res.res.send(versaoCustomizada.toBuffer());
+			res.send(versaoCustomizada.toBuffer());
 
 			mongoConnection.close();
 		});
@@ -957,6 +974,7 @@ app.post("/incluirOAC", isLoggedIn, function(req, res, next) {
 		return hasPermission('incluir_oac', req, res, next);
 	}, function(req, res) {
 
+		var userId = req.user.id;
 		var oac = new zip(req.files.fileInput.path);
 		var manifestData = cloUtils.lerManifest(oac);
 		console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
@@ -968,7 +986,7 @@ app.post("/incluirOAC", isLoggedIn, function(req, res, next) {
 				db.mongo.close();
 			}
 
-			cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
+			cloRepository.criarOAC(mongoConnection, oac, userId, manifestData.fileNames, function(err, result) {
 
 				if(err) {
 					redirectError("Erro ao Incluir OAC", err, req, res);
@@ -995,6 +1013,8 @@ app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
 		return hasPermission('incluir_versao_customizada', req, res, next);
 	}, function(req, res) {
 
+		var userId = req.user.id;
+		var degreeOfFreedom = req.user.degree_of_freedom;
 		var title = req.body.title;
 		var description = req.body.description;
 		var languages = req.body.languages.split(";");
@@ -1007,7 +1027,7 @@ app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
 				db.mongo.close();
 			}
 
-			cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
+			cloRepository.criarVersaoCustomizada(mongoConnection, oac, userId, degreeOfFreedom, title, description, languages, function(err, result) {				
 				
 				if(err) {
 					redirectError("Erro ao Incluir Versão Customizada", err, req, res);
@@ -1031,111 +1051,290 @@ app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
 
 // ***** Application Programming Interface (API) de Interação com o CLORepoistory *****
 
-app.get('/api', isLoggedIn, function (req, res) {
+app.get('/developer', isLoggedIn, function (req, res) {
 		req.user.operationCodes(function(operationCodes) {
-			res.render('pages/api', { authenticatedUser: req.user, operationCodes: operationCodes });
+			res.render('pages/developer', { authenticatedUser: req.user, operationCodes: operationCodes });
 		});
 	}
 );
 
-app.post('/obterTokenAcessoAPI', function (req, res) {
-	
+app.post('/api/obter-token-acesso', function (req, res) {		
+
 	if (req.body.login && req.body.password) {
 		passport.authenticate('local-login', function (err, user) {
 			if(err) {
-				jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Obter Token de Acesso à API: ' + err}], null, req, res);
+				jwt.sendResponse(400, 'text/plain', null, err.message, req, res);
 			} else {
 				jwt.generateToken(user, req, res);
 			}
 		})(req, res);
 	} else {
-		jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Obter Token de Acesso à API: Campos obrigatórios não informados'}], null, req, res);
+		jwt.sendResponse(400, 'text/plain', null, "Campos obrigatórios não informados", req, res);
 	}
 });
 
-app.post("/incluirOACAPI", jwt.hasValidToken, function(req, res, next) {
+app.post("/api/oacs", jwt.hasValidToken, function(req, res, next) {
 		return jwt.hasPermission('incluir_oac', req, res, next);
 	}, function(req, res) {
 
-		var filePath = req.files.fileInput.path;		
+		var userId = req.user.id;
+		var fileInput = req.files.fileInput;
 
-		if (filePath) {
-			var oac = new zip(filePath);
+		if (fileInput && fileInput.path) {
+
+			var oac = new zip(fileInput.path);
 			var manifestData = cloUtils.lerManifest(oac);
 			console.log(new Date() + " Versao do MANIFEST.MF: " + manifestData.version);
 
 			db.mongo.open(function(err, mongoConnection) {
 				
 				if(err) {
-					jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
+					jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir AOC: " + err.message, req, res);
 					db.mongo.close();
+					return;
 				}
 
-				cloRepository.criarOAC(mongoConnection, oac, manifestData.fileNames, function(err) {
+				cloRepository.criarOAC(mongoConnection, oac, userId, manifestData.fileNames, function(err, result) {
 
 					if(err) {
-						jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
+						jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir AOC: " + err.message, req, res);
 						db.mongo.close();
+						return;
 					}
 
-					fs.unlink(req.files.fileInput.path, function(err) {
+					fs.unlink(fileInput.path, function(err) {
 						if(err) {
-							jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir AOC: ' + err}], null, req, res);
+							jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir AOC: " + err.message, req, res);
+							return;
 						}
-						console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
-					});
+						console.log(new Date() + " Arquivo temporário \"" + path.basename(fileInput.path) + "\" removido com sucesso.");
 
-					mongoConnection.close();
-					jwt.sendResponse(true, [{messageType: 'sucess', message: 'OAC incluído com sucesso'}], null, req, res);
+						cloRepository.buscarIdDescritoresDeArquivoExecutavelPorIdRaiz(mongoConnection, result._id, function(err, idDescritoresDeArquivosExecutaveis) {			
+						
+							if(err) {
+								jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir AOC: " + err.message, req, res);
+								db.mongo.close();
+								return;
+							}
+
+							var uri = "";
+							for(var i = 0; i < idDescritoresDeArquivosExecutaveis.length; i++) {
+								if (i > 0) {
+									uri = uri + "; ";
+								}
+								uri = uri + "/api/oacs/" + result._id + "/" + idDescritoresDeArquivosExecutaveis[i];
+							}
+
+							mongoConnection.close();
+
+							jwt.sendResponse(201, 'text/plain', null, uri, req, res);
+						});		
+					});											
 				});
 			});
 		} else {
-			jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir OAC: Campos obrigatórios não informados'}], null, req, res);
+			jwt.sendResponse(400, 'text/plain', null, "Campos obrigatórios não informados", req, res);
 		}	
 	}
 );
 
-app.post("/incluirVersaoCustomizadaAPI", jwt.hasValidToken, function(req, res, next) {
+app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {	
+
+	var oacId = req.params.oacId;
+	var daeId = req.params.daeId;
+	var userId = req.user.id;
+	var degreeOfFreedom = req.user.degree_of_freedom;
+
+	db.mongo.open(function(err, mongoConnection) {
+		
+		if(err) {
+			jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
+			db.mongo.close();
+			return;
+		}
+		
+		cloRepository.buscarDescritorDeArquivoExecutavelPorId(mongoConnection, daeId, function(err, descritorDeArquivoExecutavel) {
+
+			if(err) {
+				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
+				db.mongo.close();
+				return;
+			}
+
+			if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.clo_id == oacId) {			
+
+				var filePath = descritorDeArquivoExecutavel.locations[0];
+
+				cloRepository.gerarPacoteOAC(mongoConnection, daeId, filePath, userId, degreeOfFreedom, function(err, oac) {			
+					
+					if(err) {
+						jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
+						db.mongo.close();
+						return;
+					}
+
+					mongoConnection.close();
+
+					jwt.sendResponse(200, 'application/zip', path.basename(filePath, path.extname(filePath)) + '.zip', oac.toBuffer(), req, res);			
+				});
+			} else {
+				jwt.sendResponse(404, 'text/plain', null, "OAC não encontrado", req, res);
+				db.mongo.close();
+			}			
+		});
+	});
+});
+
+app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, function(req, res, next) {
 		return jwt.hasPermission('incluir_versao_customizada', req, res, next);
-	}, function(req, res) {
+	}, function(req, res) {	
 
-		var title = req.body.title;
-		var description = req.body.description;
-		var languages = req.body.languages;		
-		var filePath = req.files.fileInput.path;
+		var oacId = req.params.oacId;
+		var daeId = req.params.daeId;
 
-		if (title && description && languages && filePath) {
-			var oac = new zip(filePath);
+		var userId = req.user.id;
+		var degreeOfFreedom = req.user.degree_of_freedom;
+		var title = req.query.title;
+		var description = req.query.description;
+		var languages = req.query.languages;		
+		var fileInput = req.files.fileInput;
+
+		if (title && description && languages && fileInput && fileInput.path) {			
+		
+			languages = languages.split(";");
 
 			db.mongo.open(function(err, mongoConnection) {
 				
 				if(err) {
-					jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
+					jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
 					db.mongo.close();
+					return;
 				}
 
-				cloRepository.criarVersaoCustomizada(mongoConnection, oac, title, description, languages, function(err, result) {				
-					
+				cloRepository.buscarDescritorDeArquivoExecutavelPorId(mongoConnection, daeId, function(err, descritorDeArquivoExecutavel) {
+
 					if(err) {
-						jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
+						jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
+						db.mongo.close();
+						return;
 					}
 
-					fs.unlink(req.files.fileInput.path, function(err) {
-						if(err) {
-							jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: ' + err}], null, req, res);
-						}
-						console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
-					});
-					
-					mongoConnection.close();
-					jwt.sendResponse(true, [{messageType: 'sucess', message: 'Versão Customizada incluída com sucesso'}], null, req, res);
+					if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.clo_id == oacId) {												
+						
+						var oac = new zip(fileInput.path);
+						var tokenAsArray = oac.readAsText("token.txt").split(" ");
+						var idDescritorOrigem = tokenAsArray[0];	
+
+						cloRepository.buscarDescritorDeVersaoPorId(mongoConnection, idDescritorOrigem, function(err, descritorDeVersao) {
+
+							if(err) {
+								jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
+								db.mongo.close();
+								return;
+							}
+
+							if (idDescritorOrigem == daeId || (descritorDeVersao && descritorDeVersao.id_root_version == daeId)) {
+
+								cloRepository.criarVersaoCustomizada(mongoConnection, oac, userId, degreeOfFreedom, title, description, languages, function(err, result) {				
+									
+									if(err) {
+										jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
+										return;
+									}
+
+									fs.unlink(fileInput.path, function(err) {
+										if(err) {
+											jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
+											return;
+										}
+										console.log(new Date() + " Arquivo temporário \"" + path.basename(fileInput.path) + "\" removido com sucesso.");
+									});
+									
+									mongoConnection.close();
+									
+									var version = result.version.replace('.', '-');
+									var uri = "/api/oacs/" + oacId + "/" + daeId + "/versoes-customizadas/" + version;
+									jwt.sendResponse(201, 'text/plain', null, uri, req, res);
+								});
+							} else {
+								jwt.sendResponse(400, 'text/plain', null, "Esta não é uma Versão Customizada deste OAC", req, res);
+								db.mongo.close();
+							}			
+						});
+					} else {
+						jwt.sendResponse(404, 'text/plain', null, "OAC não encontrado", req, res);
+						db.mongo.close();
+					}			
 				});
-			});
+			});						
 		} else {
-			jwt.sendResponse(false, [{messageType: 'danger', message: 'Erro ao Incluir Versão Customizada: Campos obrigatórios não informados'}], null, req, res);
+			jwt.sendResponse(400, 'text/plain', null, "Campos obrigatórios não informados", req, res);
 		}
 	}
 );
+
+app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasValidToken, function(req, res) {	
+
+	var oacId = req.params.oacId;
+	var daeId = req.params.daeId;
+	var versionNumber = req.params.versionNumber.replace('-', '.');
+	var userId = req.user.id;
+	var degreeOfFreedom = req.user.degree_of_freedom;
+
+	db.mongo.open(function(err, mongoConnection) {
+		
+		if(err) {
+			jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
+			db.mongo.close();
+			return;
+		}
+		
+		cloRepository.buscarDescritorDeArquivoExecutavelPorId(mongoConnection, daeId, function(err, descritorDeArquivoExecutavel) {
+
+			if(err) {
+				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
+				db.mongo.close();
+				return;
+			}
+
+			if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.clo_id == oacId) {
+				
+				cloRepository.buscarDescritorDeVersao(mongoConnection, daeId, versionNumber, function(err, descritorDeVersao) {
+
+					if(err) {
+						jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
+						db.mongo.close();
+						return;
+					}
+
+					if (descritorDeVersao) {
+						
+						var filePath = descritorDeArquivoExecutavel.locations[0];
+
+						cloRepository.gerarPacoteVersao(mongoConnection, descritorDeVersao._id, daeId, filePath, userId, degreeOfFreedom, function(err, versaoCustomizada) {			
+							
+							if(err) {
+								jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
+								db.mongo.close();
+								return;
+							}
+
+							mongoConnection.close();
+
+							jwt.sendResponse(200, 'application/zip', path.basename(filePath, path.extname(filePath)) + '.zip', versaoCustomizada.toBuffer(), req, res);			
+						});
+					} else {
+						jwt.sendResponse(404, 'text/plain', null, "Versão Customizada não encontrada", req, res);
+						db.mongo.close();
+					}			
+				});		
+			} else {
+				jwt.sendResponse(404, 'text/plain', null, "OAC não encontrado", req, res);
+				db.mongo.close();
+			}			
+		});
+	});
+});
 
 // ***** Inicialização do Servidor *****
 

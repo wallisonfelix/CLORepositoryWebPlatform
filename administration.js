@@ -147,7 +147,7 @@ var validarEmailConfirmacaoCadastroUsuario = function(email, code, callback) {
 						console.log(new Date() + " Email de Confirmação de Cadastro de Usuário Validado: " + user.login + ".");
 	    				callback(null);
 					} else {
-						callback(new Error(" Erro ao Atualizar Campo de Validação de Email do Usuário."));
+						callback(new Error("Erro ao Atualizar Campo de Validação de Email do Usuário."));
 					}	
 
 				}).catch(function (err) {		
@@ -155,11 +155,11 @@ var validarEmailConfirmacaoCadastroUsuario = function(email, code, callback) {
 					callback(err);
 				});			
 			} else {
-				callback(new Error(" Código de validação não corresponde."));	
+				callback(new Error("Código de validação não corresponde."));	
 			}
 
 		} else {
-			callback(new Error(" Usuário com o email " + email + " não encontrado."));
+			callback(new Error("Usuário com o email " + email + " não encontrado."));
 		}	
 	});
 }
@@ -221,7 +221,7 @@ var editarUsuario = function(idUser, name, email, profile, degreeOfFreedom, logi
 				callback(err, null);
 			});	
 		} else {
-			callback(new Error(" Usuário " + idUser + " não encontrado."), null);
+			callback(new Error("Usuário " + idUser + " não encontrado."), null);
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Editar Usuário: " + err);
@@ -239,7 +239,7 @@ var excluirUsuario = function(idUser, userLogin, callback) {
 			console.log(new Date() + " Usuário excluído: " + idUser + " - " + userLogin + ".");
 			callback(null);				
 		} else {
-			callback(new Error(" Usuário " + idUser + " - " + userLogin + " não encontrado."));
+			callback(new Error("Usuário " + idUser + " - " + userLogin + " não encontrado."));
 		}	
 	}).catch(function (err) {
 		console.error(new Date() + " Erro ao Excluir Usuário: " + err);
@@ -349,7 +349,7 @@ var editarPapel = function(idRole, name, code, description, operations, callback
 				callback(err, null);
 			});	
 		} else {
-			callback(new Error(" Papel " + idRole + " não encontrado."), null);
+			callback(new Error("Papel " + idRole + " não encontrado."), null);
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Editar Papel: " + err);
@@ -367,7 +367,7 @@ var excluirPapel = function(idRole, roleCode, callback) {
 			console.log(new Date() + " Papel excluído: " + idRole + " - " + roleCode + ".");
 			callback(null);				
 		} else {
-			callback(new Error(" Papel " + idRole + " - " + roleCode + " não encontrado."));
+			callback(new Error("Papel " + idRole + " - " + roleCode + " não encontrado."));
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Excluir Papel: " + err);
@@ -463,7 +463,7 @@ var editarOperacao = function(idOperation, name, code, description, callback) {
 			console.log(new Date() + " Operação atualizada: " + operation.id + " - " + operation.code + ".");
 			callback(null, operation);			
 		} else {
-			callback(new Error(" Operação " + idOperation + " não encontrada."), null);
+			callback(new Error("Operação " + idOperation + " não encontrada."), null);
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Editar Operação: " + err);
@@ -481,7 +481,7 @@ var excluirOperacao = function(idOperation, operationCode, callback) {
 			console.log(new Date() + " Operação excluída: " + idOperation + " - " + operationCode + ".");
 			callback(null);				
 		} else {
-			callback(new Error(" Operação " + idOperation + " - " + operationCode + " não encontrada."));
+			callback(new Error("Operação " + idOperation + " - " + operationCode + " não encontrada."));
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Excluir Operação: " + err);
@@ -545,7 +545,7 @@ var redefinirSenha = function(newPassword, email, code, callback) {
 						console.log(new Date() + " Senha de Usuário Redefinida: " + user.login + ".");
 	    				callback(null);
 					} else {
-						callback(new Error(" Erro ao Atualizar Campo Senha do Usuário."));
+						callback(new Error("Erro ao Atualizar Campo Senha do Usuário."));
 					}	
 
 				}).catch(function (err) {		
@@ -553,11 +553,11 @@ var redefinirSenha = function(newPassword, email, code, callback) {
 					callback(err);
 				});			
 			} else {
-				callback(new Error(" Código de validação não corresponde."));	
+				callback(new Error("Código de validação não corresponde."));	
 			}
 
 		} else {
-			callback(new Error(" Usuário com o email validado " + email + " não encontrado."));
+			callback(new Error("Usuário com o email validado " + email + " não encontrado."));
 		}	
 	});
 }

@@ -47,6 +47,9 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 	oac.addFile(path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json"), new Buffer(JSON.stringify(descritorDeComponentes)));
 	//Adiciona o Arquivo Executável
 	oac.addLocalFile(pathArquivoExecutavel);	
+
+	console.log(idDescritorDeArquivoExecutavel + " " + userId + " " + grauDeLiberdade);
+
 	//Adiciona o token.txt
 	oac.addFile("token.txt", new Buffer(idDescritorDeArquivoExecutavel + " " + userId + " " + grauDeLiberdade));
 
@@ -55,7 +58,7 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 }
 
 //Gera, a partir dos dados informados, o arquivo compactado que representará a Versão Customizada
-var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, grauDeLiberdade, callback) {
+var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, degreeOfFreedom, callback) {
 	//Monta o arquivo compactado que representará a Versão Customizada
 	var versaoCustomizada =  new zip();
 	var idSourceVersion = descritorDeVersao._id;
@@ -77,7 +80,7 @@ var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeCompo
 		//Adiciona o Arquivo Executável
 		versaoCustomizada.addLocalFile(pathArquivoExecutavel);	
 		//Adiciona o token.txt
-		versaoCustomizada.addFile("token.txt", new Buffer(idSourceVersion + " " + userId + " " + grauDeLiberdade));
+		versaoCustomizada.addFile("token.txt", new Buffer(idSourceVersion + " " + userId + " " + degreeOfFreedom));
 
 		//Retorna o arquivo criado
 		callback(versaoCustomizada);

@@ -7,35 +7,18 @@ var jwt = require('jwt-simple');
 var jwtTokenSecret = '12345';
 
 //Envia reposta ao cliente que realizou uma requisição a uma das operações da API
-var sendResponse = function(sucessResponse, messages, data, req, res) {
-	var resultType = "";
-	var logMessageType = "";
-
-	if (sucessResponse) {
-		resultType = "Sucess";
-		logMessageType = " Mensagem de Sucesso da API: ";
-	} else {
-		resultType = "Erro";	
-		logMessageType = "  Mensagem de Erro da API: ";	
+var sendResponse = function(statusCode, contentType, filename, data, req, res) {
+	res.status(statusCode);
+	res.set('Content-Type', contentType);
+	if (filename) {
+		res.set('Content-Disposition', 'attachment; filename=' + filename);
 	}
 
 	//Log das mensagens de resposta
-	for (var index = 0; index < messages.length; index++) {
-		console.error(new Date() + logMessageType + messages[index].message);	
-	}
-
-	//Criação do objeto de resposta
-	var response = { 
-		resultType: resultType,
-		messages: messages
-	};	
-	//Adiciona o atributo data ao objeto de resposta apenas se necessário
-	if (data) {
-		response.data = data;
-	}
+	console.log(new Date() + " API: " + statusCode + " " + data);	
 
 	//Envia a resposta
-	res.send(response);
+	res.send(data);
 };
 
 //Gera um Token de Acesso com validade de uma hora. Ele inclui o login e as operações do usuário utilizado pelo cliente para a obtenção do Token
@@ -47,14 +30,15 @@ var generateToken = function(user, req, res) {
 		exp: expires
 	}, jwtTokenSecret);
 
-	sendResponse(true, [{messageType: 'sucess', message: 'Token de Acesso à API obtido com sucesso'}], {token: token, expires: expires}, req, res);	
+	sendResponse(200, 'application/json', null, {token: token, expires: expires}, req, res);
 };
 
 //Verifica se a requisição possui um Token de Acesso válido
 //Caso o Token sejá válido, o usuário utilizado pelo cliente para a obtenção do Token é adicionado à requisição
-var hasValidToken = function(req, res, next) {
+var hasValidToken = function(req, res, next) {	
+
 	//Ler o Token enviado
-	var token = req.headers['x-access-token'];
+	var token = req.query.token;
 
 	if (token) {
 		try {
@@ -63,38 +47,40 @@ var hasValidToken = function(req, res, next) {
 			
 			//Verifica se o Token não está expirado
 			if (decodedToken.exp < Date.now()) {
-				sendResponse(false, [{messageType: 'danger', message: 'Token expirado! Obtenha um novo Token de Acesso à API'}], null, req, res);
+				sendResponse(401, 'text/plain', null, "Token expirado! Obtenha um novo Token de Acesso à API", req, res);
+				return null;
 			}
 
 			//Busca o Usuário com base no login contido no Token
 			administration.buscarUsuarioPorLogin(decodedToken.iss, true, function(err, user) {
 
-				if (err) {	           
-	                sendResponse(false, [{messageType: 'danger', message: 'Erro ao validar Token de Acesso à API: ' + err}], null, req, res);
+				if (err) {
+					sendResponse(500, 'text/plain', null, "Erro ao validar Token de Acesso à API: " + err.message, req, res);
+					return null;
 	            }
-
+	            
 	            if (user) {
 	            	req.user = user;
 	            	return next();
 	            } else {
-	            	sendResponse(false, [{messageType: 'danger', message: 'Erro ao validar Token de Acesso à API: Usuário com o login ' + decodedToken.iss + ' não encontrado'}], null, req, res);
+	            	sendResponse(401, 'text/plain', null, "Usuário com o login " + decodedToken.iss + " não encontrado", req, res);
 	            }
 			});
 	  	} catch (err) {
-	  		sendResponse(false, [{messageType: 'danger', message: 'Token inválido!'}], null, req, res);
+	  		sendResponse(401, 'text/plain', null, "Token inválido", req, res);
 	  	}
 	} else {
-		sendResponse(false, [{messageType: 'danger', message: 'Token não detectado na requisição'}], null, req, res);
+		sendResponse(401, 'text/plain', null, "Token não detectado na requisição", req, res);		
 	}
 };
 
 //Verifica se o cliente que realiza requisição a uma das operações da API possui a permissão para a Operação passada como parâmetro
 var hasPermission = function(operationCode, req, res, next) {
-	req.user.operationCodes(function(operationCodes) {
+	req.user.operationCodes(function(operationCodes) {		
        	if (operationCodes.indexOf(operationCode) != -1) {
        		return next();		
        	} else {			
-			sendResponse(false, [{messageType: 'danger', message: 'Acesso negado! Você não possui autorização para esta funcionalidade'}], null, req, res);
+       		sendResponse(403, 'text/plain', null, "Acesso negado! Você não possui autorização para esta funcionalidade", req, res);
 		}
 	});
 };

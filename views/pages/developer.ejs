@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+	    	<ol class="breadcrumb">
+			  <li>Home</li>
+			  <li class="active">Documentação da API REST</li>
+			</ol>
+
+			<h4>Documentação da API REST de Interação com o <em>CLORepository</em></h4>
+            <p>Endereço: http://api.clowebpaltform.com/</p>                
+
+            <h3>Obter Token de Acesso</h3>
+            
+            <p>Valida as credenciais de acesso enviadas e retorna um Token de Acesso à API, conforme as permissões do usuário, válido pelo período de 1 hora. O Token deve ser utilizado nas chamadas às demais operações da API.</p>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>URL</th>                        
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>POST</td>
+                        <td>/obter-token-acesso</td>                        
+                    </tr>                   
+                <tbody>
+            </table>
+
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Obrigatório</th>
+                        <th>Descrição</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>login</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Login de acesso do usuário</td>
+                    </tr>
+                    <tr>
+                        <td>password</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Senha de acesso do usuário</td>
+                    </tr>
+                <tbody>
+            </table>
+
+            <strong>Retornos:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Status</th>
+                        <th>Conteúdo</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>200</td>
+                        <td>OK</td>
+                        <td>{token: [string], expires: [date]}</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Campos obrigatórios não informados</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Erro ao Realizar Login: [string]</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Usuário com o login [string] não encontrado.</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Senha Inválida.</td>
+                    </tr>
+                <tbody>
+            </table>
+
+	      	<strong>Exemplo de Chamada:</strong>
+            <br/>
+            POST http://api.clowebplatform.com/obter-token-acesso HTTP/1.1<br/>
+            Content-Type: application/x-www-form-urlencoded<br/><br/>
+            body: { login: [string], password: [string] }<br/>
+            
+            <br/>  
+
+            <h3>Incluir OAC</h3>
+            
+            <p>Inclui novo OAC a partir do Pacote de Implantação enviado. Retorna as URLs dos Arquivos Executáveis do novo OAC.</p>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>URL</th>                        
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>POST</td>
+                        <td>/oacs[?token]</td>
+                    </tr>                   
+                <tbody>
+            </table>
+
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Obrigatório</th>
+                        <th>Descrição</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>token</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Token de Acesso à API</td>
+                    </tr>
+                    <tr>
+                        <td>fileInput</td>
+                        <td>[file]</td>
+                        <td>Sim</td>
+                        <td>Pacote de Implantação</td>
+                    </tr>
+                <tbody>
+            </table>
+
+            <strong>Retornos:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Status</th>
+                        <th>Conteúdo</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>201</td>
+                        <td>Created</td>
+                        <td>/api/oacs/[number]/[number]; /api/oacs/[number]/[number] ...</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Campos obrigatórios não informados</td>
+                    </tr>           
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token não detectado na requisição</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token inválido</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token expirado! Obtenha um novo Token de Acesso à API</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Usuário com o login [string] não encontrado</td>
+                    </tr>
+                    <tr>
+                        <td>403</td>
+                        <td>Forbidden</td>
+                        <td>Acesso negado! Você não possui autorização para esta funcionalidade</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao validar Token de Acesso à API: [string]</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao Incluir AOC: [string]</td>
+                    </tr>
+                <tbody>
+            </table>
+
+            <strong>Exemplo de Chamada:</strong>
+            <br/>
+            POST http://api.clowebplatform.com/oacs?token=[string] HTTP/1.1<br/>
+            Content-Type: application/octet-stream<br/>
+            Content-Disposition: application/form-data<br/><br/>
+            files: { fileInput: [file] }<br/>
+            
+            <br/>
+
+            <h3>Obter OAC</h3>
+            
+            <p>Retorna o Pacote de OAC do Arquivo Executável informado.</p>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>URL</th>                        
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GET</td>
+                        <td>/oacs/:oacId/:daeId[?token]</td>
+                    </tr>                   
+                <tbody>
+            </table>
+
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Obrigatório</th>
+                        <th>Descrição</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>token</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Token de Acesso à API</td>
+                    </tr>                    
+                <tbody>
+            </table>
+
+            <strong>Retornos:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Status</th>
+                        <th>Conteúdo</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>200</td>
+                        <td>OK</td>
+                        <td>[file]</td>
+                    </tr>       
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token não detectado na requisição</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token inválido</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token expirado! Obtenha um novo Token de Acesso à API</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Usuário com o login [string] não encontrado</td>
+                    </tr>
+                    <tr>
+                        <td>404</td>
+                        <td>Not Found</td>
+                        <td>OAC não encontrado</td>
+                    </tr>                    
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao validar Token de Acesso à API: [string]</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao Baixar AOC: [string]</td>
+                    </tr>
+                <tbody>
+            </table>
+
+            <strong>Exemplo de Chamada:</strong>
+            <br/>
+            GET http://api.clowebplatform.com/oacs/[number]/[number]?token=[string] HTTP/1.1<br/>
+                        
+            <br/>
+
+            <h3>Incluir Versão Customizada</h3>
+            
+            <p>Inclui nova Versão Customizada de um Arquivo Executável de OAC a partir do Pacote de Versão enviado. Retorna a URL da nova Versão Customizada.</p>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>URL</th>                        
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>POST</td>
+                        <td>/oacs/:oacId/:daeId/versoes-customizadas[?token&title&description&languages]</td>
+                    </tr>                   
+                <tbody>
+            </table>
+
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Obrigatório</th>
+                        <th>Descrição</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>oacId</td>
+                        <td>[number]</td>
+                        <td>Sim</td>
+                        <td>Identificador do OAC</td>
+                    </tr>
+                    <tr>
+                        <td>daeId</td>
+                        <td>[number]</td>
+                        <td>Sim</td>
+                        <td>Identificador do Arquivo Executável</td>
+                    </tr>
+                    <tr>
+                        <td>token</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Token de Acesso à API</td>
+                    </tr>
+                    <tr>
+                        <td>title</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Título da Versão Customizada</td>
+                    </tr>
+                    <tr>
+                        <td>description</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Descrição das customizações da Versão</td>
+                    </tr>
+                    <tr>
+                        <td>languages</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Idiomas da Versão Customizada (separados por ;)</td>
+                    </tr>
+                    <tr>
+                        <td>fileInput</td>
+                        <td>[file]</td>
+                        <td>Sim</td>
+                        <td>Pacote de Versão</td>
+                    </tr>
+                <tbody>
+            </table>
+
+            <strong>Retornos:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Status</th>
+                        <th>Conteúdo</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>201</td>
+                        <td>Created</td>
+                        <td>/api/oacs/[number]/[number]/versoes-customizadas/[string]</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Campos obrigatórios não informados</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Esta não é uma Versão Customizada deste OAC</td>
+                    </tr>                    
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token não detectado na requisição</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token inválido</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token expirado! Obtenha um novo Token de Acesso à API</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Usuário com o login [string] não encontrado</td>
+                    </tr>
+                    <tr>
+                        <td>403</td>
+                        <td>Forbidden</td>
+                        <td>Acesso negado! Você não possui autorização para esta funcionalidade</td>
+                    </tr>
+                    <tr>
+                        <td>404</td>
+                        <td>Not Found</td>
+                        <td>OAC não encontrado</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao validar Token de Acesso à API: [string]</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao Incluir Versão Customizada: [string]</td>
+                    </tr>
+                <tbody>
+            </table>
+
+            <strong>Exemplo de Chamada:</strong>
+            <br/>
+            POST http://api.clowebplatform.com/oacs/[number]/[number]/versoes-customizadas?token=[string]&title=[string]&description=[string]&languages=[string] HTTP/1.1<br/>
+            Content-Type: application/octet-stream<br/>
+            Content-Disposition: application/form-data<br/><br/>
+            files: { fileInput: [file] }<br/>
+            
+            <br/>
+
+            <h3>Obter Versão Customizada</h3>
+            
+            <p>Retorna o Pacote de OAC referente a uma Versão Customizada do Arquivo Executável informado.</p>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>URL</th>                        
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GET</td>
+                        <td>/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber[?token]</td>
+                    </tr>                   
+                <tbody>
+            </table>
+
+            <strong>Parâmetros:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Obrigatório</th>
+                        <th>Descrição</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>token</td>
+                        <td>[string]</td>
+                        <td>Sim</td>
+                        <td>Token de Acesso à API</td>
+                    </tr>                    
+                <tbody>
+            </table>
+
+            <strong>Retornos:</strong>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Status</th>
+                        <th>Conteúdo</th>
+                    </tr>    
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>200</td>
+                        <td>OK</td>
+                        <td>[file]</td>
+                    </tr>       
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token não detectado na requisição</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token inválido</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Token expirado! Obtenha um novo Token de Acesso à API</td>
+                    </tr>
+                    <tr>
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Usuário com o login [string] não encontrado</td>
+                    </tr>
+                    <tr>
+                        <td>404</td>
+                        <td>Not Found</td>
+                        <td>OAC não encontrado</td>
+                    </tr>                    
+                    <tr>
+                        <td>404</td>
+                        <td>Not Found</td>
+                        <td>Versão Customizada não encontrado</td>
+                    </tr>                    
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao validar Token de Acesso à API: [string]</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Erro ao Baixar Versão Customizada: [string]</td>
+                    </tr>
+                <tbody>
+            </table>
+
+            <strong>Exemplo de Chamada:</strong>
+            <br/>
+            GET http://api.clowebplatform.com/oacs/[number]/[number]/versoes-customizadas/[string]?token=[string] HTTP/1.1<br/>
+                        
+            <br/><br/>
+
+	    </div>
+	  </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>

@@ -35,10 +35,10 @@ passport.use('local-login', new LocalStrategy({
                     console.log(new Date() + " Login de Usuário realizado com sucesso: " + user.login + ".");
                     done(null, user);        
                 } else {
-                    return done(new Error(" Senha Inválida."));    
+                    return done(new Error("Senha Inválida."));    
                 }
             } else {
-                return done(new Error(" Usuário com o login " + login + " não encontrado."));
+                return done(new Error("Usuário com o login " + login + " não encontrado."));
             }
         });
     })
