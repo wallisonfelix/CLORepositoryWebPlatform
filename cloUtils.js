@@ -246,6 +246,7 @@ var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) 
 										//Se as alterações não forem compatíveis com o Grau de Liberdade, 
 										//a inclusão deve ser cancelada
 										callback(new Error("Customizações não compatíveis com o Grau de Liberdade"), null);
+										return;
 									}
 								}
 								
@@ -268,7 +269,6 @@ var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) 
 			}
 		}
 	}
-
 	callback(null, delta);
 }
 
