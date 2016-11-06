@@ -17,6 +17,8 @@ var server = http.Server(app);
 var multer = require('multer');
 var bodyParser = require('body-parser');
 
+var moment = require('moment');
+
 var serverAddress = 'http://localhost';
 
 String.prototype.endsWith = function(suffix) {
@@ -859,11 +861,9 @@ app.get("/baixarOAC", function(req, res) {
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
 			res.set('Content-Type', 'application/zip');
 			//Informa o nome do arquivo ao navegador.
-			res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
-			//Informa o tamanho do arquivo ao navegador.
-			res.set('Content-Length', oac.toBuffer().length);
+			res.set('Content-Disposition', 'attachment; filename="' + path.basename(filePath, path.extname(filePath)) + '.zip"');			
 			//Envia o arquivo em forma de bytes.
-			res.send(oac.toBuffer());
+			oac.pipe(res);
 
 			mongoConnection.close();
 		});
@@ -958,12 +958,10 @@ app.get("/baixarVersaoCustomizada", function(req, res) {
 
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
 			res.set('Content-Type', 'application/zip');
-			//Informa o nome do arquivo ao navegador.
-			res.set('Content-Disposition', 'attachment; filename=' + path.basename(filePath, path.extname(filePath)) + '.zip');
-			//Informa o tamanho do arquivo ao navegador.
-			res.set('Content-Length', versaoCustomizada.toBuffer().length);
+			//Informa o nome do arquivo ao navegador.			
+			res.set('Content-Disposition', 'attachment; filename="' + path.basename(filePath, path.extname(filePath)) + '.zip"');
 			//Envia o arquivo em forma de bytes.
-			res.send(versaoCustomizada.toBuffer());
+			versaoCustomizada.pipe(res);
 
 			mongoConnection.close();
 		});
@@ -1153,7 +1151,7 @@ app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {
 			return;
 		}
 		
-		cloRepository.buscarDescritorDeArquivoExecutavelPorId(mongoConnection, daeId, function(err, descritorDeArquivoExecutavel) {
+		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"clo_id": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 			if(err) {
 				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
@@ -1165,8 +1163,8 @@ app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {
 
 				var filePath = descritorDeArquivoExecutavel.locations[0];
 
-				cloRepository.gerarPacoteOAC(mongoConnection, daeId, filePath, userId, degreeOfFreedom, function(err, oac) {			
-					
+				cloRepository.gerarPacoteOAC(mongoConnection, daeId, filePath, userId, degreeOfFreedom, function(err, oac) {								
+
 					if(err) {
 						jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
 						db.mongo.close();
@@ -1175,7 +1173,7 @@ app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {
 
 					mongoConnection.close();
 
-					jwt.sendResponse(200, 'application/zip', path.basename(filePath, path.extname(filePath)) + '.zip', oac.toBuffer(), req, res);			
+					jwt.sendResponse(200, 'application/zip', path.basename(filePath, path.extname(filePath)) + '.zip', oac, req, res);			
 				});
 			} else {
 				jwt.sendResponse(404, 'text/plain', null, "OAC não encontrado", req, res);
@@ -1211,7 +1209,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 					return;
 				}
 
-				cloRepository.buscarDescritorDeArquivoExecutavelPorId(mongoConnection, daeId, function(err, descritorDeArquivoExecutavel) {
+				cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"clo_id": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 					if(err) {
 						jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
@@ -1225,7 +1223,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 						var tokenAsArray = oac.readAsText("token.txt").split(" ");
 						var idDescritorOrigem = tokenAsArray[0];	
 
-						cloRepository.buscarDescritorDeVersaoPorId(mongoConnection, idDescritorOrigem, function(err, descritorDeVersao) {
+						cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeVersoes", idDescritorOrigem, {"id_source_version": 1, "id_root_version": 1, "version": 1}, function(err, descritorDeVersao) {
 
 							if(err) {
 								jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
@@ -1252,7 +1250,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 									
 									mongoConnection.close();
 									
-									var version = result.version.replace('.', '-');
+									var version = result.version.replace(/\./g, '-');
 									var uri = "/api/oacs/" + oacId + "/" + daeId + "/versoes-customizadas/" + version;
 									jwt.sendResponse(201, 'text/plain', null, uri, req, res);
 								});
@@ -1277,7 +1275,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 
 	var oacId = req.params.oacId;
 	var daeId = req.params.daeId;
-	var versionNumber = req.params.versionNumber.replace('-', '.');
+	var versionNumber = req.params.versionNumber.replace(/-/g, '.');
 	var userId = req.user.id;
 	var degreeOfFreedom = req.user.degree_of_freedom;
 
@@ -1289,7 +1287,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 			return;
 		}
 		
-		cloRepository.buscarDescritorDeArquivoExecutavelPorId(mongoConnection, daeId, function(err, descritorDeArquivoExecutavel) {
+		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"clo_id": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 			if(err) {
 				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
@@ -1321,7 +1319,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 
 							mongoConnection.close();
 
-							jwt.sendResponse(200, 'application/zip', path.basename(filePath, path.extname(filePath)) + '.zip', versaoCustomizada.toBuffer(), req, res);			
+							jwt.sendResponse(200, 'application/zip', path.basename(filePath, path.extname(filePath)) + '.zip', versaoCustomizada, req, res);			
 						});
 					} else {
 						jwt.sendResponse(404, 'text/plain', null, "Versão Customizada não encontrada", req, res);

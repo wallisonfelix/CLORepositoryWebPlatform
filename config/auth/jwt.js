@@ -10,15 +10,23 @@ var jwtTokenSecret = '12345';
 var sendResponse = function(statusCode, contentType, filename, data, req, res) {
 	res.status(statusCode);
 	res.set('Content-Type', contentType);
-	if (filename) {
-		res.set('Content-Disposition', 'attachment; filename=' + filename);
-	}
 
-	//Log das mensagens de resposta
-	console.log(new Date() + " API: " + statusCode + " " + data);	
+	//Caso seja enviado um arquivo, o tratamento do envio da resposta é diferenciado
+	if (!filename) {
+		console.log(new Date() + " API: " + statusCode + " " + data);		
 
-	//Envia a resposta
-	res.send(data);
+		console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Retornando os dados ###");
+
+		//Envia a resposta
+		res.send(data);
+	} else {
+		res.set('Content-Disposition', 'attachment; filename="' + filename + '"');
+
+		console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Retornando os dados ###");
+
+		//Envia a resposta
+		data.pipe(res);		
+	}	
 };
 
 //Gera um Token de Acesso com validade de uma hora. Ele inclui o login e as operações do usuário utilizado pelo cliente para a obtenção do Token
@@ -36,6 +44,8 @@ var generateToken = function(user, req, res) {
 //Verifica se a requisição possui um Token de Acesso válido
 //Caso o Token sejá válido, o usuário utilizado pelo cliente para a obtenção do Token é adicionado à requisição
 var hasValidToken = function(req, res, next) {	
+
+	console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Iniciando processamento de requisição com Token ###");
 
 	//Ler o Token enviado
 	var token = req.query.token;
