@@ -3,7 +3,7 @@ Projeto para o desenvolvimento de uma Plataforma Web responsiva a ser utilizada 
 
 <ul type='disc'>
 <li><b>José Wallison Félix da Silva</b></li>
-<li>Orientado pelo <b>Prof. Dr. Cidcley Teixeira de Souza</b></li>
+<li>Orientada pelo <b>Prof. Dr. Cidcley Teixeira de Souza</b></li>
 </ul>
 Programa de Pós-Graduação em Ciências da Computação - PPGCC<br/>
 Instituto Federal de Educação, Ciência e Tecnologia do Ceará - IFCE<br/>
