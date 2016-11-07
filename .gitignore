@@ -10,3 +10,7 @@ sent/
 # file Passo-a-Passo.txt #
 ###################
 Passo-a-Passo.txt
+
+# files with passwords #
+###################
+config/mail/mail.js
