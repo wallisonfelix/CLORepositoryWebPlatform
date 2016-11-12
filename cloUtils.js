@@ -23,7 +23,7 @@ var lerManifest = function(zip)
 				if(line.startsWith("Executable-File-Directory")) {			
 					data.fileNames.push(line.split(": ")[1]);		
 				} else if (line.startsWith("Executable-File")) {
-					var last = data.fileNames.length - 1;
+					var lastFileName = data.fileNames.length - 1;
 					data.fileNames[lastFileName] = data.fileNames[lastFileName].concat('/' + line.split(": ")[1]);
 				}	
 			});
@@ -64,6 +64,7 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 	//Retorna o arquivo criado
 	oac.finalize();
 	callback(oac);
+	return;
 }
 
 //Gera, a partir dos dados informados, o arquivo compactado que representará a Versão Customizada
@@ -101,6 +102,7 @@ var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeCompo
 		//Retorna o arquivo criado
 		versaoCustomizada.finalize();
 		callback(versaoCustomizada);
+		return;
 	});
 }
 
@@ -130,6 +132,7 @@ var mergeCustomizations = function(descritorDeVersao, descritorDeComponentes, ca
 	//Retorna o DescritorDeComponentes com as customizações incorporadas,
 	//representando dessa forma o estado dos componentes para uma determinada Versão Customizada
 	callback(descritorDeComponentes);
+	return;
 }
 
 //Verifica se o Grau de Liberdade informado como parâmetro tem permissão para 
@@ -159,14 +162,15 @@ var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callb
 		if (err) {
 		    console.error(new Date() + " Erro ao Processar Cenas para a Obtenção de Delta: " + err);
 			callback(err, null);
+			return;
 		} else {
 			callback(null, delta);
+			return;
 		}			
 	});
 	
 	//Processa as Cenas para o cálculo do Delta
 	function processarCenas(scene, sceneProcessDone) {
-
 		//Identifica a Cena no arquivo JSON com o estado dos componentes no início da hierarquia equivalente a que será processada.  
 		jsonDescritor.scenes.forEach(function(sceneDescritor) {
 
@@ -176,17 +180,19 @@ var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callb
 				//Processa os Componentes da Cena para o cálculo do Delta
 				async.each(scene.components, function processarComponentes(component, componentProcessDone) {
 					
+					var componenteEncontrado = false;
 					//Identifica o Componente no arquivo JSON com o estado dos componentes no início da hierarquia equivalente a que será processada.  					
-					sceneDescritor.components.forEach(function(componentDescritor) {
-
+					sceneDescritor.components.forEach(function(componentDescritor) {						
 						//Identifica o Componente equivalente para a realização da comparação.
 						if(component.name == componentDescritor.name) {
+							componenteEncontrado = true;
 							//Obtém as diferenças entre os Componentes comparados e as armazena no Delta da Cena que está sendo processada.
-							getDiffComponente(component, componenteDescritor, function (err, deltaComponente) {
+							getDiffComponente(component, componentDescritor, function (err, deltaComponente) {
 
 								if (err) {
 								    console.error(new Date() + " Erro ao Verificar as Customizações Realizadas nos Componentes: " + err);
 									componentProcessDone(err);
+									return;
 								} 
 
 								//Caso os Componentes sejam distintos, as modificações são adicionadas no Delta da Cena que está sendo processada.
@@ -202,22 +208,30 @@ var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callb
 								}
 
 								componentProcessDone(null);
+								return;
 							});
 						}						
 					});
-					//Caso não encontre o Componente equivalente para a Comparação
-					componentProcessDone(new Error("Componente não encontrado em Cena"));					
+					
+					if(!componenteEncontrado) {
+						//Caso não encontre o Componente equivalente para a Comparação
+						componentProcessDone(new Error("Componente não encontrado em Cena"));	
+						return;				
+					}					
 				}, function(err) {
 
 					if (err) {
 					    console.error(new Date() + " Erro ao Processar Componentes para a Obtenção de Delta: " + err);
-						componentProcessDone(err);
+						sceneProcessDone(err);
+						return;
 					} 
 
 					//Adiciona o Delta da Cena processada ao Delta final resultante da comparação dos arquivos JSONs
 					if(delta_scene.components) {
 						delta.push(delta_scene);
 					}
+
+					sceneProcessDone(null);
 				});
 			}
 		});
@@ -242,6 +256,7 @@ var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callb
 					//Se as alterações não forem compatíveis com o Grau de Liberdade, 
 					//a inclusão deve ser cancelada
 					callback(new Error("Customizações não compatíveis com o Grau de Liberdade"), null);
+					return;
 				}
 			}
 		}
@@ -250,8 +265,10 @@ var getDeltaAsync = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callb
 		if(Object.keys(deltaComponente).length > 0) {
 			deltaComponente.name = componentA.name;
 			callback(null, deltaComponente);
+			return;
 		} else {
 			callback(null, null);
+			return;
 		}		
 	}
 }
@@ -320,6 +337,7 @@ var getDelta = function(jsonFromFile, jsonDescritor, grauDeLiberdade, callback) 
 	}
 
 	callback(null, delta);
+	return;
 }
 
 module.exports.lerManifest = lerManifest;

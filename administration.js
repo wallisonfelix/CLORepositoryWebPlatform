@@ -12,10 +12,12 @@ var incluirUsuario = function(name, email, profile, login, password, callback) {
 
 	model.User.create( { userValidated: userValidated, name: name, email: email, emailValidated: emailValidated, profile: profile, degree_of_freedom: 0, login: login, password: hashPassword } ).then(function (user) {
 		console.log(new Date() + " Novo Usuário inserido: " + user.login + ".");		
-		callback(null, user);		
+		callback(null, user);	
+		return;	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Incluir Usuário: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -43,10 +45,12 @@ var enviarEmailConfirmacaoCadastroUsuario = function(email, login, urlEmailValid
 	    if(err){
 	        console.error(new Date() + " Erro ao Enviar Email de Confirmação de Cadastro de Usuário: " + err);
 	        callback(err);
+	        return;
 	    }	    
 	    
 	    console.log(new Date() + " Enviado Email de Confirmação de Cadastro de Usuário: " + login + ".");
 	    callback(null);
+	    return;
 	});
 }
 
@@ -58,9 +62,11 @@ var buscarUsuarioPorId = function(idUser, callback) {
 			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
 		}
 		callback(null, user);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -73,9 +79,11 @@ var buscarUsuarioPorEmail = function(email, emailValidated, callback) {
 			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
 		}
 		callback(null, user);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -88,9 +96,11 @@ var buscarUsuarioPorLogin = function(login, userValidated, callback) {
 			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
 		}
 		callback(null, user);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Usuário: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -118,9 +128,11 @@ var buscarUsuarios = function(name, email, login, degreeOfFreedom, emailValidate
 			console.log(new Date() + " Pesquisa por Usuário com retorno vazio");
 		}
 		callback(null, users);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Usuários: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -133,6 +145,7 @@ var validarEmailConfirmacaoCadastroUsuario = function(email, code, callback) {
 		if(err){
 	        console.error(new Date() + " Erro ao Validar Email de Confirmação de Cadastro de Usuário: " + err);
 	        callback(err);
+	        return;
 	    }	    
 
 		if (user) {
@@ -146,20 +159,25 @@ var validarEmailConfirmacaoCadastroUsuario = function(email, code, callback) {
 						console.log(new Date() + " Usuário atualizado: " + user.id + " - " + user.login + ".");
 						console.log(new Date() + " Email de Confirmação de Cadastro de Usuário Validado: " + user.login + ".");
 	    				callback(null);
+	    				return;
 					} else {
 						callback(new Error("Erro ao Atualizar Campo de Validação de Email do Usuário."));
+						return;
 					}	
 
 				}).catch(function (err) {		
 					console.error(new Date() + " Erro ao Atualizar Campo de Validação de Email do Usuário: " + err);
 					callback(err);
+					return;
 				});			
 			} else {
-				callback(new Error("Código de validação não corresponde."));	
+				callback(new Error("Código de validação não corresponde."));
+				return;	
 			}
 
 		} else {
 			callback(new Error("Usuário com o email " + email + " não encontrado."));
+			return;
 		}	
 	});
 }
@@ -196,10 +214,12 @@ var enviarEmailValidacaoCadastroUsuario = function(email, user, callback) {
 		    if(err){
 		        console.error(new Date() + " Erro ao Enviar Email de Validação de Cadastro de Usuário: " + err);
 		        callback(err);
+		        return;
 		    }	    
 		    
 		    console.log(new Date() + " Enviado Email de Validação de Cadastro de Usuário: " + user.id + ".");
 		    callback(null);
+		    return;
 		});					
 	});
 }
@@ -216,16 +236,20 @@ var editarUsuario = function(idUser, name, email, profile, degreeOfFreedom, logi
 			user.setRoles(roles).then(function (roles) {
 				console.log(new Date() + " Atualizados os Papéis do Usuário: " + user.id + " - " + user.login + ".");			
 				callback(null, user);
+				return;
 			}).catch(function (err) {		
 				console.error(new Date() + " Erro ao Atualizar os Papéis do Usuário: " + err);
 				callback(err, null);
+				return;
 			});	
 		} else {
 			callback(new Error("Usuário " + idUser + " não encontrado."), null);
+			return;
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Editar Usuário: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -237,13 +261,16 @@ var excluirUsuario = function(idUser, userLogin, callback) {
 		
 		if(qtyDeletedUser == 1) {			
 			console.log(new Date() + " Usuário excluído: " + idUser + " - " + userLogin + ".");
-			callback(null);				
+			callback(null);	
+			return;			
 		} else {
 			callback(new Error("Usuário " + idUser + " - " + userLogin + " não encontrado."));
+			return;
 		}	
 	}).catch(function (err) {
 		console.error(new Date() + " Erro ao Excluir Usuário: " + err);
 		callback(err);
+		return;
 	});
 
 }
@@ -256,9 +283,11 @@ var buscarTodosPapeis = function(callback) {
 			console.log(new Date() + " Pesquisa por Papel com retorno vazio");
 		}
 		callback(null, roles);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -271,9 +300,11 @@ var buscarPapelPorId = function(idRole, callback) {
 			console.log(new Date() + " Pesquisa por Papel com retorno vazio");
 		}
 		callback(null, role);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Papel: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -286,9 +317,11 @@ var buscarPapeisPorCodigos = function(codes, callback) {
 			console.log(new Date() + " Pesquisa por Papéis com retorno vazio");
 		}
 		callback(null, roles);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -305,9 +338,11 @@ var buscarPapeis = function(name, code, description, callback) {
 			console.log(new Date() + " Pesquisa por Papel com retorno vazio");
 		}
 		callback(null, roles);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Papéis: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -321,13 +356,16 @@ var incluirPapel = function(name, code, description, operations, callback) {
 		role.setOperations(operations).then(function (operations) {
 			console.log(new Date() + " Atualizadas as Operações do Papel: " + role.id + " - " + role.code + ".");			
 			callback(null, role);
+			return;
 		}).catch(function (err) {		
 			console.error(new Date() + " Erro ao Atualizar as Operações do Papel: " + err);
 			callback(err, null);
+			return;
 		});	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Incluir Papel: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -344,16 +382,20 @@ var editarPapel = function(idRole, name, code, description, operations, callback
 			role.setOperations(operations).then(function (operations) {
 				console.log(new Date() + " Atualizadas as Operações do Papel: " + role.id + " - " + role.code + ".");			
 				callback(null, role);
+				return;
 			}).catch(function (err) {		
 				console.error(new Date() + " Erro ao Atualizar as Operações do Papel: " + err);
 				callback(err, null);
+				return;
 			});	
 		} else {
 			callback(new Error("Papel " + idRole + " não encontrado."), null);
+			return;
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Editar Papel: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -365,13 +407,16 @@ var excluirPapel = function(idRole, roleCode, callback) {
 		
 		if(qtyDeletedRole == 1) {			
 			console.log(new Date() + " Papel excluído: " + idRole + " - " + roleCode + ".");
-			callback(null);				
+			callback(null);		
+			return;		
 		} else {
 			callback(new Error("Papel " + idRole + " - " + roleCode + " não encontrado."));
+			return;
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Excluir Papel: " + err);
 		callback(err);
+		return;
 	});
 
 }
@@ -384,9 +429,11 @@ var buscarTodasOperacoes = function(callback) {
 			console.log(new Date() + " Pesquisa por Operações com retorno vazio");
 		}
 		callback(null, operations);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -399,9 +446,11 @@ var buscarOperacaoPorId = function(idOperation, callback) {
 			console.log(new Date() + " Pesquisa por Operação com retorno vazio");
 		}
 		callback(null, operation);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Operação: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -414,9 +463,11 @@ var buscarOperacoesPorCodigos = function(codes, callback) {
 			console.log(new Date() + " Pesquisa por Operações com retorno vazio");
 		}
 		callback(null, operations);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -433,9 +484,11 @@ var buscarOperacoes = function(name, code, description, callback) {
 			console.log(new Date() + " Pesquisa por Operação com retorno vazio");
 		}
 		callback(null, operations);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Pesquisar Operações: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -446,9 +499,11 @@ var incluirOperacao = function(name, code, description, callback) {
 	model.Operation.create( { name: name, code: code, description: description } ).then(function (operation) {
 		console.log(new Date() + " Nova Operação inserida: " + operation.id + " - " + operation.code + ".");
 		callback(null, operation);
+		return;
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Incluir Operação: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -461,13 +516,16 @@ var editarOperacao = function(idOperation, name, code, description, callback) {
 		if(updatedOperations[0] == 1) {
 			operation = updatedOperations[1][0];
 			console.log(new Date() + " Operação atualizada: " + operation.id + " - " + operation.code + ".");
-			callback(null, operation);			
+			callback(null, operation);	
+			return;		
 		} else {
 			callback(new Error("Operação " + idOperation + " não encontrada."), null);
+			return;
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Editar Operação: " + err);
 		callback(err, null);
+		return;
 	});
 
 }
@@ -479,13 +537,16 @@ var excluirOperacao = function(idOperation, operationCode, callback) {
 		
 		if(qtyDeletedOperation == 1) {			
 			console.log(new Date() + " Operação excluída: " + idOperation + " - " + operationCode + ".");
-			callback(null);				
+			callback(null);		
+			return;		
 		} else {
 			callback(new Error("Operação " + idOperation + " - " + operationCode + " não encontrada."));
+			return;
 		}	
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Excluir Operação: " + err);
 		callback(err);
+		return;
 	});
 
 }
@@ -514,10 +575,12 @@ var enviarEmailRedefinicaoSenha = function(email, login, urlPasswordRedefine, ca
 	    if(err){
 	        console.error(new Date() + " Erro ao Enviar Email para Redefinição de Senha: " + err);
 	        callback(err);
+	        return;
 	    }	    
 	    
 	    console.log(new Date() + " Enviado Email para Redefinição de Senha: " + login + ".");
 	    callback(null);
+	    return;
 	});
 }
 
@@ -529,6 +592,7 @@ var redefinirSenha = function(newPassword, email, code, callback) {
 		if(err){
 	        console.error(new Date() + " Erro ao Redefinir Senha: " + err);
 	        callback(err);
+	        return;
 	    }	    
 
 		if (user) {
@@ -544,20 +608,25 @@ var redefinirSenha = function(newPassword, email, code, callback) {
 						console.log(new Date() + " Usuário atualizado: " + user.id + " - " + user.login + ".");											
 						console.log(new Date() + " Senha de Usuário Redefinida: " + user.login + ".");
 	    				callback(null);
+	    				return;
 					} else {
 						callback(new Error("Erro ao Atualizar Campo Senha do Usuário."));
+						return;
 					}	
 
 				}).catch(function (err) {		
 					console.error(new Date() + " Erro ao Atualizar Campo Senha do Usuário: " + err);
 					callback(err);
+					return;
 				});			
 			} else {
 				callback(new Error("Código de validação não corresponde."));	
+				return;
 			}
 
 		} else {
 			callback(new Error("Usuário com o email validado " + email + " não encontrado."));
+			return;
 		}	
 	});
 }

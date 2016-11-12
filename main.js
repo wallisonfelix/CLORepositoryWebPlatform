@@ -104,7 +104,7 @@ function redirectNotHasOperation(req, res) {
 			res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Acesso negado! Você não possui autorização para esta funcionalidade"], 'messagesTypes': ["danger"] });
 		});
 	} else {
-		res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Acesso negado! Você não possui autorização para esta funcionalidade"], 'messagesTypes': ["danger"] });
+		res.render('pages/index', { authenticatedUser: null, 'messages': ["Acesso negado! Você não possui autorização para esta funcionalidade"], 'messagesTypes': ["danger"] });
 	}
 }
 
@@ -116,7 +116,7 @@ function redirectError(errorMessage, error, req, res) {
 			res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error.message], 'messagesTypes': ["danger"]});
 		});
 	} else {
-		res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': [errorMessage + ": " + error.message], 'messagesTypes': ["danger"]});
+		res.render('pages/index', { authenticatedUser: null, 'messages': [errorMessage + ": " + error.message], 'messagesTypes': ["danger"]});
 	}
 }
 
@@ -1250,6 +1250,8 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 									
 									mongoConnection.close();
 									
+									console.log(JSON.stringify(result));
+
 									var version = result.version.replace(/\./g, '-');
 									var uri = "/api/oacs/" + oacId + "/" + daeId + "/versoes-customizadas/" + version;
 									jwt.sendResponse(201, 'text/plain', null, uri, req, res);

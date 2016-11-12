@@ -12,19 +12,36 @@ var moment = require('moment');
 //retornando os elementos do Descritor que forem definidos por parâmetro
 var buscarDescritorPorId = function(mongoConnection, nomeColecao, idDescritor, arrayElementosDescritor, callback) {
 
-	if (bson.ObjectID.isValid(idDescritor)) {
+	if (!bson.ObjectID.isValid(idDescritor)) {
+		callback(new Error("Id do " + nomeColecao + " inválido"), null);
+		return;
+	}
+
+	if (arrayElementosDescritor) {
 		mongoConnection.collection(nomeColecao).findOne({ _id: new mongodb.ObjectID(idDescritor) }, arrayElementosDescritor, function(err, descritor) {
 		
 		    if(err) {
 				console.error(new Date() + " Erro ao Pesquisar " + nomeColecao + ": " + err);
 				callback(err, null);
+				return;
+			}
+
+			callback(null, descritor);
+			return;	
+	    });
+	} else {
+		mongoConnection.collection(nomeColecao).findOne({ _id: new mongodb.ObjectID(idDescritor) }, function(err, descritor) {
+		
+		    if(err) {
+				console.error(new Date() + " Erro ao Pesquisar " + nomeColecao + ": " + err);
+				callback(err, null);
+				return;
 			}
 
 			callback(null, descritor);	
+			return;
 	    });
-	} else {
-		callback(new Error("Id do " + nomeColecao + " inválido"), null);
-	}    
+	}
 }
 
 //Realiza a criação dos elementos que compõem um OAC no banco de dados
@@ -42,14 +59,18 @@ var criarOAC = function(mongoConnection, zip, userId, fileNames, callback)
    		if(err) {
 			console.error(new Date() + " Erro ao Criar DescritorRaiz: " + err);
 			callback(err, null);
+			return;
 		}
 
 		fileNames.forEach(function(element) {
 		   var obj = {}
 		   //Caminho completo do arquivo NomeDoOAC_extensao.json
-		   dae = element.replace(".", "_") + ".json";
+		   dae = element.replace('.', '_').concat(".json");
+		   console.log("### " + dae);
 		   //Caminho completo do arquivo NomeDoOAC.json		 
-		   lista_componentes = element.replace((path.extname(element)).substr(1), "json");
+		   lista_componentes = element.substring(0, element.lastIndexOf('.')).concat(".json");
+		   console.log("### " + lista_componentes);
+
 		   obj.exec = JSON.parse(zip.readAsText(dae).trim());
 		   obj.exec.clo_id = lomFile._id;
 		   obj.comp = JSON.parse(zip.readAsText(lista_componentes).trim());
@@ -62,11 +83,13 @@ var criarOAC = function(mongoConnection, zip, userId, fileNames, callback)
 			   if(err) {
 					console.error(new Date() + " Erro ao Criar DescritorDeArquivoExecutavel: " + err);
 					callback(err, null);
+					return;
 				}
 			   	count++;
 			   	if(count == toCollection.length) {
 					console.log(new Date() + " OAC inserido com sucesso.");
 					callback(null, lomFile);
+					return;
 				}
 			});
 		});
@@ -84,10 +107,12 @@ function criarDescritorRaiz(mongoConnection, lom, userId, callback)
 	    if(err) {
 			console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
 			callback(err, null);
+			return;
 		}
 
 	    console.log(new Date() + " Novo documento DescritorRaiz inserido: " + lom._id + ".");
-		callback(null, data)
+		callback(null, data);
+		return;
     })
   }
   
@@ -121,13 +146,16 @@ function criarDescritorDeArquivoExecutavel(mongoConnection, zip, element, qualif
     
     if(err) {
       console.error(new Date() + " Erro ao Inserir DescritorDeComponente: " + err);
-      callback(err, null)
+      callback(err, null);
+      return;
 	}
 
     console.log(new Date() + " Novo documento DescritorDeComponente inserido: " + jsonComp._id + ".");
 	count++
-	if(count == 2)
-		callback(null, data)
+	if(count == 2) {
+		callback(null, data);
+		return;
+	}
   })
 
   //Cria a lista "locations" no JSON que resultará no Descritor de Arquivo Executável,
@@ -136,7 +164,8 @@ function criarDescritorDeArquivoExecutavel(mongoConnection, zip, element, qualif
   mongoConnection.collection('DescritoresDeArquivosExecutaveis').insert(jsonExec, function(err, data) {
     if(err) {
       console.error(new Date() + " Erro ao Inserir DescritorDeArquivoExecutavel: " + err);
-	  callback(err, data)
+	  callback(err, data);
+	  return; 
 	}	
 	//Envia o arquivo executável para o diretório de destino no servidor.
 	//Caso exista um arquivo com a mesma nomenclatura, ele não é substituido.
@@ -146,8 +175,10 @@ function criarDescritorDeArquivoExecutavel(mongoConnection, zip, element, qualif
 
 	console.log(new Date() + " Novo documento DescritorDeArquivoExecutavel inserido: " + jsonExec._id + ".");
 	count++
-	if(count == 2)
-		callback(null, data)
+	if(count == 2) {
+		callback(null, data);
+		return;
+	}
   });
 }
 
@@ -161,13 +192,14 @@ var buscarOAC = function(mongoConnection, title, callback)
 
 	//Pesquisa os Descritores Raízes passando os campos utilizados como filtro e 
 	//limitando o retorno aos campos que serão utilizados
-	var cursorDescritoresRaizes = mongoConnection.collection("DescritoresRaizes").find({"title.value": titleRegex}, {"qualified_name": 1, "title.value": 1});
+	var cursorDescritoresRaizes = mongoConnection.collection("DescritoresRaizes").find({"title.value": titleRegex}, {"qualified_name": 1, "title.value": 1});	
 
 	cursorDescritoresRaizes.count(function(err, count) {			
 
 		if (err) {
 		    console.error(new Date() + " Erro ao Pesquisar DescritoresRaizes: " + err);
 			callback(err, result);
+			return;
 		}
 
 		var countDescritoresRaizes = count;
@@ -176,9 +208,8 @@ var buscarOAC = function(mongoConnection, title, callback)
 		if (countDescritoresRaizes == 0) {
 			console.log(new Date() + " Pesquisa por OAC com retorno vazio");
 			callback(null, result);
+			return;
 		}
-
-		console.log(countDescritoresRaizes);	
 
 		//Intera na lista de resultados
 		cursorDescritoresRaizes.forEach(function(descritorRaiz)	{
@@ -197,6 +228,7 @@ var buscarOAC = function(mongoConnection, title, callback)
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
 					callback(err, result);
+					return;
 				}
 
 				var countDescritoresDeArqExec = count;	
@@ -204,6 +236,7 @@ var buscarOAC = function(mongoConnection, title, callback)
 				
 				//Intera na lista dos Descritores de Arquivos Executáveis
 				cursorDescritoresDeArqExec.forEach(function(descritorDeArqExec) {
+					
 					//Prepara objeto para representar o Arquivo Executável
 					var file = {};
 					file._id = descritorDeArqExec._id;
@@ -222,6 +255,7 @@ var buscarOAC = function(mongoConnection, title, callback)
 						if (err) {
 						    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
 							callback(err, result);
+							return;
 						}
 
 						//Preenche o campo qtyCustomizedVersion
@@ -239,6 +273,7 @@ var buscarOAC = function(mongoConnection, title, callback)
 								//Retorna a lista de resultados da pesquisa
 								console.log(new Date() + " Retorno de uma Pesquisa por OAC: " + JSON.stringify(result) + ".");
 								callback(null, result);
+								return;
 							}
 						}
 					});
@@ -256,13 +291,16 @@ function buscarMetadadosOAC(mongoConnection, idDescritorRaiz, callback) {
 	    if(err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritorRaiz: " + err);
 			callback(err, null);
+			return;
 		}
 
 		if(descritorRaiz) {		
 			console.log(new Date() + " Retornando Metadados para Visualização: " + idDescritorRaiz + ".");
 			callback(null, descritorRaiz);	
+			return;
 		} else {
 			callback(new Error("DescritorRaiz com o id " + idDescritorRaiz + " não encontrado."), null);
+			return;
 		}	    
 		
     });
@@ -277,6 +315,7 @@ var gerarPacoteOAC = function(mongoConnection, idDescritorDeArquivoExecutavel, p
 		if (err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
 			callback(err, null);
+			return;
 		}
 
 		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel
@@ -285,11 +324,13 @@ var gerarPacoteOAC = function(mongoConnection, idDescritorDeArquivoExecutavel, p
 			if (err) {	
 				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
 				callback(err, null);
+				return;
 			}
 
 			//Gera o arquivo compactado que representa o OAC
 			cloUtils.gerarArquivoOAC(idDescritorDeArquivoExecutavel, pathArquivoExecutavel, descritorDeComponentes, userId, degreeOfFreedom, function(oac) {
 				callback(null, oac);
+				return;
 			});
 		});
 	});
@@ -304,6 +345,7 @@ var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, fileP
 		var cursorDescritoresDeVersoes = mongoConnection.collection("DescritoresDeVersoes").find({"id_source_version" : new mongodb.ObjectID(idSourceVersion)});
 	} else {
 		callback(new Error("Id do Descritor de Arquivo Executável inválido"), null);
+		return;
 	}
 
 	cursorDescritoresDeVersoes.count(function(err, cursorSize) {			
@@ -311,11 +353,13 @@ var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, fileP
 		if (err) {
 		    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
 			callback(err, result);
+			return;
 		}
 
 		if (cursorSize == 0) {
 			console.log(new Date() + " Pesquisa por Versões Customizadas com retorno vazio");
 			callback(null, result);
+			return;
 		}
 		
 		indexDescritoresDeVersoes = 0;
@@ -328,6 +372,7 @@ var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, fileP
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
 					callback(err, result);
+					return;
 				}
 
 				indexMetadados = 0;
@@ -358,6 +403,7 @@ var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, fileP
 						indexDescritoresDeVersoes++;
 						if (indexDescritoresDeVersoes == cursorSize) {
 							callback(null, result);
+							return;
 						}
 					}
 				});
@@ -375,10 +421,12 @@ var gerarPacoteVersao = function(mongoConnection, idVersion, idRootVersion, path
 		if (err) {
 			console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
 			callback(err, null);
+			return;
 		}
 
 		if (!descritorDeArquivoExecutavel) {
 			callback(new Error("DescritorDeArquivosExecutavel com o id " + idRootVersion + " não encontrado."), null);
+			return;
 		}
 
 		//Pesquisa o DescritorDeComponentes referenciado pelo DescritorDeArquivoExecutavel raiz da hierarquia em que a Versão está inserida
@@ -387,10 +435,12 @@ var gerarPacoteVersao = function(mongoConnection, idVersion, idRootVersion, path
 			if (err) {
 				console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
 				callback(err, null);
+				return;
 			}
 
 			if (!descritorDeComponentesRaiz) {
 				callback(new Error("DescritorDeComponentes com o id " + descritorDeArquivoExecutavel.id_components + " não encontrado."), null);
+				return;
 			}
 
 			//Pesquisa o DescritorDeVersao referente à versão que se deseja fazer o download
@@ -399,15 +449,18 @@ var gerarPacoteVersao = function(mongoConnection, idVersion, idRootVersion, path
 				if (err) {
 					console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
 					callback(err, null);
+					return;
 				}
 
 				if (!descritorDeVersao) {
 					callback(new Error("DescritorDeVersao com o id " + idVersion + " não encontrado."), null);
+					return;
 				}
 				
 				//Gera o arquivo compactado que representa a Versão Customizada
 				cloUtils.gerarArquivoVersaoCustomizada(descritorDeVersao, descritorDeComponentesRaiz, pathArquivoExecutavel, userId, degreeOfFreedom, function(versaoCustomizada) {
 					callback(null, versaoCustomizada);
+					return;
 				});
 			});
 		});
@@ -424,6 +477,7 @@ var getVersion = function(mongoConnection, id, callback) {
 		if (err) {
 		    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
 			callback(err, null);
+			return;
 		}
 
 		//Caso seja retornado um DescritorDeArquivoExecutavel,
@@ -441,6 +495,7 @@ var getVersion = function(mongoConnection, id, callback) {
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
 					callback(err, null);
+					return;
 				}
 
 				//Define a versão que o novo DescritorDeVersao deve assumir
@@ -453,6 +508,7 @@ var getVersion = function(mongoConnection, id, callback) {
 				ret.version = (version + 1).toString();				
 				
 				callback(null, ret);
+				return;
 			});
 		
 		} else {
@@ -463,6 +519,7 @@ var getVersion = function(mongoConnection, id, callback) {
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
 					callback(err, null);
+					return;
 				}
 
 				var ret = {};						
@@ -508,6 +565,7 @@ var getVersion = function(mongoConnection, id, callback) {
 				}
 
 				callback(null, ret);
+				return;
 			});
 		}
 	});
@@ -531,6 +589,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 		idDescritorOrigem = new mongodb.ObjectID(tokenAsArray[0]);	
 	} else {
 		callback(new Error("Id do Descritor de Origem definido no token.txt inválido"), null);
+		return;
 	}
 
 	//Diretório em que o Arquivo Executável da Versão está localizado no servidor
@@ -559,6 +618,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 		if (err) {
 		    console.error(new Date() + " Erro ao Obter Número de Versão para novo DescritorDeVersao: " + err);
 			callback(err, null);
+			return;
 		}
 	
 		if(result) {
@@ -579,6 +639,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeArquivosExecutaveis: " + err);
 					callback(err, null);
+					return;
 				}
 
 				diretorioArquivoExecutavel = descritorDeArqExec.locations;
@@ -589,6 +650,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 				    if(error) {
 				      console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + error);
 				      callback(error, null);
+				      return;
 					}
 
 					console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Iniciando o Cálculo do Delta ###");
@@ -600,6 +662,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 						if (err) {
 						    console.error(new Date() + " Erro ao Obter Delta para novo DescritorDeVersao: " + err);
 							callback(err, null);
+							return;
 						}
 
 						descritorDeVersao.customizations = delta;
@@ -612,6 +675,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 							if(err) {						      
 						    	console.error(new Date() + " Erro ao Pesquisar DescritoresDeComponentes: " + err);
 						    	callback(err, null);
+						    	return;
 							}
 
 							if(descDeVersParaIncorporacao) {
@@ -635,14 +699,17 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 										if(err) {						      
 									    	console.error(new Date() + " Erro ao Atualizar DescritorDeVersao: " + err);
 									    	callback(err, null);
+									    	return;
 										}
 
 										console.log(new Date() + " Nova Incorporação de Versão realizada: " + descDeVersParaIncorporacao._id);
-										callback(null, descDeVersAtualizado);
+										callback(null, descDeVersParaIncorporacao);
+										return;
 									});
 								} else {
 									console.log(new Date() + " Nova Incorporação de Versão realizada: " + descDeVersParaIncorporacao._id);
 									callback(null, descDeVersParaIncorporacao);
+									return;
 								}																
 							} else {
 								//Caso não seja encontrado DescritorDeVersao com as mesmas customizações, 
@@ -678,10 +745,12 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 									if(err) {						      
 								    	console.error(new Date() + " Erro ao Inserir DescritorDeVersao: " + err);
 								    	callback(err, null);
+								    	return;
 									}
 									
 									console.log(new Date() + " Novo documento DescritorDeVersao inserido: " + descritorDeVersao._id);
 									callback(null, descritorDeVersao);
+									return;
 								});
 							}
 						});
@@ -689,7 +758,8 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 				});
 			});
 		} else {
-			callback(new Error("Versão de origem com id " + idDescritorOrigem + " não encontrada."), null);			
+			callback(new Error("Versão de origem com id " + idDescritorOrigem + " não encontrada."), null);	
+			return;		
 		}
 	});
 }
@@ -703,12 +773,15 @@ var buscarIdDescritoresDeArquivoExecutavelPorIdRaiz = function(mongoConnection, 
 		    if(err) {
 				console.error(new Date() + " Erro ao Pesquisar DescritorDeArquivoExecutavel: " + err);
 				callback(err, null);
+				return;
 			}
 
 			callback(null, idDescritoresDeArquivosExecutaveis);	
+			return;
 	    });
 	} else {
 		callback(new Error("Id do Descritor Raiz inválido"), null);
+		return;
 	}    
 }
 
@@ -721,12 +794,15 @@ var buscarDescritorDeVersao = function(mongoConnection, idDescritorDeArquivoExec
 		    if(err) {
 				console.error(new Date() + " Erro ao Pesquisar DescritorDeVersao: " + err);
 				callback(err, null);
+				return;
 			}
 
 			callback(null, descritorDeVersao);	
+			return;
 	    });
 	} else {
 		callback(new Error("Id do Descritor de Arquivo Executável inválido"), null);
+		return;
 	}    
 }
 
