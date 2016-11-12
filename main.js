@@ -1010,7 +1010,7 @@ app.post("/incluirOAC", isLoggedIn, function(req, res, next) {
 app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
 		return hasPermission('incluir_versao_customizada', req, res, next);
 	}, function(req, res) {
-
+		
 		var userId = req.user.id;
 		var degreeOfFreedom = req.user.degree_of_freedom;
 		var title = req.body.title;
