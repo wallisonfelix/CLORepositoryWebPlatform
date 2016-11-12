@@ -66,10 +66,8 @@ var criarOAC = function(mongoConnection, zip, userId, fileNames, callback)
 		   var obj = {}
 		   //Caminho completo do arquivo NomeDoOAC_extensao.json
 		   dae = element.replace('.', '_').concat(".json");
-		   console.log("### " + dae);
 		   //Caminho completo do arquivo NomeDoOAC.json		 
 		   lista_componentes = element.substring(0, element.lastIndexOf('.')).concat(".json");
-		   console.log("### " + lista_componentes);
 
 		   obj.exec = JSON.parse(zip.readAsText(dae).trim());
 		   obj.exec.clo_id = lomFile._id;
@@ -97,23 +95,43 @@ var criarOAC = function(mongoConnection, zip, userId, fileNames, callback)
 }
 
 //Cria um novo documento na Collection DescritoresRaizes
-function criarDescritorRaiz(mongoConnection, lom, userId, callback)
-  {
-    lom._id = new mongodb.ObjectID();
-    lom.user = userId;
-	lom.date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-    mongoConnection.collection('DescritoresRaizes').insert(lom, function(err, data) {
+function criarDescritorRaiz(mongoConnection, lom, userId, callback) {
 
-	    if(err) {
+	lom.qualified_name = lom.title.value.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+
+	mongoConnection.collection("DescritoresRaizes").count({"qualified_name" : lom.qualified_name}, function(err, qtyDescritores) {		
+
+		if(err) {
 			console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
 			callback(err, null);
 			return;
 		}
 
-	    console.log(new Date() + " Novo documento DescritorRaiz inserido: " + lom._id + ".");
-		callback(null, data);
-		return;
-    })
+		console.log("Quantidade: " + qtyDescritores);
+		
+		if(qtyDescritores == 0) {
+
+			lom._id = new mongodb.ObjectID();    
+		    lom.user = userId;
+			lom.date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+		    mongoConnection.collection('DescritoresRaizes').insert(lom, function(err, data) {
+
+			    if(err) {
+					console.error(new Date() + " Erro ao Inserir DescritorRaiz: " + err);
+					callback(err, null);
+					return;
+				}
+
+			    console.log(new Date() + " Novo documento DescritorRaiz inserido: " + lom._id + ".");
+				callback(null, data);
+				return;
+		    });
+
+		} else {
+			callback(new Error("Já existe um DescritorRaiz com o Nome Qualificado " + lom.qualified_name + ". Escolha um título diferente para o OAC."), null);	
+			return;
+		}
+	});
   }
   
 //Cria um novo DescritorDeArquivoExecutavel, criando também o DescritorDeComponents ao qual ele o referencia
