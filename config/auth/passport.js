@@ -7,13 +7,13 @@ var LocalStrategy = require('passport-local').Strategy;
 
 //Serializa Usuário na sessão
 passport.serializeUser(function(user, done) {
-	done(null, user.id);
+	return done(null, user.id);
 });
 
 //Deserializa Usuário
 passport.deserializeUser(function(id, done) {
     administration.buscarUsuarioPorId(id, function(err, user) {
-        done(err, user);
+        return done(err, user);
     });    
 });
 
@@ -33,7 +33,7 @@ passport.use('local-login', new LocalStrategy({
             if (user) {
                 if ( bcrypt.compareSync(password, user.password) ) {
                     console.log(new Date() + " Login de Usuário realizado com sucesso: " + user.login + ".");
-                    done(null, user);        
+                    return done(null, user);        
                 } else {
                     return done(new Error("Senha Inválida."));    
                 }

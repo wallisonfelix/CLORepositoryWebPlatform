@@ -138,6 +138,7 @@ app.post('/realizarLogin', isLoggedOut, function (req, res) {
 			      	if(err) {
 						console.error(new Date() + " Erro ao Realizar Login: " + err);
 						res.render('pages/login', { authenticatedUser: null, 'messages': [err], 'messagesTypes': ["danger"]});
+						return;
 					} 
 
 					req.user.operationCodes(function(operationCodes) {
@@ -148,6 +149,7 @@ app.post('/realizarLogin', isLoggedOut, function (req, res) {
 		})(req, res);
 	} else {
 		console.error(new Date() + " Erro ao Realizar Login: Campos obrigatórios não informados");
+		res.render('pages/login', { authenticatedUser: null, 'messages': ["Campos obrigatórios não informados"], 'messagesTypes': ["danger"]});
 	}
 });
 
@@ -172,14 +174,16 @@ app.post('/recuperarSenha', isLoggedOut, function (req, res) {
 		}
 
 		if(err) {
-			redirectError("Erro ao Pesquisar Usuário", err, req, res);			
+			redirectError("Erro ao Pesquisar Usuário", err, req, res);	
+			return;		
 		} 
 
 		var urlPasswordRedefine = serverAddress + "/redefinir_senha";
 		administration.enviarEmailRedefinicaoSenha(user.email, user.login, urlPasswordRedefine, function (err) {
 
 			if(err) {
-				redirectError("Erro ao Enviar Email para Redefinição de Senha", err, req, res);				
+				redirectError("Erro ao Enviar Email para Redefinição de Senha", err, req, res);	
+				return;			
 			}
 	
 			res.render('pages/index', { authenticatedUser: null, 'messages': ["Você receberá um email para a redefinição de senha"], 'messagesTypes': ["warning"] } );
@@ -204,7 +208,8 @@ app.post('/redefinirSenha', isLoggedOut, function (req, res) {
 	administration.redefinirSenha(newPassword, email, code, function (err) {
 
 		if(err) {
-			redirectError("Erro ao Redefinir Senha de Usuário", err, req, res);				
+			redirectError("Erro ao Redefinir Senha de Usuário", err, req, res);			
+			return;	
 		}
 			
 		res.render('pages/login', { authenticatedUser: null,  'messages': ["Senha redefinda com sucesso"], 'messagesTypes': ["success", "success"] } );
@@ -229,13 +234,15 @@ app.post('/incluirUsuario', isLoggedOut, function (req, res) {
 		
 		if(err) {
 			redirectError("Erro ao Incluir Usuário", err, req, res);			
+			return;
 		}
 
 		var urlEmailValidation = serverAddress + "/validarEmail";
 		administration.enviarEmailConfirmacaoCadastroUsuario(user.email, user.login, urlEmailValidation, function (err) {
 
 			if(err) {
-				redirectError("Erro ao Enviar Email de Confirmação de Cadastro de Usuário", err, req, res);				
+				redirectError("Erro ao Enviar Email de Confirmação de Cadastro de Usuário", err, req, res);	
+				return;			
 			}
 	
 			res.render('pages/visualizar_usuario', { authenticatedUser: null, 'user' : user, 'userRoles': null, 'messages': ["Usuário " + user.login + " incluído com sucesso", "Você receberá um email para confirmação do cadastro"], 'messagesTypes': ["success", "warning"] } );
@@ -251,7 +258,8 @@ app.get('/validarEmail', isLoggedOut, function (req, res) {
 	administration.validarEmailConfirmacaoCadastroUsuario(email, code, function (err) {
 
 		if(err) {
-			redirectError("Erro ao Validar Email de Confirmação de Cadastro de Usuário", err, req, res);	
+			redirectError("Erro ao Validar Email de Confirmação de Cadastro de Usuário", err, req, res);
+			return;	
 		}
 			
 		res.render('pages/index', { authenticatedUser: null, 'messages': ["Email validado com sucesso", "Em breve você receberá um email com o resultado da análise do seu cadastro"], 'messagesTypes': ["success", "warning"] } );
@@ -283,7 +291,8 @@ app.get('/pesquisarUsuario', isLoggedIn, function(req, res, next) {
 		administration.buscarUsuarios(name, email, login, degreeOfFreedom, emailValidated, userValidated, function(err, users) {
 
 			if(err) {
-				redirectError("Erro ao Pesquisar Usuários", err, req, res);				
+				redirectError("Erro ao Pesquisar Usuários", err, req, res);		
+				return;		
 			}
 
 			req.user.operationCodes(function(operationCodes) {
@@ -308,13 +317,15 @@ app.get('/editar_usuario', isLoggedIn, function(req, res, next) {
 			}
 
 			if(err) {
-				redirectError("Erro ao Pesquisar Usuários", err, req, res);				
+				redirectError("Erro ao Pesquisar Usuários", err, req, res);	
+				return;			
 			} 
 
 			administration.buscarTodosPapeis(function (err, roles) {
 
 				if(err) {
 					redirectError("Erro ao Pesquisar Papéis", err, req, res);
+					return;
 				}
 
 				user.getRoles().then(function (userRoles) {		
@@ -352,18 +363,21 @@ app.post('/validarUsuario', isLoggedIn, function(req, res, next) {
 				
 				if(err) {
 					redirectError("Erro ao Pesquisar Papéis", err, req, res);
+					return;
 				}
 			
 				administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
 					
 					if(err) {
 						redirectError("Erro ao Editar Usuário", err, req, res);
+						return;
 					}
 
 					administration.enviarEmailValidacaoCadastroUsuario(user.email, user, function (err) {
 
 						if(err) {
 							redirectError("Erro ao Enviar Email de Validação de Cadastro de Usuário", err, req, res);
+							return;
 						}
 
 						user.getRoles().then(function (userRoles) {
@@ -403,13 +417,15 @@ app.post('/editarUsuario', isLoggedIn, function(req, res, next) {
 		administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
 			
 			if(err) {
-				redirectError("Erro ao Pesquisar Papéis", err, req, res);				
+				redirectError("Erro ao Pesquisar Papéis", err, req, res);	
+				return;			
 			}
 		
 			administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
 				
 				if(err) {
-					redirectError("Erro ao Editar Usuário", err, req, res);					
+					redirectError("Erro ao Editar Usuário", err, req, res);	
+					return;				
 				}
 
 				user.getRoles().then(function (userRoles) {
@@ -432,7 +448,8 @@ app.get('/excluirUsuario', isLoggedIn, function(req, res, next) {
 		administration.excluirUsuario(idUser, userLogin, function(err) {
 
 			if(err) {
-				redirectError("Erro ao Excluir Usuário", err, req, res);					
+				redirectError("Erro ao Excluir Usuário", err, req, res);
+				return;					
 			}
 
 			req.user.operationCodes(function(operationCodes) {	
@@ -462,7 +479,8 @@ app.get('/pesquisarPapel', isLoggedIn, function(req, res, next) {
 		administration.buscarPapeis(name, code, description, function(err, roles) {
 
 			if(err) {
-				redirectError("Erro ao Pesquisar Papéis", err, req, res);				
+				redirectError("Erro ao Pesquisar Papéis", err, req, res);	
+				return;			
 			}
 
 			req.user.operationCodes(function(operationCodes) {
@@ -478,7 +496,8 @@ app.get('/incluir_papel', isLoggedIn, function(req, res, next) {
 		administration.buscarTodasOperacoes(function (err, operations) {
 			
 			if(err) {
-				redirectError("Erro ao Pesquisar Operações", err, req, res);				
+				redirectError("Erro ao Pesquisar Operações", err, req, res);	
+				return;			
 			}
 
 			var role = model.Role.build({});
@@ -507,13 +526,15 @@ app.post('/incluirPapel', isLoggedIn, function(req, res, next) {
 		administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
 			
 			if(err) {
-				redirectError("Erro ao Pesquisar Operações", err, req, res);					
+				redirectError("Erro ao Pesquisar Operações", err, req, res);	
+				return;				
 			}
 
 			administration.incluirPapel(name, code, description, operations, function (err, role) {
 				
 				if(err) {
 					redirectError("Erro ao Incluir Papel", err, req, res);
+					return;
 				}
 
 				role.getOperations().then(function (roleOperations) {			
@@ -545,6 +566,7 @@ app.get('/editar_papel', isLoggedIn, function(req, res, next) {
 			
 				if(err) {
 					redirectError("Erro ao Pesquisar Operações", err, req, res);
+					return;
 				}
 
 				role.getOperations().then(function (roleOperations) {
@@ -576,13 +598,15 @@ app.post('/editarPapel', isLoggedIn, function(req, res, next) {
 		administration.buscarOperacoesPorCodigos(operationCodes, function (err, operations) {		
 			
 			if(err) {
-				redirectError("Erro ao Pesquisar Operações", err, req, res);				
+				redirectError("Erro ao Pesquisar Operações", err, req, res);	
+				return;			
 			}
 		
 			administration.editarPapel(idRole, name, code, description, operations, function (err, role) {
 				
 				if(err) {
-					redirectError("Erro ao Editar Papel", err, req, res);					
+					redirectError("Erro ao Editar Papel", err, req, res);	
+					return;				
 				}
 
 				role.getOperations().then(function (roleOperations) {	
@@ -605,7 +629,8 @@ app.get('/excluirPapel', isLoggedIn, function(req, res, next) {
 		administration.excluirPapel(idRole, roleCode, function(err) {
 
 			if(err) {
-				redirectError("Erro ao Excluir Papel", err, req, res);				
+				redirectError("Erro ao Excluir Papel", err, req, res);	
+				return;			
 			}
 
 			req.user.operationCodes(function(operationCodes) {		
@@ -635,7 +660,8 @@ app.get('/pesquisarOperacao', isLoggedIn, function(req, res, next) {
 		administration.buscarOperacoes(name, code, description, function(err, operations) {
 
 			if(err) {
-				redirectError("Erro ao Pesquisar Operações", err, req, res);					
+				redirectError("Erro ao Pesquisar Operações", err, req, res);
+				return;					
 			}
 
 			req.user.operationCodes(function(operationCodes) {	
@@ -666,7 +692,8 @@ app.post('/incluirOperacao', isLoggedIn, function(req, res, next) {
 		administration.incluirOperacao(name, code, description, function (err, operation) {
 			
 			if(err) {
-				redirectError("Erro ao Incluir Operação", err, req, res);					
+				redirectError("Erro ao Incluir Operação", err, req, res);	
+				return;				
 			}
 			
 			req.user.operationCodes(function(operationCodes) {				
@@ -688,7 +715,8 @@ app.get('/editar_operacao', isLoggedIn, function(req, res, next) {
 				err = new Error("Operação " + idOperation + " não encontrada.");
 			}
 			if(err) {
-				redirectError("Erro ao Pesquisar Operação", err, req, res);				
+				redirectError("Erro ao Pesquisar Operação", err, req, res);	
+				return;			
 			} 
 			
 			req.user.operationCodes(function(operationCodes) {	
@@ -710,7 +738,8 @@ app.post('/editarOperacao', isLoggedIn, function(req, res, next) {
 		administration.editarOperacao(idOperation, name, code, description, function (err, operation) {
 			
 			if(err) {
-				redirectError("Erro ao Editar Operação", err, req, res);				
+				redirectError("Erro ao Editar Operação", err, req, res);	
+				return;			
 			}
 
 			req.user.operationCodes(function(operationCodes) {	
@@ -730,7 +759,8 @@ app.get('/excluirOperacao', isLoggedIn, function(req, res, next) {
 		administration.excluirOperacao(idOperation, operationCode, function(err) {
 
 			if(err) {
-				redirectError("Erro ao Excluir Operação", err, req, res);				
+				redirectError("Erro ao Excluir Operação", err, req, res);	
+				return;			
 			}
 
 			req.user.operationCodes(function(operationCodes) {	
@@ -779,6 +809,7 @@ app.get('/pesquisarOAC', function (req, res) {
 		if (err) {
 			redirectError("Erro ao Pesquisar OAC", err, req, res);
 			db.mongo.close();
+			return;
 		}
 
 		cloRepository.buscarOAC(mongoConnection, title, function(err, result) {			
@@ -786,6 +817,7 @@ app.get('/pesquisarOAC', function (req, res) {
 			if(err) {
 				redirectError("Erro ao Pesquisar OAC", err, req, res);
 				db.mongo.close();
+				return;
 			}
 
 			mongoConnection.close();
@@ -808,6 +840,7 @@ app.get('/visualizarMetadadosOAC', function (req, res) {
 		if(err) { 
 			redirectError("Erro ao Visualizar Metadados de OAC", err, req, res);			
 			db.mongo.close();
+			return;
 		}
 
 		cloRepository.buscarMetadadosOAC(mongoConnection, idOAC, function(err, metadados) {
@@ -815,6 +848,7 @@ app.get('/visualizarMetadadosOAC', function (req, res) {
 			if(err) {
 				redirectError("Erro ao Visualizar Metadados de OAC", err, req, res);
 				db.mongo.close();
+				return;
 			}
 
 			mongoConnection.close();
@@ -848,6 +882,7 @@ app.get("/baixarOAC", function(req, res) {
 		if (err) {
 			redirectError("Erro ao Baixar OAC", err, req, res);
 			db.mongo.close();
+			return;
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando o OAC
@@ -856,6 +891,7 @@ app.get("/baixarOAC", function(req, res) {
 			if(err) {
 				redirectError("Erro ao Baixar OAC", err, req, res);
 				db.mongo.close();
+				return;
 			}
 
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
@@ -879,6 +915,7 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 		if(err) { 
 			redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 			db.mongo.close();
+			return;
 		}
 
 		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
@@ -886,9 +923,11 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 			if(err) {
 				redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 				db.mongo.close();
+				return;
 			}
 
-			mongoConnection.close();			
+			mongoConnection.close();	
+
 			if (req.user) {
 				req.user.operationCodes(function(operationCodes) {
 					res.render('pages/listar_versoes_customizadas', { authenticatedUser: req.user, operationCodes: operationCodes, 'versoesCustomizadas' : versoesCustomizadas});
@@ -910,6 +949,7 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 		if(err) { 
 			redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 			db.mongo.close();
+			return;
 		}
 
 		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
@@ -917,6 +957,7 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 			if(err) {
 				redirectError("Erro ao Listar Versões Customizadas", err, req, res);
 				db.mongo.close();
+				return;
 			}
 			
 			res.setHeader('Content-Type', 'application/json');
@@ -946,6 +987,7 @@ app.get("/baixarVersaoCustomizada", function(req, res) {
 		if(err) {
 			redirectError("Erro ao Baixar Versão Customizada", err, req, res);			
 			db.mongo.close();
+			return;
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando a Versão Customizada
@@ -954,6 +996,7 @@ app.get("/baixarVersaoCustomizada", function(req, res) {
 			if(err) {
 				redirectError("Erro ao Baixar Versão Customizada", err, req, res);
 				db.mongo.close();
+				return;
 			}
 
 			//Informa ao navegador o tipo de arquivo a ser enviado. Neste caso, zip.
@@ -982,6 +1025,7 @@ app.post("/incluirOAC", isLoggedIn, function(req, res, next) {
 			if(err) {
 				redirectError("Erro ao Incluir OAC", err, req, res);
 				db.mongo.close();
+				return;
 			}
 
 			cloRepository.criarOAC(mongoConnection, oac, userId, manifestData.fileNames, function(err, result) {
@@ -989,16 +1033,22 @@ app.post("/incluirOAC", isLoggedIn, function(req, res, next) {
 				if(err) {
 					redirectError("Erro ao Incluir OAC", err, req, res);
 					db.mongo.close();
+					return;
 				}
 
 				fs.unlink(req.files.fileInput.path, function(err) {
 					if(err) {
-						redirectError("Erro ao Incluir OAC", err, req, res);
+						console.error(new Date() + " Erro ao Remover Arquivo Temporário: " + err);
+						req.user.operationCodes(function(operationCodes) {
+							res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["OAC incluído com sucesso", "Erro ao Remover Arquivo Temporário"], 'messagesTypes': ["success", "danger"]});
+						});
+						return;
 					}
-					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
+					console.log(new Date() + " Arquivo Temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 				});
 
-				mongoConnection.close();				
+				mongoConnection.close();	
+
 				req.user.operationCodes(function(operationCodes) {
 					res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["OAC incluído com sucesso"], 'messagesTypes': ["success"]});
 				});				
@@ -1023,17 +1073,24 @@ app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
 			if(err) {
 				redirectError("Erro ao Incluir Versão Customizada", err, req, res);			
 				db.mongo.close();
+				return;
 			}
 
 			cloRepository.criarVersaoCustomizada(mongoConnection, oac, userId, degreeOfFreedom, title, description, languages, function(err, result) {				
 				
 				if(err) {
 					redirectError("Erro ao Incluir Versão Customizada", err, req, res);
+					db.mongo.close();
+					return;
 				}
 
 				fs.unlink(req.files.fileInput.path, function(err) {
 					if(err) {
-						redirectError("Erro ao Incluir Versão Customizada", err, req, res);
+						console.error(new Date() + " Erro ao Remover Arquivo Temporário: " + err);
+						req.user.operationCodes(function(operationCodes) {
+							res.render('pages/index', { authenticatedUser: req.user, operationCodes: operationCodes, 'messages': ["Versão Customizada incluída com sucesso", "Erro ao Remover Arquivo Temporário"], 'messagesTypes': ["success", "danger"]});
+						});
+						return;
 					}
 					console.log(new Date() + " Arquivo temporário \"" + path.basename(req.files.fileInput.path) + "\" removido com sucesso.");
 				});
@@ -1102,10 +1159,10 @@ app.post("/api/oacs", jwt.hasValidToken, function(req, res, next) {
 
 					fs.unlink(fileInput.path, function(err) {
 						if(err) {
-							jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir AOC: " + err.message, req, res);
-							return;
+							console.error(new Date() + " Erro ao Remover Arquivo Temporário: " + err);
+						} else {
+							console.log(new Date() + " Arquivo temporário \"" + path.basename(fileInput.path) + "\" removido com sucesso.");
 						}
-						console.log(new Date() + " Arquivo temporário \"" + path.basename(fileInput.path) + "\" removido com sucesso.");
 
 						cloRepository.buscarIdDescritoresDeArquivoExecutavelPorIdRaiz(mongoConnection, result._id, function(err, idDescritoresDeArquivosExecutaveis) {			
 						
@@ -1242,16 +1299,14 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 
 									fs.unlink(fileInput.path, function(err) {
 										if(err) {
-											jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
-											return;
-										}
-										console.log(new Date() + " Arquivo temporário \"" + path.basename(fileInput.path) + "\" removido com sucesso.");
+											console.error(new Date() + " Erro ao Remover Arquivo Temporário: " + err);
+										} else {
+											console.log(new Date() + " Arquivo temporário \"" + path.basename(fileInput.path) + "\" removido com sucesso.");
+										}										
 									});
 									
 									mongoConnection.close();
 									
-									console.log(JSON.stringify(result));
-
 									var version = result.version.replace(/\./g, '-');
 									var uri = "/api/oacs/" + oacId + "/" + daeId + "/versoes-customizadas/" + version;
 									jwt.sendResponse(201, 'text/plain', null, uri, req, res);
