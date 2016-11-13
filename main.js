@@ -217,9 +217,17 @@ app.post('/redefinirSenha', isLoggedOut, function (req, res) {
 });
 
 // ***** Auto-cadastro *****
-
 app.get('/incluir_usuario', isLoggedOut, function (req, res) {
-	res.render('pages/incluir_usuario', { authenticatedUser: null }); 	
+
+	administration.buscarTodasAtividades(function (err, activities) {
+
+		if(err) {
+			redirectError("Erro ao Pesquisar Atividades", err, req, res);
+			return;
+		}
+		
+		res.render('pages/incluir_usuario', { authenticatedUser: null, activities: activities }); 	
+	});	
 });
 
 app.post('/incluirUsuario', isLoggedOut, function (req, res) {
@@ -229,24 +237,41 @@ app.post('/incluirUsuario', isLoggedOut, function (req, res) {
 	var profile = req.body.profile;	
 	var login = req.body.login;
 	var password = req.body.password;
+	//Um array é retornado apenas quando mais de uma Atividade é selecionada
+	var activityCodes;
+	if ( Array.isArray(req.body.activities) ) {
+		activityCodes = req.body.activities;
+	} else {
+		activityCodes = new Array(req.body.activities);
+	}
 
-	administration.incluirUsuario(name, email, profile, login, password, function (err, user) {
-		
+	administration.buscarAtividadesPorCodigos(activityCodes, function (err, activities) {		
+				
 		if(err) {
-			redirectError("Erro ao Incluir Usuário", err, req, res);			
+			redirectError("Erro ao Pesquisar Atividades", err, req, res);
 			return;
 		}
 
-		var urlEmailValidation = serverAddress + "/validarEmail";
-		administration.enviarEmailConfirmacaoCadastroUsuario(user.email, user.login, urlEmailValidation, function (err) {
-
+		administration.incluirUsuario(name, email, activities, profile, login, password, function (err, user) {
+			
 			if(err) {
-				redirectError("Erro ao Enviar Email de Confirmação de Cadastro de Usuário", err, req, res);	
-				return;			
+				redirectError("Erro ao Incluir Usuário", err, req, res);			
+				return;
 			}
-	
-			res.render('pages/visualizar_usuario', { authenticatedUser: null, 'user' : user, 'userRoles': null, 'messages': ["Usuário " + user.login + " incluído com sucesso", "Você receberá um email para confirmação do cadastro"], 'messagesTypes': ["success", "warning"] } );
-		});
+
+			var urlEmailValidation = serverAddress + "/validarEmail";
+			administration.enviarEmailConfirmacaoCadastroUsuario(user.email, user.login, urlEmailValidation, function (err) {
+
+				if(err) {
+					redirectError("Erro ao Enviar Email de Confirmação de Cadastro de Usuário", err, req, res);	
+					return;			
+				}
+				
+				user.getActivities().then(function (userActivities) {
+					res.render('pages/visualizar_usuario', { authenticatedUser: null, 'user' : user, 'userRoles': null, 'userActivities': userActivities, 'messages': ["Usuário " + user.login + " incluído com sucesso", "Você receberá um email para confirmação do cadastro"], 'messagesTypes': ["success", "warning"] } );
+				});
+			});
+		});		
 	});		
 });
 
@@ -328,11 +353,22 @@ app.get('/editar_usuario', isLoggedIn, function(req, res, next) {
 					return;
 				}
 
-				user.getRoles().then(function (userRoles) {		
-					req.user.operationCodes(function(operationCodes) {
-						res.render('pages/editar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'roles': roles});
-					});
-				});			
+				administration.buscarTodasAtividades(function (err, activities) {
+
+					if(err) {
+						redirectError("Erro ao Pesquisar Atividades", err, req, res);
+						return;
+					}
+					
+
+					user.getRoles().then(function (userRoles) {		
+						req.user.operationCodes(function(operationCodes) {
+							user.getActivities().then(function (userActivities) {		
+								res.render('pages/editar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'userActivities': userActivities, 'roles': roles, 'activities': activities});
+							});
+						});
+					});			
+				});
 			});
 		});
 	}
@@ -351,6 +387,13 @@ app.post('/validarUsuario', isLoggedIn, function(req, res, next) {
 			var profile = req.body.profile;
 			var degreeOfFreedom = req.body.degreeOfFreedom;
 			var login = req.body.login;
+			//Um array é retornado apenas quando mais de uma Atividade é selecionada
+			var activityCodes;
+			if ( Array.isArray(req.body.activities) ) {
+				activityCodes = req.body.activities;
+			} else {
+				activityCodes = new Array(req.body.activities);
+			}
 			//Um array é retornado apenas quando mais de um Papel é selecionado
 			var roleCodes;
 			if ( Array.isArray(req.body.checkRole) ) {
@@ -359,34 +402,44 @@ app.post('/validarUsuario', isLoggedIn, function(req, res, next) {
 				roleCodes = new Array(req.body.checkRole);
 			}
 
-			administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
+			administration.buscarAtividadesPorCodigos(activityCodes, function (err, activities) {		
 				
 				if(err) {
-					redirectError("Erro ao Pesquisar Papéis", err, req, res);
+					redirectError("Erro ao Pesquisar Atividades", err, req, res);
 					return;
 				}
-			
-				administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
+
+				administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
 					
 					if(err) {
-						redirectError("Erro ao Editar Usuário", err, req, res);
+						redirectError("Erro ao Pesquisar Papéis", err, req, res);
 						return;
 					}
-
-					administration.enviarEmailValidacaoCadastroUsuario(user.email, user, function (err) {
-
+				
+					administration.editarUsuario(idUser, name, email, activities, profile, degreeOfFreedom, login, roles, function (err, user) {
+						
 						if(err) {
-							redirectError("Erro ao Enviar Email de Validação de Cadastro de Usuário", err, req, res);
+							redirectError("Erro ao Editar Usuário", err, req, res);
 							return;
 						}
 
-						user.getRoles().then(function (userRoles) {
-							req.user.operationCodes(function(operationCodes) {			
-								res.render('pages/visualizar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + idUser + " validado com sucesso", "Um email com o resultado da análise do cadastro foi enviado ao Usuário"], 'messagesTypes': ["success", "warning"] } );
+						administration.enviarEmailValidacaoCadastroUsuario(user.email, user, function (err) {
+
+							if(err) {
+								redirectError("Erro ao Enviar Email de Validação de Cadastro de Usuário", err, req, res);
+								return;
+							}
+
+							user.getRoles().then(function (userRoles) {
+								req.user.operationCodes(function(operationCodes) {
+									user.getActivities().then(function (userActivities) {					
+										res.render('pages/visualizar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'userActivities': userActivities, 'messages': ["Usuário " + idUser + " validado com sucesso", "Um email com o resultado da análise do cadastro foi enviado ao Usuário"], 'messagesTypes': ["success", "warning"] } );
+									});		
+								});
 							});
 						});
-					});
-				});		
+					});		
+				});
 			});
 		} else {
 			req.user.operationCodes(function(operationCodes) {			
@@ -402,10 +455,17 @@ app.post('/editarUsuario', isLoggedIn, function(req, res, next) {
 
 		var idUser = req.body.idUser;
 		var name = req.body.name;
-		var email = req.body.email;
+		var email = req.body.email;		
 		var profile = req.body.profile;
 		var degreeOfFreedom = req.body.degreeOfFreedom;
 		var login = req.body.login;
+		//Um array é retornado apenas quando mais de uma Atividade é selecionada
+		var activityCodes;
+		if ( Array.isArray(req.body.activities) ) {
+			activityCodes = req.body.activities;
+		} else {
+			activityCodes = new Array(req.body.activities);
+		}
 		//Um array é retornado apenas quando mais de um Papel é selecionado
 		var roleCodes;
 		if ( Array.isArray(req.body.checkRole) ) {
@@ -414,26 +474,36 @@ app.post('/editarUsuario', isLoggedIn, function(req, res, next) {
 			roleCodes = new Array(req.body.checkRole);
 		}
 
-		administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
-			
+		administration.buscarAtividadesPorCodigos(activityCodes, function (err, activities) {		
+				
 			if(err) {
-				redirectError("Erro ao Pesquisar Papéis", err, req, res);	
-				return;			
+				redirectError("Erro ao Pesquisar Atividades", err, req, res);
+				return;
 			}
-		
-			administration.editarUsuario(idUser, name, email, profile, degreeOfFreedom, login, roles, function (err, user) {
+
+			administration.buscarPapeisPorCodigos(roleCodes, function (err, roles) {		
 				
 				if(err) {
-					redirectError("Erro ao Editar Usuário", err, req, res);	
-					return;				
+					redirectError("Erro ao Pesquisar Papéis", err, req, res);	
+					return;			
 				}
+			
+				administration.editarUsuario(idUser, name, email, activities, profile, degreeOfFreedom, login, roles, function (err, user) {
+					
+					if(err) {
+						redirectError("Erro ao Editar Usuário", err, req, res);	
+						return;				
+					}
 
-				user.getRoles().then(function (userRoles) {
-					req.user.operationCodes(function(operationCodes) {	
-						res.render('pages/visualizar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'messages': ["Usuário " + idUser + " atualizado com sucesso"], 'messagesTypes': ["success"] } );
-					});		
-				});
-			});		
+					user.getRoles().then(function (userRoles) {
+						req.user.operationCodes(function(operationCodes) {
+							user.getActivities().then(function (userActivities) {
+								res.render('pages/visualizar_usuario', { authenticatedUser: req.user, operationCodes: operationCodes, 'user' : user, 'userRoles': userRoles, 'userActivities': userActivities, 'messages': ["Usuário " + idUser + " atualizado com sucesso"], 'messagesTypes': ["success"] } );
+							});		
+						});		
+					});
+				});		
+			});
 		});
 	}
 );
@@ -784,10 +854,10 @@ app.get('/incluir_oac', isLoggedIn, function(req, res, next) {
 app.get('/pesquisar_oac', function (req, res) {
 	if (req.user) {
 		req.user.operationCodes(function(operationCodes) {
-			res.render('pages/pesquisar_oac', { authenticatedUser: req.user, operationCodes: operationCodes, 'result' : null, 'title' : ''});
+			res.render('pages/pesquisar_oac', { authenticatedUser: req.user, operationCodes: operationCodes, 'result' : null, 'title' : '', 'description': '', 'keyWord': ''});
 		});
 	} else {
-		res.render('pages/pesquisar_oac', { authenticatedUser: null, 'result' : null, 'title' : ''});	
+		res.render('pages/pesquisar_oac', { authenticatedUser: null, 'result' : null, 'title' : '', 'description': '', 'keyWord': ''});	
 	}
 });
 
@@ -803,6 +873,8 @@ app.get('/incluir_versao_customizada', isLoggedIn, function(req, res, next) {
 app.get('/pesquisarOAC', function (req, res) {
 	
 	var title = req.query.title;
+	var description = req.query.description;
+	var keyWord = req.query.keyWord;
 
 	db.mongo.open(function(err, mongoConnection) {
 
@@ -812,7 +884,7 @@ app.get('/pesquisarOAC', function (req, res) {
 			return;
 		}
 
-		cloRepository.buscarOAC(mongoConnection, title, function(err, result) {			
+		cloRepository.buscarOAC(mongoConnection, title, description, keyWord, function(err, result) {			
 
 			if(err) {
 				redirectError("Erro ao Pesquisar OAC", err, req, res);
@@ -823,10 +895,10 @@ app.get('/pesquisarOAC', function (req, res) {
 			mongoConnection.close();
 			if (req.user) {
 				req.user.operationCodes(function(operationCodes) {
-					res.render('pages/pesquisar_oac', { authenticatedUser: req.user, operationCodes: operationCodes, 'result' : result, 'title' : title});
+					res.render('pages/pesquisar_oac', { authenticatedUser: req.user, operationCodes: operationCodes, 'result' : result, 'title' : title, 'description': description, 'keyWord': keyWord});
 				});
 			} else {
-				res.render('pages/pesquisar_oac', { authenticatedUser: null, 'result' : result, 'title' : title});
+				res.render('pages/pesquisar_oac', { authenticatedUser: null, 'result' : result, 'title' : title, 'description': description, 'keyWord': keyWord});
 			}
 		});
 	});

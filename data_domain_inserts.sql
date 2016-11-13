@@ -62,3 +62,31 @@ INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM role
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'administrador'), (SELECT id FROM operations WHERE code = 'validar_usuario'));
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'administrador'), (SELECT id FROM operations WHERE code = 'editar_usuario'));
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'administrador'), (SELECT id FROM operations WHERE code = 'excluir_usuario'));
+
+-- Insert Activities
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (1, 'professor_ens_infantil', 'Professor do Ensino Infantil', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (2, 'professor_ens_fundamental', 'Professor do Ensino Fundamental', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (3, 'professor_ens_medio', 'Professor do Ensino Médio', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (4, 'professor_ens_tecnico', 'Professor do Ensino Técnico', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (5, 'professor_ens_superior', 'Professor do Ensino Superior', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (6, 'professor_pos_graduacao', 'Professor de Pós-graduação', NOW(), NOW());
+
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (7, 'aluno_ens_fundamental', 'Aluno do Ensino Fundamental', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (8, 'aluno_ens_medio', 'Aluno do Ensino Médio', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (9, 'aluno_ens_tecnico', 'Aluno do Ensino Técnico', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (10, 'aluno_ens_superior', 'Aluno do Ensino Superior', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (11, 'aluno_pos_graduacao', 'Aluno de Pós-graduação', NOW(), NOW());
+
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (12, 'analista_sistemas', 'Analista de Sistemas', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (13, 'desenvolvedor_sistemas', 'Desenvolvedor de Sistema', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (14, 'designer', 'Designer', NOW(), NOW());
+
+SELECT setval('activities_id_seq', (SELECT MAX(id) FROM activities));	
+
+-- Insert Default User ADMIN - Login admin / Password admin
+INSERT INTO users (id, name, email, "emailValidated", profile, login, password, degree_of_freedom, "userValidated", created_at, updated_at) 
+	VALUES (1, 'ADMIN', 'admin@email.com', TRUE, 'Administrador da Plataforma', 'admin', '$2a$08$62aL8DUIZnjJU6bcOaCGp.pYCXgN3l9VKN8AuQtySipBt9UyIu6kW', 4, TRUE, NOW(), NOW());
+INSERT INTO user_roles (user_id, role_id) VALUES ((SELECT id FROM users WHERE login = 'admin'), (SELECT id FROM roles WHERE code = 'administrador'));
+INSERT INTO user_activities (user_id, activity_id) VALUES ((SELECT id FROM users WHERE login = 'admin'), (SELECT id FROM activities WHERE code = 'analista_sistemas'));
+
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));	

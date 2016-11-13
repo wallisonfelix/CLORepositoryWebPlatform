@@ -106,11 +106,30 @@ var Operation = db.sequelize.define('operation', {
     ]
 });
 
+//Representação no CLORepository de uma Atividade que os Usuários da Plataforma indicar que praticam.
+var Activity = db.sequelize.define('activity', {
+	id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
+	name: { type: Sequelize.STRING(32), allowNull: false, validate: { notEmpty: { args: true, msg: "Preencha o campo Nome da Atividade"} } },	
+	code: { type: Sequelize.STRING(32), allowNull: false, unique: true, validate: { notEmpty: { args: true, msg: "Preencha o campo Código da Atividade"} } },
+}, {
+	tableName: "activities",
+	timestamps: true,
+	underscored: true,
+	indexes: [ {
+      		unique: true,
+    		fields: ["code"]
+    	}
+    ]
+});
+
 //Relacionamento m : n entre os Papéis e as Operações - Vários Papéis podem ser autorizados para muitas Operações.
 Role.belongsToMany(Operation, { constraints: true, as: 'Operations', through: 'role_operations', foreignKey: 'role_id', otherKey: 'operation_id', timestamps: false, onDelete: 'cascade', onUpdate: 'cascade'});
 
 //Relacionamento m : n entre os Usuários e os Papéis - Vários Usuários podem possuir um conjunto de Papéis.
 User.belongsToMany(Role, { constraints: true, as: 'Roles', through: 'user_roles', foreignKey: 'user_id', otherKey: 'role_id', timestamps: false, onDelete: 'cascade', onUpdate: 'cascade'});
+
+//Relacionamento m : n entre os Usuários e as Atividades - Vários Usuários podem exercer um conjunto de Atividades.
+User.belongsToMany(Activity, { constraints: true, as: 'Activities', through: 'user_activities', foreignKey: 'user_id', otherKey: 'activity_id', timestamps: false, onDelete: 'cascade', onUpdate: 'cascade'});
 
 //Deleta e Recria o Banco de Dados - Apenas para o ambiente de DESENVOLVIMENTO.
 //db.sequelize.sync( { force: true } );
@@ -119,3 +138,4 @@ db.sequelize.sync();
 module.exports.User = User;
 module.exports.Role = Role;
 module.exports.Operation = Operation;
+module.exports.Activity = Activity;

@@ -48,6 +48,24 @@
 						<input id="login" name="login" type="text" value="<%= user.login %>" class="form-control" required/>
 						<span class="help-block">Informe o login do Usuário</span>
 					</div>					
+				</div>
+				<div class="form-group">
+					<label for="activities" class="control-label col-sm-3">Atividades / Atuação :</label>
+					<div class="col-sm-9">
+						<select id="activities" name="activities" class="form-control" multiple> <% 
+		      				if(activities) {
+			      				for(var i = 0; i < activities.length; i++) { %> 
+			      					<option value="<%= activities[i].code %>" 
+			      						<% for(var j = 0; j < userActivities.length; j++) { 
+			      							if (activities[i].code == userActivities[j].code) { %> selected <% break; } 
+						      			} %>>
+						      			<%= activities[i].name %>
+						      		</option> 
+			      				<% } 			      				
+			      			} %> 
+						</select>
+						<span class="help-block">Informe as Atividades do Usuário</span>
+					</div>
 				</div>						
 				<div class="form-group">
 					<label for="profile" class="control-label col-sm-3">Perfil :</label>

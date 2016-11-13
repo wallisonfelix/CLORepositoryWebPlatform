@@ -108,7 +108,7 @@ function criarDescritorRaiz(mongoConnection, lom, userId, callback) {
 		}
 
 		console.log("Quantidade: " + qtyDescritores);
-		
+
 		if(qtyDescritores == 0) {
 
 			lom._id = new mongodb.ObjectID();    
@@ -201,16 +201,18 @@ function criarDescritorDeArquivoExecutavel(mongoConnection, zip, element, qualif
 }
 
 //Realiza a busca de OACs cujo metadados correspondam com os campos passados como parâmetro
-var buscarOAC = function(mongoConnection, title, callback)
+var buscarOAC = function(mongoConnection, title, description, keyWord, callback)
 {
-	//Monta Regex para consulta pelo campo Título do OAC
+	//Monta Regex para consulta pelo campos
 	var titleRegex = new RegExp(".*" + title + ".*", "i");
+	var descriptionRegex = new RegExp(".*" + description + ".*", "i");	
+	var keyWordRegex = new RegExp(".*" + keyWord + ".*", "i");
 	
 	var result = [];
 
 	//Pesquisa os Descritores Raízes passando os campos utilizados como filtro e 
 	//limitando o retorno aos campos que serão utilizados
-	var cursorDescritoresRaizes = mongoConnection.collection("DescritoresRaizes").find({"title.value": titleRegex}, {"qualified_name": 1, "title.value": 1});	
+	var cursorDescritoresRaizes = mongoConnection.collection("DescritoresRaizes").find({"title.value": titleRegex, "descriptions.value": descriptionRegex, "keywords.value": keyWordRegex}, {"qualified_name": 1, "title.value": 1});	
 
 	cursorDescritoresRaizes.count(function(err, count) {			
 

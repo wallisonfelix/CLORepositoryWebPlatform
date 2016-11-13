@@ -4,7 +4,7 @@ var console = require('console');
 var bcrypt = require('bcrypt-nodejs');
 
 //Inclui um novo Usuário no banco de dados, com base nos valores passados como parâmetro
-var incluirUsuario = function(name, email, profile, login, password, callback) {
+var incluirUsuario = function(name, email, activities, profile, login, password, callback) {
 	
 	var hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(8));
 	var emailValidated = false;
@@ -12,8 +12,16 @@ var incluirUsuario = function(name, email, profile, login, password, callback) {
 
 	model.User.create( { userValidated: userValidated, name: name, email: email, emailValidated: emailValidated, profile: profile, degree_of_freedom: 0, login: login, password: hashPassword } ).then(function (user) {
 		console.log(new Date() + " Novo Usuário inserido: " + user.login + ".");		
-		callback(null, user);	
-		return;	
+		
+		user.setActivities(activities).then(function (activities) {
+			console.log(new Date() + " Atualizadas as Atividades do Usuário: " + user.id + " - " + user.login + ".");			
+			callback(null, user);
+			return;
+		}).catch(function (err) {		
+			console.error(new Date() + " Erro ao Atualizar as Atividades do Usuário: " + err);
+			callback(err, null);
+			return;
+		});		
 	}).catch(function (err) {		
 		console.error(new Date() + " Erro ao Incluir Usuário: " + err);
 		callback(err, null);
@@ -225,7 +233,7 @@ var enviarEmailValidacaoCadastroUsuario = function(email, user, callback) {
 }
 
 //Edita um Usuário no banco de dados, com base nos valores passados como parâmetro
-var editarUsuario = function(idUser, name, email, profile, degreeOfFreedom, login, roles, callback) {
+var editarUsuario = function(idUser, name, email, activities, profile, degreeOfFreedom, login, roles, callback) {
 
 	model.User.update( { name: name, email: email, profile: profile, degree_of_freedom: degreeOfFreedom, login: login, userValidated: true }, { where: { id: idUser }, returning: true } ).then(function (updatedUsers) {
 		
@@ -233,15 +241,35 @@ var editarUsuario = function(idUser, name, email, profile, degreeOfFreedom, logi
 			user = updatedUsers[1][0];
 			console.log(new Date() + " Usuário atualizado: " + user.id + " - " + user.login + ".");
 			
+			qtyListasAtualizadas = 0;
+
 			user.setRoles(roles).then(function (roles) {
-				console.log(new Date() + " Atualizados os Papéis do Usuário: " + user.id + " - " + user.login + ".");			
-				callback(null, user);
-				return;
+				console.log(new Date() + " Atualizados os Papéis do Usuário: " + user.id + " - " + user.login + ".");
+				qtyListasAtualizadas++;
+
+				if (qtyListasAtualizadas == 2) {			
+					callback(null, user);
+					return;
+				}				
 			}).catch(function (err) {		
 				console.error(new Date() + " Erro ao Atualizar os Papéis do Usuário: " + err);
 				callback(err, null);
 				return;
 			});	
+
+			user.setActivities(activities).then(function (activities) {
+				console.log(new Date() + " Atualizadas as Atividades do Usuário: " + user.id + " - " + user.login + ".");
+				qtyListasAtualizadas++;
+
+				if (qtyListasAtualizadas == 2) {			
+					callback(null, user);
+					return;
+				}				
+			}).catch(function (err) {		
+				console.error(new Date() + " Erro ao Atualizar as Atividades do Usuário: " + err);
+				callback(err, null);
+				return;
+			});
 		} else {
 			callback(new Error("Usuário " + idUser + " não encontrado."), null);
 			return;
@@ -551,6 +579,40 @@ var excluirOperacao = function(idOperation, operationCode, callback) {
 
 }
 
+//Realiza a busca de todas as Atividades contidas no banco de dados
+var buscarTodasAtividades = function(callback) {
+
+	model.Activity.findAll( { attributes: ['id', 'name', 'code'], order: 'id' } ).then(function (activities) {				
+		if (activities.length == 0) {
+			console.log(new Date() + " Pesquisa por Atividades com retorno vazio");
+		}
+		callback(null, activities);
+		return;
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Pesquisar Atividades: " + err);
+		callback(err, null);
+		return;
+	});
+
+}
+
+//Realiza a busca de Atividades cujo código está entre os informados como parâmetros
+var buscarAtividadesPorCodigos = function(codes, callback) {
+
+	model.Activity.findAll( { where: { code: { $in: codes} }, attributes: ['id', 'name', 'code'] } ).then(function (activities) {
+		if (activities.length == 0) {
+			console.log(new Date() + " Pesquisa por Atividades com retorno vazio");
+		}
+		callback(null, activities);
+		return;
+	}).catch(function (err) {		
+		console.error(new Date() + " Erro ao Pesquisar Atividades: " + err);
+		callback(err, null);
+		return;
+	});
+
+}
+
 //Envia um email informando que foi solicitada a redefinição de senha para o usuário cujo email e login são passados como parâmetro
 //O email também inclui a URL para a redefinição da senha
 var enviarEmailRedefinicaoSenha = function(email, login, urlPasswordRedefine, callback) {
@@ -657,6 +719,9 @@ module.exports.buscarOperacoes = buscarOperacoes;
 module.exports.incluirOperacao = incluirOperacao;
 module.exports.editarOperacao = editarOperacao;
 module.exports.excluirOperacao = excluirOperacao;
+
+module.exports.buscarTodasAtividades = buscarTodasAtividades;
+module.exports.buscarAtividadesPorCodigos = buscarAtividadesPorCodigos;
 
 module.exports.enviarEmailRedefinicaoSenha = enviarEmailRedefinicaoSenha;
 module.exports.redefinirSenha = redefinirSenha;
