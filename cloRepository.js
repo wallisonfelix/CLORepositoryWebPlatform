@@ -70,7 +70,7 @@ var criarOAC = function(mongoConnection, zip, userId, fileNames, callback)
 		   lista_componentes = element.substring(0, element.lastIndexOf('.')).concat(".json");
 
 		   obj.exec = JSON.parse(zip.readAsText(dae).trim());
-		   obj.exec.clo_id = lomFile._id;
+		   obj.exec.id_clo = lomFile._id;
 		   obj.comp = JSON.parse(zip.readAsText(lista_componentes).trim());
 		   obj.fileName = element;
 		   toCollection.push(obj);
@@ -106,8 +106,6 @@ function criarDescritorRaiz(mongoConnection, lom, userId, callback) {
 			callback(err, null);
 			return;
 		}
-
-		console.log("Quantidade: " + qtyDescritores);
 
 		if(qtyDescritores == 0) {
 
@@ -241,7 +239,7 @@ var buscarOAC = function(mongoConnection, title, description, keyWord, callback)
 
 			//Pesquisa os Descritores de Arquivos Executáveis referente ao Descritor Raiz,
 			//limitando o retorno aos campos que serão utilizados
-			var cursorDescritoresDeArqExec = mongoConnection.collection("DescritoresDeArquivosExecutaveis").find({"clo_id" : descritorRaiz._id}, {"locations": 1});		
+			var cursorDescritoresDeArqExec = mongoConnection.collection("DescritoresDeArquivosExecutaveis").find({"id_clo" : descritorRaiz._id}, {"locations": 1});		
 
 			cursorDescritoresDeArqExec.count(function(err, count) {
 
@@ -788,7 +786,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 var buscarIdDescritoresDeArquivoExecutavelPorIdRaiz = function(mongoConnection, idDescritorRaiz, callback) {
 
 	if (bson.ObjectID.isValid(idDescritorRaiz)) {
-		mongoConnection.collection("DescritoresDeArquivosExecutaveis").distinct('_id', {clo_id: new mongodb.ObjectID(idDescritorRaiz)}, {}, function(err, idDescritoresDeArquivosExecutaveis) {
+		mongoConnection.collection("DescritoresDeArquivosExecutaveis").distinct('_id', {id_clo: new mongodb.ObjectID(idDescritorRaiz)}, {}, function(err, idDescritoresDeArquivosExecutaveis) {
 		
 		    if(err) {
 				console.error(new Date() + " Erro ao Pesquisar DescritorDeArquivoExecutavel: " + err);

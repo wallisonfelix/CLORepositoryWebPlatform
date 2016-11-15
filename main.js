@@ -1290,7 +1290,7 @@ app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {
 			return;
 		}
 		
-		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"clo_id": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
+		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 			if(err) {
 				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
@@ -1298,7 +1298,7 @@ app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {
 				return;
 			}
 
-			if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.clo_id == oacId) {			
+			if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.id_clo == oacId) {			
 
 				var filePath = descritorDeArquivoExecutavel.locations[0];
 
@@ -1348,7 +1348,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 					return;
 				}
 
-				cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"clo_id": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
+				cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 					if(err) {
 						jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
@@ -1356,7 +1356,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 						return;
 					}
 
-					if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.clo_id == oacId) {												
+					if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.id_clo == oacId) {												
 						
 						var oac = new zip(fileInput.path);
 						var tokenAsArray = oac.readAsText("token.txt").split(" ");
@@ -1426,7 +1426,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 			return;
 		}
 		
-		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"clo_id": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
+		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 			if(err) {
 				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
@@ -1434,7 +1434,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 				return;
 			}
 
-			if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.clo_id == oacId) {
+			if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.id_clo == oacId) {
 				
 				cloRepository.buscarDescritorDeVersao(mongoConnection, daeId, versionNumber, function(err, descritorDeVersao) {
 
