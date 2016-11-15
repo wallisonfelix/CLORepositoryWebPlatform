@@ -193,42 +193,51 @@ var validarEmailConfirmacaoCadastroUsuario = function(email, code, callback) {
 //Envia um email informando que o cadastro do Usuário passado como parâmetro foi validado
 var enviarEmailValidacaoCadastroUsuario = function(email, user, callback) {
 
-	user.getRoles().then(function (userRoles) {	
+	user.getActivities().then(function (userActivities) {	
 
-		var roles = '';
-		for (var i = 0; i < userRoles.length; i++) {
-			roles += userRoles[i].name + '; ';			
+		var activities = '';
+		for (var i = 0; i < userActivities.length; i++) {
+			activities += userActivities[i].name + '; ';			
 		}
 
-		var mailOptions = {
-	    from: "CLO Web Platform <clowebplatform@gmail.com>",
-	    to: email,
-	    subject: "Validação de Cadastro - CLO Web Platform",
-	    html: "<b>Parabéns! Seu cadastro foi validado com sucesso</b><br /><br />" +
-	    		"<p>A equipe da CLO Web Platform realizou a validação do seu cadastro, tornando-o apto a utilizar a plataforma.</p>" +
-	    		"<p>O(s) Papel(is) de acesso ao ambiente e o Grau de Liberdade foram definidos de acordo com a análise do seu perfil. Seguem os dados após o processo de validação:</p><br />" +
-	    		"<p><b>Nome:</b> " + user.name + "<br />" +
-	    		"<b>Email:</b> " + user.email + "<br />" +
-	    		"<b>Login:</b> " + user.login + "<br />" +
-	    		"<b>Perfil:</b> " + user.profile + "<br />" +
-	    		"<b>Grau de Liberdade:</b> " + user.degree_of_freedom + "<br />" +
-	    		"<b>Papéis:</b> " + roles + "</p><br />" +
-	    		"<p>Atenciosamente, <br />" +
-	    		"Equipe da CLO Web Platform</p>"
-		};
+		user.getRoles().then(function (userRoles) {	
 
-		mail.sendMail(mailOptions, function(err, info){
-		   
-		    if(err){
-		        console.error(new Date() + " Erro ao Enviar Email de Validação de Cadastro de Usuário: " + err);
-		        callback(err);
-		        return;
-		    }	    
-		    
-		    console.log(new Date() + " Enviado Email de Validação de Cadastro de Usuário: " + user.id + ".");
-		    callback(null);
-		    return;
-		});					
+			var roles = '';
+			for (var j = 0; j < userRoles.length; j++) {
+				roles += userRoles[j].name + '; ';			
+			}
+
+			var mailOptions = {
+		    from: "CLO Web Platform <clowebplatform@gmail.com>",
+		    to: email,
+		    subject: "Validação de Cadastro - CLO Web Platform",
+		    html: "<b>Parabéns! Seu cadastro foi validado com sucesso</b><br /><br />" +
+		    		"<p>A equipe da CLO Web Platform realizou a validação do seu cadastro, tornando-o apto a utilizar a plataforma.</p>" +
+		    		"<p>O(s) Papel(is) de acesso ao ambiente e o Grau de Liberdade foram definidos de acordo com a análise do seu perfil. Seguem os dados após o processo de validação:</p><br />" +
+		    		"<p><b>Nome:</b> " + user.name + "<br />" +
+		    		"<b>Email:</b> " + user.email + "<br />" +
+		    		"<b>Login:</b> " + user.login + "<br />" +
+		    		"<b>Atividades / Atuação:</b> " + activities + "<br />" +
+		    		"<b>Perfil:</b> " + user.profile + "<br />" +
+		    		"<b>Grau de Liberdade:</b> " + user.degree_of_freedom + "<br />" +
+		    		"<b>Papéis:</b> " + roles + "</p><br />" +
+		    		"<p>Atenciosamente, <br />" +
+		    		"Equipe da CLO Web Platform</p>"
+			};
+
+			mail.sendMail(mailOptions, function(err, info){
+			   
+			    if(err){
+			        console.error(new Date() + " Erro ao Enviar Email de Validação de Cadastro de Usuário: " + err);
+			        callback(err);
+			        return;
+			    }	    
+			    
+			    console.log(new Date() + " Enviado Email de Validação de Cadastro de Usuário: " + user.id + ".");
+			    callback(null);
+			    return;
+			});					
+		});
 	});
 }
 

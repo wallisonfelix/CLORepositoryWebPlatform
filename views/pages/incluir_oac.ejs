@@ -20,7 +20,8 @@
 			  <li class="active">Incluir OAC</li>
 			</ol>		
 	      	
-	      	<form action="/incluirOAC" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8">
+	      	<form action="/incluirOAC" method="post" enctype="multipart/form-data" role="form" class="form-horizontal" accept-charset="UTF-8"
+	      	onsubmit="$('#enviando').modal('show');" >
 	      		<div class="form-group">
     				<label for="fileInput" class="control-label col-sm-3">Pacote de Implantação <span class="required">*</span> :</label>
     				<div class="col-sm-9">
@@ -36,7 +37,7 @@
 				<% if (authenticatedUser && operationCodes.indexOf('incluir_oac') != -1) { %>
 		      		<div class="form-group">
 	    				<div class="col-sm-offset-3 col-sm-9">
-	    					<input type="submit" name="btnEnviar" class="btn btn-info" value="Enviar" data-toggle="modal" data-target="#enviando" />
+	    					<input type="submit" name="btnEnviar" class="btn btn-info" value="Enviar" />
 	    				</div>
 		      		</div>
 		      	<% } %>
