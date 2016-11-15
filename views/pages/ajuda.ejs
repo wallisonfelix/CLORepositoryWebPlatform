@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<% include ../partials/head %>
+</head>
+
+<body style="background-color: #fffffa;">
+	<% include ../partials/page_header %>
+
+	<div class="container">
+	  <% include ../partials/header %>
+
+	  <div class="row">
+	    <div id="menu" class="col-sm-3">
+	    	<% include ../partials/menu %>
+	    </div>	    	
+
+	    <!-- Page Content -->
+	    <div class="col-sm-9">
+			<ol class="breadcrumb">
+				<li>Home</li>
+			  	<li class="active">Ajuda</li>
+			</ol>
+
+			<h4>Orientações sobre como utilizar OACs e Versões Customizadas contidas no <em>CLORepository</em>:</h4>			
+			<br/>  
+			<ol type="1.1">
+				<li>
+					Acesse o <em>link</em>   <a><span class="glyphicon glyphicon-search"></span>  Pesquisar OAC</a>; <br/>
+					Obs.: <em>Caso possua cadastro na Plataforma, autentique-se para que o Pacote de OAC (P-OAC) a ser baixado inclua o seu respectivo Grau de Liberdade</em>.
+				</li>
+				<br/>
+				<li>
+					Consulte e baixe, no formato .ZIP, o P-OAC representando o OAC ou a Versão Customizada desejada;
+					<br />
+					<img src="ajuda/listagem_oac.png" class="img-responsive center-block" alt="Print da Listagem de um OAC">
+					<br />
+					<span class="help-block"><b>Figura 1:</b> Print da Listagem de um OAC</span>
+					<br />
+					<img src="ajuda/listagem_versoes_customizadas.png" class="img-responsive center-block" alt="Print da Listagem de Versões Customizadas de um OAC">
+					<br />
+					<span class="help-block"><b>Figura 2:</b> Print da Listagem de Versões Customizadas de um OAC</span>
+				</li>
+				<br/>
+				<li>
+					Descompacte todo o conteúdo do arquivo baixado em um mesmo diretório (arquivo executável, JSON com o estado dos componentes, <em>token.txt</em> e diretório <em>components</em> com os arquivos de mídia);
+					<br />
+					<img src="ajuda/oac_descompactado.png" class="img-responsive center-block" alt="Print de um OAC Descompactado">
+					<br />
+					<span class="help-block"><b>Figura 3:</b> Print de um OAC Descompactado</span>
+				</li>
+				<br/>
+				<li>
+					Execute o Arquivo Executável com o programa adequado;
+					<br />
+					<img src="ajuda/execucao_arquivo_executavel_oac.png" class="img-responsive center-block" alt="Print da Execução do Arquivo Executável de um OAC">
+					<br />
+					<span class="help-block"><b>Figura 4:</b> Print da Execução do Arquivo Executável de um OAC</span>
+				</li>
+				<br/>
+				<li style="list-style-type: none;">
+					4.1. De acordo com o Grau de Liberdade definido no P-OAC, poderá ser possível realizar customizações durante a utilização do recurso;					
+				</li>
+				<br/>
+				<li style="list-style-type: none;">
+					4.2. Ao finalizar o processo de customização, é gerado um Pacote de Implantação de Versão Customizada (PI-VC) no formato .ZIP que pode ser adicionado ao <em>CLORepository</em> por meio da Plataforma.
+				</li>
+			</ol>
+			<br/>
+
+	    </div>
+	  </div>
+
+	</div>
+
+	<% include ../partials/page_footer %>
+</body>
+
+</html>

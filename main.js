@@ -233,7 +233,7 @@ app.get('/incluir_usuario', isLoggedOut, function (req, res) {
 app.post('/incluirUsuario', isLoggedOut, function (req, res) {
 
 	var name = req.body.name;
-	var email = req.body.email;
+	var email = req.body.email;	
 	var profile = req.body.profile;	
 	var login = req.body.login;
 	var password = req.body.password;
@@ -841,6 +841,16 @@ app.get('/excluirOperacao', isLoggedIn, function(req, res, next) {
 );
 
 // ***** Gerenciamento dos Objetos de Aprendizagem Customizáveis *****
+
+app.get('/ajuda', function (req, res) {
+	if (req.user) {
+		req.user.operationCodes(function(operationCodes) {
+			res.render('pages/ajuda', { authenticatedUser: req.user, operationCodes: operationCodes });
+		});
+	} else {
+		res.render('pages/ajuda', { authenticatedUser: null });	
+	}
+});
 
 app.get('/incluir_oac', isLoggedIn, function(req, res, next) {
 		return hasPermission('incluir_oac', req, res, next);
