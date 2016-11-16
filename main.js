@@ -1145,9 +1145,9 @@ app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
 		
 		var userId = req.user.id;
 		var degreeOfFreedom = req.user.degree_of_freedom;
-		var title = req.body.title;
-		var description = req.body.description;
+		var title = req.body.title;		
 		var languages = req.body.languages.split(";");
+		var description = req.body.description;
 		var oac = new zip(req.files.fileInput.path);
 
 		db.mongo.open(function(err, mongoConnection) {
@@ -1331,9 +1331,9 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 
 		var userId = req.user.id;
 		var degreeOfFreedom = req.user.degree_of_freedom;
-		var title = req.query.title;
-		var description = req.query.description;
+		var title = req.query.title;		
 		var languages = req.query.languages;		
+		var description = req.query.description;
 		var fileInput = req.files.fileInput;
 
 		if (title && description && languages && fileInput && fileInput.path) {			

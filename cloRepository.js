@@ -151,7 +151,7 @@ function criarDescritorDeArquivoExecutavel(mongoConnection, zip, element, qualif
   	scene.components.forEach(function(component) {
 	  	if (component.hasOwnProperty("source")) {	  		
 			//Caso exista arquivos com a mesma nomenclatura, eles não são substituidos.	
-			zip.extractEntryTo(path.dirname(element) + "/components/" + component.source, diretorioDestinoComponentes, false, false);
+			zip.extractEntryTo(path.dirname(element) + "/components/" + path.basename(component.source), diretorioDestinoComponentes, false, false);
 			component.source = diretorioDestinoComponentes + path.basename(component.source);
 	  	}
   	});
@@ -599,7 +599,14 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 	var shasum = crypto.createHash('sha1');
 	
 	//Conteúdo do token.txt
-	var tokenAsArray = oac.readAsText("token.txt").split(" ");
+	var token = oac.getEntry("token.txt");
+	var tokenAsArray = null;
+	if (token) {
+		tokenAsArray = oac.readAsText(token).split(" ");		
+	} else {
+		callback(new Error("Arquivo token.txt não encontrado"), null);
+		return;
+	}
 	
 	//Descritor de origem da nova Versão Customizada
 	var idDescritorOrigem;
@@ -744,17 +751,13 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 								//e atualiza os campos "source" do campo Customizations antes de incluí-lo no banco
 								descritorDeVersao.customizations.forEach(function(scene) {
 								  	scene.components.forEach(function(component) {
-								  		if (component.hasOwnProperty("source")) {
-								  			oacEntries.forEach(function(file) {
-								  				if(component.source == path.basename(file.entryName)) {
-								  					//Caso exista arquivos com a mesma nomenclatura, eles não são substituidos.	
-													oac.extractEntryTo("components/" + component.source, diretorioDestinoComponentes, false, false);
-								  					component.source = diretorioDestinoComponentes + component.source;
-								  				}
-											});											
+								  		if (component.hasOwnProperty("source")) {								  			
+						  					//Caso exista arquivos com a mesma nomenclatura, eles não são substituidos.	
+											oac.extractEntryTo("components/" + path.basename(component.source), diretorioDestinoComponentes, false, false);
+						  					component.source = diretorioDestinoComponentes + path.basename(component.source);								  														
 										}
 								  	});
-								});
+								});								
 								console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Finalizando a escrita no filesystem ###");
 
 								//Inclui um novo DescritorDeVersao

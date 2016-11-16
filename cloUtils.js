@@ -9,30 +9,34 @@ var archiver = require('archiver');
 
 //Lê o arquivo MANIFEST.MF e monta um objeto com a versão do MANIFEST e com
 // lista de arquivos executáveis contidas no OAC.
-var lerManifest = function(zip)
-{
+var lerManifest = function(zip) {
+	
 	var mf = zip.getEntry("MANIFEST.MF");
-	var data = {};
-	data.fileNames = [];
-	var mfContent = zip.readAsText(mf).toString().split("\n");
-	data.version = mfContent[0].toString().split(": ")[1];
+	if (mf) {
+		var data = {};
+		data.fileNames = [];
+		var mfContent = zip.readAsText(mf).toString().split("\n");
+		data.version = mfContent[0].toString().split(": ")[1];
 
-	switch (data.version) {
-		case '1.0':
-			mfContent.forEach(function(line) {
-				if(line.startsWith("Executable-File-Directory")) {			
-					data.fileNames.push(line.split(": ")[1]);		
-				} else if (line.startsWith("Executable-File")) {
-					var lastFileName = data.fileNames.length - 1;
-					data.fileNames[lastFileName] = data.fileNames[lastFileName].concat('/' + line.split(": ")[1]);
-				}	
-			});
-			break;
-		default:
-			break;
+		switch (data.version) {
+			case '1.0':
+				mfContent.forEach(function(line) {
+					if(line.startsWith("Executable-File-Directory")) {			
+						data.fileNames.push(line.split(": ")[1]);		
+					} else if (line.startsWith("Executable-File")) {
+						var lastFileName = data.fileNames.length - 1;
+						data.fileNames[lastFileName] = data.fileNames[lastFileName].concat('/' + line.split(": ")[1]);
+					}	
+				});
+				break;
+			default:
+				return null;
+		}
+				
+		return data;
+	} else {
+		return null;
 	}
-			
-	return data;
 }
 
 //Gera, a partir dos dados informados, o arquivo compactado que representará o OAC
