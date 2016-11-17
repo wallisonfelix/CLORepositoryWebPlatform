@@ -1,31 +1,31 @@
 -- Insert Operations
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (1,	'Pesquisar OperaÁ„o', 'pesquisar_operacao', 'OperaÁ„o referente a funcionalidade de Pesquisa de OperaÁıes', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (2,	'Incluir OperaÁ„o', 'incluir_operacao', 'OperaÁ„o referente a funcionalidade de Inclus„o de OperaÁıes', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (3,	'Editar OperaÁ„o', 'editar_operacao', 'OperaÁ„o referente a funcionalidade de EdiÁ„o de OperaÁıes', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (4,	'Excluir OperaÁ„o',	'excluir_operacao', 'OperaÁ„o referente a funcionalidade de Exclus„o de OperaÁıes', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (5,	'Pesquisar Papel', 'pesquisar_papel', 'OperaÁ„o referente a funcionalidade de Pesquisa de PapÈis', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (6,	'Incluir Papel', 'incluir_papel', 'OperaÁ„o referente a funcionalidade de Inclus„o de PapÈis', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (7,	'Editar Papel', 'editar_papel', 'OperaÁ„o referente a funcionalidade de EdiÁ„o de PapÈis', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (8,	'Excluir Papel', 'excluir_papel', 'OperaÁ„o referente a funcionalidade de Exclus„o de PapÈis', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (9,	'Pesquisar Usu·rio', 'pesquisar_usuario', 'OperaÁ„o referente a funcionalidade de Pesquisa de Usu·rios', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (10, 'Validar Usu·rio',	'validar_usuario', 'OperaÁ„o referente a funcionalidade de ValidaÁ„o de Usu·rios', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (11, 'Editar Usu·rio', 'editar_usuario', 'OperaÁ„o referente a funcionalidade de EdiÁ„o de Usu·rios', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (12, 'Excluir Usu·rio',	'excluir_usuario', 'OperaÁ„o referente a funcionalidade de Exclus„o de Usu·rios', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (13, 'Pesquisar OAC', 'pesquisar_oac', 'OperaÁ„o referente a funcionalidade de Pesquisa de OAC', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (14, 'Visualizar Metadados de OAC',	'visualizar_metadado_oac', 'OperaÁ„o referente a funcionalidade de VisualizaÁ„o de Metadados de OAC', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (15, 'Visualizar Versıes de OAC', 'visualizar_versoes_oac',	'OperaÁ„o referente a funcionalidade de VisualizaÁ„o de Versıes Customizadas de OAC', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (16, 'Baixar OAC',	'baixar_oac', 'OperaÁ„o referente a funcionalidade de Baixar OAC', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (17, 'Baixar Versıes de OAC', 'baixar_versoes_oac', 'OperaÁ„o referente a funcionalidade de Baixar Versıes Customizadas de OAC', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (18, 'Incluir OAC',	'incluir_oac', 'OperaÁ„o referente a funcionalidade de Inclus„o de OAC', NOW(), NOW());
-INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (19, 'Incluir Vers„o Customizada', 'incluir_versao_customizada', 'OperaÁ„o referente a funcionalidade de Inclus„o de Versıes Customizadas', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (1,	'Pesquisar Opera√ß√£o', 'pesquisar_operacao', 'Opera√ß√£o referente a funcionalidade de Pesquisa de Opera√ß√µes', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (2,	'Incluir Opera√ß√£o', 'incluir_operacao', 'Opera√ß√£o referente a funcionalidade de Inclus√£o de Opera√ß√µes', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (3,	'Editar Opera√ß√£o', 'editar_operacao', 'Opera√ß√£o referente a funcionalidade de Edi√ß√£o de Opera√ß√µes', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (4,	'Excluir Opera√ß√£o',	'excluir_operacao', 'Opera√ß√£o referente a funcionalidade de Exclus√£o de Opera√ß√µes', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (5,	'Pesquisar Papel', 'pesquisar_papel', 'Opera√ß√£o referente a funcionalidade de Pesquisa de Pap√©is', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (6,	'Incluir Papel', 'incluir_papel', 'Opera√ß√£o referente a funcionalidade de Inclus√£o de Pap√©is', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (7,	'Editar Papel', 'editar_papel', 'Opera√ß√£o referente a funcionalidade de Edi√ß√£o de Pap√©is', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (8,	'Excluir Papel', 'excluir_papel', 'Opera√ß√£o referente a funcionalidade de Exclus√£o de Pap√©is', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (9,	'Pesquisar Usu√°rio', 'pesquisar_usuario', 'Opera√ß√£o referente a funcionalidade de Pesquisa de Usu√°rios', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (10, 'Validar Usu√°rio',	'validar_usuario', 'Opera√ß√£o referente a funcionalidade de Valida√ß√£o de Usu√°rios', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (11, 'Editar Usu√°rio', 'editar_usuario', 'Opera√ß√£o referente a funcionalidade de Edi√ß√£o de Usu√°rios', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (12, 'Excluir Usu√°rio',	'excluir_usuario', 'Opera√ß√£o referente a funcionalidade de Exclus√£o de Usu√°rios', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (13, 'Pesquisar OAC', 'pesquisar_oac', 'Opera√ß√£o referente a funcionalidade de Pesquisa de OAC', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (14, 'Visualizar Metadados de OAC',	'visualizar_metadado_oac', 'Opera√ß√£o referente a funcionalidade de Visualiza√ß√£o de Metadados de OAC', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (15, 'Visualizar Vers√µes de OAC', 'visualizar_versoes_oac',	'Opera√ß√£o referente a funcionalidade de Visualiza√ß√£o de Vers√µes Customizadas de OAC', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (16, 'Baixar OAC',	'baixar_oac', 'Opera√ß√£o referente a funcionalidade de Baixar OAC', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (17, 'Baixar Vers√µes de OAC', 'baixar_versoes_oac', 'Opera√ß√£o referente a funcionalidade de Baixar Vers√µes Customizadas de OAC', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (18, 'Incluir OAC',	'incluir_oac', 'Opera√ß√£o referente a funcionalidade de Inclus√£o de OAC', NOW(), NOW());
+INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (19, 'Incluir Vers√£o Customizada', 'incluir_versao_customizada', 'Opera√ß√£o referente a funcionalidade de Inclus√£o de Vers√µes Customizadas', NOW(), NOW());
 
 SELECT setval('operations_id_seq', (SELECT MAX(id) FROM operations));
 
 -- Insert Roles
-INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (1, 'Professor', 'professor', 'Papel destinado ‡ Professores', NOW(), NOW());
-INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (2, 'Aluno', 'aluno', 'Papel destinado ‡ Alunos', NOW(), NOW());
-INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (3, 'Designer', 'designer', 'Papel destinado ‡ Designers', NOW(), NOW());
-INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (4, 'Administrador', 'administrador', 'Papel destinado  aos Administradores do RepositÛrio', NOW(), NOW());
+INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (1, 'Professor', 'professor', 'Papel destinado √† Professores', NOW(), NOW());
+INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (2, 'Aluno', 'aluno', 'Papel destinado √† Alunos', NOW(), NOW());
+INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (3, 'Designer', 'designer', 'Papel destinado √† Designers', NOW(), NOW());
+INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES (4, 'Administrador', 'administrador', 'Papel destinado  aos Administradores do Reposit√≥rio', NOW(), NOW());
 
 SELECT setval('roles_id_seq', (SELECT MAX(id) FROM roles));
 
@@ -66,16 +66,16 @@ INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM role
 -- Insert Activities
 INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (1, 'professor_ens_infantil', 'Professor do Ensino Infantil', NOW(), NOW());
 INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (2, 'professor_ens_fundamental', 'Professor do Ensino Fundamental', NOW(), NOW());
-INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (3, 'professor_ens_medio', 'Professor do Ensino MÈdio', NOW(), NOW());
-INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (4, 'professor_ens_tecnico', 'Professor do Ensino TÈcnico', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (3, 'professor_ens_medio', 'Professor do Ensino M√©dio', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (4, 'professor_ens_tecnico', 'Professor do Ensino T√©cnico', NOW(), NOW());
 INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (5, 'professor_ens_superior', 'Professor do Ensino Superior', NOW(), NOW());
-INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (6, 'professor_pos_graduacao', 'Professor de PÛs-graduaÁ„o', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (6, 'professor_pos_graduacao', 'Professor de P√≥s-gradua√ß√£o', NOW(), NOW());
 
 INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (7, 'aluno_ens_fundamental', 'Aluno do Ensino Fundamental', NOW(), NOW());
-INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (8, 'aluno_ens_medio', 'Aluno do Ensino MÈdio', NOW(), NOW());
-INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (9, 'aluno_ens_tecnico', 'Aluno do Ensino TÈcnico', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (8, 'aluno_ens_medio', 'Aluno do Ensino M√©dio', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (9, 'aluno_ens_tecnico', 'Aluno do Ensino T√©cnico', NOW(), NOW());
 INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (10, 'aluno_ens_superior', 'Aluno do Ensino Superior', NOW(), NOW());
-INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (11, 'aluno_pos_graduacao', 'Aluno de PÛs-graduaÁ„o', NOW(), NOW());
+INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (11, 'aluno_pos_graduacao', 'Aluno de P√≥s-gradua√ß√£o', NOW(), NOW());
 
 INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (12, 'analista_sistemas', 'Analista de Sistemas', NOW(), NOW());
 INSERT INTO activities (id, code, name, created_at, updated_at) VALUES (13, 'desenvolvedor_sistemas', 'Desenvolvedor de Sistema', NOW(), NOW());
