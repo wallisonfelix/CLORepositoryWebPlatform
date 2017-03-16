@@ -37,15 +37,15 @@ var enviarEmailConfirmacaoCadastroUsuario = function(email, login, urlEmailValid
 	var urlEmailValidation = urlEmailValidation + "?email=" + email + "&code=" + validationCode;
 
 	var mailOptions = {
-	    from: "CLO Web Platform <clowebplatform@gmail.com>",
-	    to: email,
-	    subject: "Confirmação de Cadastro - CLO Web Platform",
-	    html: "<b>Bem-vindo à CLO Web Platform</b><br /><br />" +
-	    		"<p>Foi realizado um cadastro de usuário na CLO Web Platform com este endereço de email.</p>" +
-	    		"<p>Para confirmar o cadastro, clique no link a seguir: " + urlEmailValidation + "</p><br />" +
-	    		"<p>Caso não tenha realizado o cadastro, desconsiderar este email.</p><br />" +
-	    		"<p>Atenciosamente, <br />" +
-	    		"Equipe da CLO Web Platform</p>"
+            from: "CLOWebPlatform <clowebplatform@gmail.com>",
+            to: email,
+            subject: "Confirmação de Cadastro - CLOWebPlatform / CLOVeR",
+            html: "<b>Bem-vindo à CLOWebPlatform</b><br /><br />" +
+                        "<p>Foi realizado um cadastro de usuário na CLOWebPlatform com este endereço de email.</p>" +
+                        "<p>Para confirmar o cadastro, clique no link a seguir: " + urlEmailValidation + "</p><br />" +
+                        "<p>Caso não tenha realizado o cadastro, desconsiderar este email.</p>" +
+                        "<p>Atenciosamente, <br /><br />" +
+                        "Equipe do <img src='http://clowebplatform.com/logo_clover.png' alt='Logo do CLOVeR' height='19px' width='85px'></p>"
 	};
 
 	mail.sendMail(mailOptions, function(err, info){
@@ -208,21 +208,21 @@ var enviarEmailValidacaoCadastroUsuario = function(email, user, callback) {
 			}
 
 			var mailOptions = {
-		    from: "CLO Web Platform <clowebplatform@gmail.com>",
-		    to: email,
-		    subject: "Validação de Cadastro - CLO Web Platform",
-		    html: "<b>Parabéns! Seu cadastro foi validado com sucesso</b><br /><br />" +
-		    		"<p>A equipe da CLO Web Platform realizou a validação do seu cadastro, tornando-o apto a utilizar a plataforma.</p>" +
-		    		"<p>O(s) Papel(is) de acesso ao ambiente e o Grau de Liberdade foram definidos de acordo com a análise do seu perfil. Seguem os dados após o processo de validação:</p><br />" +
-		    		"<p><b>Nome:</b> " + user.name + "<br />" +
-		    		"<b>Email:</b> " + user.email + "<br />" +
-		    		"<b>Login:</b> " + user.login + "<br />" +
-		    		"<b>Atividades / Atuação:</b> " + activities + "<br />" +
-		    		"<b>Perfil:</b> " + user.profile + "<br />" +
-		    		"<b>Grau de Liberdade:</b> " + user.degree_of_freedom + "<br />" +
-		    		"<b>Papéis:</b> " + roles + "</p><br />" +
-		    		"<p>Atenciosamente, <br />" +
-		    		"Equipe da CLO Web Platform</p>"
+			    from: "CLOWebPlatform <clowebplatform@gmail.com>",
+			    to: email,
+			    subject: "Validação de Cadastro - CLOWebPlatform / CLOVeR",
+			    html: "<b>Parabéns! Seu cadastro foi validado com sucesso</b><br /><br />" +
+			    		"<p>A equipe do CLOVeR realizou a validação do seu cadastro, tornando-o apto a utilizar a plataforma.</p>" +
+			    		"<p>O(s) Papel(is) de acesso ao ambiente e o Grau de Liberdade foram definidos de acordo com a análise do seu perfil. Seguem os dados após o processo de validação:</p>" +
+		    			"<p><b>Nome:</b> " + user.name + "<br />" +
+		    			"<b>Email:</b> " + user.email + "<br />" +
+		    			"<b>Login:</b> " + user.login + "<br />" +
+		    			"<b>Atividades / Atuação:</b> " + activities + "<br />" +
+		    			"<b>Perfil:</b> " + user.profile + "<br />" +
+		    			"<b>Grau de Liberdade:</b> " + user.degree_of_freedom + "<br />" +
+		    			"<b>Papéis:</b> " + roles + "</p>" +
+		    			"<p>Atenciosamente, <br /><br />" +
+               				"Equipe do <img src='http://clowebplatform.com/logo_clover.png' alt='Logo do CLOVeR' height='19px' width='85px'></p>"
 			};
 
 			mail.sendMail(mailOptions, function(err, info){
@@ -630,15 +630,15 @@ var enviarEmailRedefinicaoSenha = function(email, login, urlPasswordRedefine, ca
 	var urlPasswordRedefine = urlPasswordRedefine + "?email=" + email + "&code=" + validationCode;
 
 	var mailOptions = {
-	    from: "CLO Web Platform <clowebplatform@gmail.com>",
+	    from: "CLOWebPlatform <clowebplatform@gmail.com>",
 	    to: email,
-	    subject: "Solicitação de Redefinição de Senha - CLO Web Platform",
-	    html: "<b>Seguem abaixo as instruções para a redefinição de sua senha na CLO Web Platform</b><br /><br />" +
-	    		"<p>Foi realizada uma solicitação de redefinição de senha na CLO Web Platform para o usuário com este endereço de email.</p>" +
+	    subject: "Solicitação de Redefinição de Senha - CLOWebPlatform / CLOVeR",
+	    html: "<b>Seguem abaixo as instruções para a redefinição de sua senha na CLOWebPlatform</b><br /><br />" +
+	    		"<p>Foi realizada uma solicitação de redefinição de senha na CLOWebPlatform para o usuário com este endereço de email.</p>" +
 	    		"<p>Para proceder com a redefinição de senha, clique no link a seguir: " + urlPasswordRedefine + "</p><br />" +
-	    		"<p>Caso não tenha realizado essa solicitação de redefinição, desconsiderar este email.</p><br />" +
-	    		"<p>Atenciosamente, <br />" +
-	    		"Equipe da CLO Web Platform</p>"
+	    		"<p>Caso não tenha realizado essa solicitação de redefinição, desconsiderar este email.</p>" +
+	    		"<p>Atenciosamente, <br /><br />" +
+	                "Equipe do <img src='http://clowebplatform.com/logo_clover.png' alt='Logo do CLOVeR' height='19px' width='85px'></p>"
 	};
 
 	mail.sendMail(mailOptions, function(err, info){
