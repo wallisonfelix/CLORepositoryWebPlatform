@@ -2,3 +2,57 @@
 	font-weight: bold;
 	color: red;
 }
+
+.breadcrumb {
+	color: #0A8E38;
+}
+
+.breadcrumb .active {
+	color: #034C15;
+}
+
+a {
+	color: #034C15;
+}
+
+a:focus, a:hover {
+	color: #0A8E38;	
+}
+
+.btn {
+	background-color: #0A8E38;
+	border-color: #034C15;
+}
+
+.btn:focus, .btn:hover {
+	background-color: #034C15;
+	border-color: #0A8E38;
+}
+
+.btn-link {
+	color: #034C15;
+	background-color: transparent;
+	border-color: transparent;
+}
+
+.btn-link:focus, .btn-link:hover {
+	color: #0A8E38;
+	background-color: transparent;
+	border-color: transparent;
+}
+
+.navbar-default .navbar-nav li a, .navbar-default .navbar-nav li a {
+	color: #034C15;
+}
+
+.navbar-default .navbar-nav li a:focus, .navbar-default .navbar-nav li a:hover {
+	color: #0A8E38;
+}
+
+.dropdown-menu li a, .dropdown-menu li a {
+	color: #034C15;
+}
+
+.dropdown-menu li a:focus, .dropdown-menu li a:hover {
+	color: #0A8E38;
+}

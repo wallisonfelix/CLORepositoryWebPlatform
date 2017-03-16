@@ -3,7 +3,7 @@ var Sequelize = require('sequelize');
 
 //Definição dos Modelos utilizados para o controle de Autenticação e Autorização da CLOWebPlatform.
 
-//Representação no CLORepository de um Usuário da Plataforma.
+//Representação no CLOVeR de um Usuário da Plataforma.
 var User = db.sequelize.define('user', {
 	id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
 	name: { type: Sequelize.STRING(255), allowNull: false, validate: { notEmpty: { args: true, msg: "Preencha o campo Nome do Usuário"} } }, 
@@ -55,7 +55,7 @@ var User = db.sequelize.define('user', {
   	}
 });
 
-//Representação no CLORepository de um Papel que os Usuários da Plataforma podem possuir.
+//Representação no CLOVeR de um Papel que os Usuários da Plataforma podem possuir.
 var Role = db.sequelize.define('role', {
 	id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
 	name: { type: Sequelize.STRING(32), allowNull: false, validate: { notEmpty: { args: true, msg: "Preencha o campo Nome do Papel"} } },
@@ -88,7 +88,7 @@ var Role = db.sequelize.define('role', {
 	}
 });
 
-//Representação no CLORepository de uma Operação oferecida na Plataforma,
+//Representação no CLOVeR de uma Operação oferecida na Plataforma,
 //para a qual os Pápeis são autorizados a realizarem.
 var Operation = db.sequelize.define('operation', {
 	id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
@@ -106,7 +106,7 @@ var Operation = db.sequelize.define('operation', {
     ]
 });
 
-//Representação no CLORepository de uma Atividade que os Usuários da Plataforma indicar que praticam.
+//Representação no CLOVeR de uma Atividade que os Usuários da Plataforma indicar que praticam.
 var Activity = db.sequelize.define('activity', {
 	id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
 	name: { type: Sequelize.STRING(32), allowNull: false, validate: { notEmpty: { args: true, msg: "Preencha o campo Nome da Atividade"} } },	

@@ -44,7 +44,8 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 	//Monta o arquivo compactado que representará o OAC
 	var oac = archiver.create('zip');
 	
-	console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Iniciando a leitura do filesystem ###");
+	var inicioLeituraFilesystem = moment().utc();
+
 	//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes do OAC
 	descritorDeComponentes.scenes.forEach(function(scene) {
 	  	scene.components.forEach(function(component) {
@@ -56,8 +57,10 @@ var gerarArquivoOAC = function(idDescritorDeArquivoExecutavel, pathArquivoExecut
 		  	}
 	  	});
 	});
-	console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Finalizando a leitura do filesystem ###");
 
+	var fimLeituraFilesystem = moment().utc();
+	console.log(fimLeituraFilesystem.diff(inicioLeituraFilesystem, "milliseconds") + " ### Tempo de leitura do filesystem ###");
+	
 	//Adiciona o DescritorDeComponentes
 	oac.append(JSON.stringify(descritorDeComponentes), { "name": path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json") });
 	//Adiciona o Arquivo Executável
@@ -77,12 +80,15 @@ var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeCompo
 	var versaoCustomizada = archiver.create('zip');
 	var idSourceVersion = descritorDeVersao._id;
 	
-	console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Iniciando a Realização do Merge ###");
+	var inicioRealizacaoMerge = moment().utc();
+
 	mergeCustomizations(descritorDeVersao, descritorDeComponentesRaiz, function(descritorDeComponentes) {
 		
-		console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Finalizando a Realização do Merge ###");
+		var fimRealizacaoMerge = moment().utc();
+		console.log(fimRealizacaoMerge.diff(inicioRealizacaoMerge, "milliseconds") + " ### Tempo de Realização do Merge ###");		
 
-		console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Iniciando a leitura do filesystem ###");
+		var inicioLeituraFilesystem = moment().utc();
+
 		//Adiciona ao arquivo compactado os arquivos referenciados pelos Componentes da Versão Customizada
 		descritorDeComponentes.scenes.forEach(function(scene) {
 		  	scene.components.forEach(function(component) {
@@ -94,7 +100,9 @@ var gerarArquivoVersaoCustomizada = function(descritorDeVersao, descritorDeCompo
 			  	}
 		  	});
 		});
-		console.log(moment().format("DD/MM/YYYY HH:mm:ss.SSS") + " ### Finalizando a leitura do filesystem ###");
+		
+		var fimLeituraFilesystem = moment().utc();
+		console.log(fimLeituraFilesystem.diff(inicioLeituraFilesystem, "milliseconds") + " ### Tempo de leitura do filesystem ###");
 
 		//Adiciona o DescritorDeComponentes		
 		versaoCustomizada.append(JSON.stringify(descritorDeComponentes), { "name": path.basename(pathArquivoExecutavel).replace(path.extname(pathArquivoExecutavel), ".json") });
@@ -145,11 +153,13 @@ var checarPermissao = function(key, grauDeLiberdade) {
 	if(grauDeLiberdade == 4)
 		return true
 	if(grauDeLiberdade == 3)
-		return key == "enabled" || key == "visible" || key == "startTime" || key == "stopTime" || key == "label" || key == "text" || key == "source"
+		return key == "enabled" || key == "visible" || key == "position" || key == "zindex" 
+					|| key == "startTime" || key == "stopTime" || key == "label" || key == "text" || key == "source";
 	if(grauDeLiberdade == 2)
-		return key == "enabled" || key == "visible" || key == "startTime" || key == "stopTime"
+		return key == "enabled" || key == "visible" || key == "position" || key == "zindex" 
+					|| key == "startTime" || key == "stopTime";
 	if(grauDeLiberdade == 1)
-		return key == "enabled" || key == "visible"
+		return key == "enabled" || key == "visible" || key == "position" || key == "zindex"
 	
 }
 

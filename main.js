@@ -2,7 +2,7 @@ var db = require('./config/database/db.js');
 var passport = require('./config/auth/passport.js');
 var jwt = require('./config/auth/jwt.js');
 var model = require('./model/models.js');
-var cloRepository = require('./cloRepository.js');
+var clover = require('./clover.js');
 var cloUtils = require('./cloUtils.js');
 var administration = require('./administration.js');
 var path = require('path');
@@ -16,8 +16,6 @@ var http = require('http');
 var server = http.Server(app);
 var multer = require('multer');
 var bodyParser = require('body-parser');
-
-var moment = require('moment');
 
 var serverAddress = 'http://localhost';
 
@@ -894,7 +892,7 @@ app.get('/pesquisarOAC', function (req, res) {
 			return;
 		}
 
-		cloRepository.buscarOAC(mongoConnection, title, description, keyWord, function(err, result) {			
+		clover.buscarOAC(mongoConnection, title, description, keyWord, function(err, result) {			
 
 			if(err) {
 				redirectError("Erro ao Pesquisar OAC", err, req, res);
@@ -925,7 +923,7 @@ app.get('/visualizarMetadadosOAC', function (req, res) {
 			return;
 		}
 
-		cloRepository.buscarMetadadosOAC(mongoConnection, idOAC, function(err, metadados) {
+		clover.buscarMetadadosOAC(mongoConnection, idOAC, function(err, metadados) {
 			
 			if(err) {
 				redirectError("Erro ao Visualizar Metadados de OAC", err, req, res);
@@ -968,7 +966,7 @@ app.get("/baixarOAC", function(req, res) {
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando o OAC
-		cloRepository.gerarPacoteOAC(mongoConnection, id, filePath, userId, degreeOfFreedom, function(err, oac) {			
+		clover.gerarPacoteOAC(mongoConnection, id, filePath, userId, degreeOfFreedom, function(err, oac) {			
 			
 			if(err) {
 				redirectError("Erro ao Baixar OAC", err, req, res);
@@ -1000,7 +998,7 @@ app.get('/listarVersoesCustomizadas', function (req, res) {
 			return;
 		}
 
-		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
+		clover.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
 				redirectError("Erro ao Listar Versões Customizadas", err, req, res);
@@ -1034,7 +1032,7 @@ app.get('/listarVersoesCustomizadasDeVersao', function (req, res) {
 			return;
 		}
 
-		cloRepository.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
+		clover.buscarVersoesCustomizadas(mongoConnection, idSourceVersion, filePath, function(err, versoesCustomizadas) {
 			
 			if(err) {
 				redirectError("Erro ao Listar Versões Customizadas", err, req, res);
@@ -1073,7 +1071,7 @@ app.get("/baixarVersaoCustomizada", function(req, res) {
 		}
 		
 		//Chama a função que gera e retorna o arquivo representando a Versão Customizada
-		cloRepository.gerarPacoteVersao(mongoConnection, id, idRootVersion, filePath, userId, degreeOfFreedom, function(err, versaoCustomizada) {			
+		clover.gerarPacoteVersao(mongoConnection, id, idRootVersion, filePath, userId, degreeOfFreedom, function(err, versaoCustomizada) {			
 			
 			if(err) {
 				redirectError("Erro ao Baixar Versão Customizada", err, req, res);
@@ -1110,7 +1108,7 @@ app.post("/incluirOAC", isLoggedIn, function(req, res, next) {
 				return;
 			}
 
-			cloRepository.criarOAC(mongoConnection, oac, userId, manifestData.fileNames, function(err, result) {
+			clover.criarOAC(mongoConnection, oac, userId, manifestData.fileNames, function(err, result) {
 
 				if(err) {
 					redirectError("Erro ao Incluir OAC", err, req, res);
@@ -1158,7 +1156,7 @@ app.post("/incluirVersaoCustomizada", isLoggedIn, function(req, res, next) {
 				return;
 			}
 
-			cloRepository.criarVersaoCustomizada(mongoConnection, oac, userId, degreeOfFreedom, title, description, languages, function(err, result) {				
+			clover.criarVersaoCustomizada(mongoConnection, oac, userId, degreeOfFreedom, title, description, languages, function(err, result) {				
 				
 				if(err) {
 					redirectError("Erro ao Incluir Versão Customizada", err, req, res);
@@ -1231,7 +1229,7 @@ app.post("/api/oacs", jwt.hasValidToken, function(req, res, next) {
 					return;
 				}
 
-				cloRepository.criarOAC(mongoConnection, oac, userId, manifestData.fileNames, function(err, result) {
+				clover.criarOAC(mongoConnection, oac, userId, manifestData.fileNames, function(err, result) {
 
 					if(err) {
 						jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir AOC: " + err.message, req, res);
@@ -1246,7 +1244,7 @@ app.post("/api/oacs", jwt.hasValidToken, function(req, res, next) {
 							console.log(new Date() + " Arquivo temporário \"" + path.basename(fileInput.path) + "\" removido com sucesso.");
 						}
 
-						cloRepository.buscarIdDescritoresDeArquivoExecutavelPorIdRaiz(mongoConnection, result._id, function(err, idDescritoresDeArquivosExecutaveis) {			
+						clover.buscarIdDescritoresDeArquivoExecutavelPorIdRaiz(mongoConnection, result._id, function(err, idDescritoresDeArquivosExecutaveis) {			
 						
 							if(err) {
 								jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir AOC: " + err.message, req, res);
@@ -1290,7 +1288,7 @@ app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {
 			return;
 		}
 		
-		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
+		clover.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 			if(err) {
 				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
@@ -1302,7 +1300,7 @@ app.get("/api/oacs/:oacId/:daeId", jwt.hasValidToken, function(req, res) {
 
 				var filePath = descritorDeArquivoExecutavel.locations[0];
 
-				cloRepository.gerarPacoteOAC(mongoConnection, daeId, filePath, userId, degreeOfFreedom, function(err, oac) {								
+				clover.gerarPacoteOAC(mongoConnection, daeId, filePath, userId, degreeOfFreedom, function(err, oac) {								
 
 					if(err) {
 						jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar AOC: " + err.message, req, res);
@@ -1348,7 +1346,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 					return;
 				}
 
-				cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
+				clover.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 					if(err) {
 						jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
@@ -1362,7 +1360,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 						var tokenAsArray = oac.readAsText("token.txt").split(" ");
 						var idDescritorOrigem = tokenAsArray[0];	
 
-						cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeVersoes", idDescritorOrigem, {"id_source_version": 1, "id_root_version": 1, "version": 1}, function(err, descritorDeVersao) {
+						clover.buscarDescritorPorId(mongoConnection, "DescritoresDeVersoes", idDescritorOrigem, {"id_source_version": 1, "id_root_version": 1, "version": 1}, function(err, descritorDeVersao) {
 
 							if(err) {
 								jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
@@ -1372,7 +1370,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 
 							if (idDescritorOrigem == daeId || (descritorDeVersao && descritorDeVersao.id_root_version == daeId)) {
 
-								cloRepository.criarVersaoCustomizada(mongoConnection, oac, userId, degreeOfFreedom, title, description, languages, function(err, result) {				
+								clover.criarVersaoCustomizada(mongoConnection, oac, userId, degreeOfFreedom, title, description, languages, function(err, result) {				
 									
 									if(err) {
 										jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);
@@ -1426,7 +1424,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 			return;
 		}
 		
-		cloRepository.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
+		clover.buscarDescritorPorId(mongoConnection, "DescritoresDeArquivosExecutaveis", daeId, {"id_clo": 1, "locations": 1}, function(err, descritorDeArquivoExecutavel) {
 
 			if(err) {
 				jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
@@ -1436,7 +1434,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 
 			if (descritorDeArquivoExecutavel && descritorDeArquivoExecutavel.id_clo == oacId) {
 				
-				cloRepository.buscarDescritorDeVersao(mongoConnection, daeId, versionNumber, function(err, descritorDeVersao) {
+				clover.buscarDescritorDeVersao(mongoConnection, daeId, versionNumber, function(err, descritorDeVersao) {
 
 					if(err) {
 						jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);
@@ -1448,7 +1446,7 @@ app.get("/api/oacs/:oacId/:daeId/versoes-customizadas/:versionNumber", jwt.hasVa
 						
 						var filePath = descritorDeArquivoExecutavel.locations[0];
 
-						cloRepository.gerarPacoteVersao(mongoConnection, descritorDeVersao._id, daeId, filePath, userId, degreeOfFreedom, function(err, versaoCustomizada) {			
+						clover.gerarPacoteVersao(mongoConnection, descritorDeVersao._id, daeId, filePath, userId, degreeOfFreedom, function(err, versaoCustomizada) {			
 							
 							if(err) {
 								jwt.sendResponse(500, 'text/plain', null, "Erro ao Baixar Versão Customizada: " + err.message, req, res);

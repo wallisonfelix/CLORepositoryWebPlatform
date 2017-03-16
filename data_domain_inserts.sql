@@ -1,4 +1,4 @@
--- Insert Operations
+﻿-- Insert Operations
 INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (1,	'Pesquisar Operação', 'pesquisar_operacao', 'Operação referente a funcionalidade de Pesquisa de Operações', NOW(), NOW());
 INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (2,	'Incluir Operação', 'incluir_operacao', 'Operação referente a funcionalidade de Inclusão de Operações', NOW(), NOW());
 INSERT INTO operations (id, name, code, description, created_at, updated_at) VALUES (3,	'Editar Operação', 'editar_operacao', 'Operação referente a funcionalidade de Edição de Operações', NOW(), NOW());
@@ -49,6 +49,8 @@ INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM role
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'designer'), (SELECT id FROM operations WHERE code = 'visualizar_versoes_oac'));
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'designer'), (SELECT id FROM operations WHERE code = 'baixar_oac'));
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'designer'), (SELECT id FROM operations WHERE code = 'baixar_versoes_oac'));
+INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'designer'), (SELECT id FROM operations WHERE code = 'incluir_oac'));
+INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'designer'), (SELECT id FROM operations WHERE code = 'incluir_versao_customizada'));
 
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'administrador'), (SELECT id FROM operations WHERE code = 'pesquisar_operacao'));
 INSERT INTO role_operations (role_id, operation_id) VALUES ((SELECT id FROM roles WHERE code = 'administrador'), (SELECT id FROM operations WHERE code = 'incluir_operacao'));
