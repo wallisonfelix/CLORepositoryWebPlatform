@@ -72,7 +72,7 @@ var criarOAC = function(mongoConnection, zip, userId, fileNames, callback)
 		   obj.exec = JSON.parse(zip.readAsText(dae).trim());
 		   obj.exec.id_clo = lomFile._id;
 		   obj.comp = JSON.parse(zip.readAsText(lista_componentes).trim());
-		   obj.fileName = element;
+		   obj.fileName = element;		  
 		   toCollection.push(obj);
 		});
 	   	//Intera a lista de arquivos executáveis do OAC para incluí-los no banco
@@ -209,7 +209,7 @@ function criarDescritorDeArquivoExecutavel(mongoConnection, zip, element, qualif
 //Define o Padrão de Regex adotado para as consultas utilizando filtros
 var formatValuesInRegexPattern = function(filter) {
 	if (!filter || filter.trim() == "") {
-		return "/.*/i";
+		return ".*";
 	} else {
 		var regexPattern = "";
 		filter.split(" ").forEach(function(currentValue, indexValue, values) {
@@ -220,7 +220,7 @@ var formatValuesInRegexPattern = function(filter) {
 				regexPattern = regexPattern.concat(".*" + currentValue + ".*");				
 			}
 		});
-		return "/" + regexPattern + "/i";
+		return regexPattern;
 	}
 }
 
@@ -230,13 +230,13 @@ var buscarOAC = function(mongoConnection, title, description, keyWord, callback)
 	//Monta Regex para consulta pelos campos
 	var titleRegex = formatValuesInRegexPattern(title);
 	var descriptionRegex = formatValuesInRegexPattern(description);
-	var keyWordRegex = formatValuesInRegexPattern(keyWord);
+	var keyWordRegex = formatValuesInRegexPattern(keyWord);	
 
 	var result = [];
 
 	//Pesquisa os Descritores de Versão que os respectivos metadados correspondam aos campos utilizados como filtro, 
 	//limitando o retorno aos identificadores do Descritores de Arquivo Executável das versões
-	mongoConnection.collection("DescritoresDeVersoes").distinct("id_root_version", {metadata: { $elemMatch: {"title": titleRegex, "description": descriptionRegex}}}, {"id_root_version": 1}, function(err, idDescritoresDeArquivosExecutaveis) {
+	mongoConnection.collection("DescritoresDeVersoes").distinct("id_root_version", {metadata: { $elemMatch: {"title": {$regex: titleRegex, $options: 'i'}, "description": {$regex: descriptionRegex, $options: 'i'}}}}, {"id_root_version": 1}, function(err, idDescritoresDeArquivosExecutaveis) {
 
 		if (err) {
 		    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -256,7 +256,7 @@ var buscarOAC = function(mongoConnection, title, description, keyWord, callback)
 
 			//Pesquisa os Descritores Raízes passando os campos utilizados como filtro e 
 			//limitando o retorno aos campos que serão utilizados
-			var cursorDescritoresRaizes = mongoConnection.collection("DescritoresRaizes").find({ $or: [{"title.value": titleRegex, "descriptions.value": descriptionRegex, "keywords.value": keyWordRegex}, {_id: { $in: idDescritoresRaizes}}] }, {"qualified_name": 1, "title.value": 1});	
+			var cursorDescritoresRaizes = mongoConnection.collection("DescritoresRaizes").find({ $or: [{"title.value": {$regex: titleRegex, $options: 'i'}, "descriptions.value": {$regex: descriptionRegex, $options: 'i'}, "keywords.value": {$regex: keyWordRegex, $options: 'i'}}, {"_id": { $in: idDescritoresRaizes}} ]}, {"qualified_name": 1, "title.value": 1});
 
 			cursorDescritoresRaizes.count(function(err, count) {			
 
