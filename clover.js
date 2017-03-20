@@ -1,5 +1,5 @@
 var cloUtils = require('./cloUtils.js');
-var DIR = 'D:/clo/file';
+var DIR = './file';
 var path = require('path');
 var mongodb = require('mongodb');
 var zip = require('adm-zip');
