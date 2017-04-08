@@ -1,5 +1,5 @@
 # CLOWebPlatform
-Projeto para o desenvolvimento de uma Plataforma Web responsiva a ser utilizada como interface para o CLOVeR (Repositório para Versionamento de Objeto de Aprendizagem Customizáveis) proposto na pesquisa de mestrado de:
+Projeto para o desenvolvimento de uma Plataforma Web responsiva a ser utilizada como interface para o Repositório para o Versionamento de Objetos de Aprendizagem Customizáveis (Customizable Learning Object VErsioning Repository - CLOVeR) proposto na pesquisa de mestrado de:
 
 <ul type='disc'>
 <li><b>José Wallison Félix da Silva</b></li>
