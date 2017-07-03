@@ -1360,7 +1360,7 @@ app.post("/api/oacs/:oacId/:daeId/versoes-customizadas", jwt.hasValidToken, func
 						var tokenAsArray = oac.readAsText("token.txt").split(" ");
 						var idDescritorOrigem = tokenAsArray[0];	
 
-						clover.buscarDescritorPorId(mongoConnection, "DescritoresDeVersoes", idDescritorOrigem, {"id_source_version": 1, "id_root_version": 1, "version": 1}, function(err, descritorDeVersao) {
+						clover.buscarDescritorPorId(mongoConnection, "DescritoresDeVersoes", idDescritorOrigem, {"id_parent_version": 1, "id_root_version": 1, "version": 1}, function(err, descritorDeVersao) {
 
 							if(err) {
 								jwt.sendResponse(500, 'text/plain', null, "Erro ao Incluir Versão Customizada: " + err.message, req, res);

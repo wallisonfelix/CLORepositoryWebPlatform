@@ -408,7 +408,7 @@ var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, fileP
 
 	if (bson.ObjectID.isValid(idSourceVersion)) {
 		//Pesquisa as Versões Customizadas oriundas do DescritorDeVersao ou do DescritorDeArquivoExecutavel com o id passado como parâmetro
-		var cursorDescritoresDeVersoes = mongoConnection.collection("DescritoresDeVersoes").find({"id_source_version" : new mongodb.ObjectID(idSourceVersion)});
+		var cursorDescritoresDeVersoes = mongoConnection.collection("DescritoresDeVersoes").find({"id_parent_version" : new mongodb.ObjectID(idSourceVersion)});
 	} else {
 		callback(new Error("Id do Descritor de Arquivo Executável inválido"), null);
 		return;
@@ -433,7 +433,7 @@ var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, fileP
 		cursorDescritoresDeVersoes.forEach(function(descritorDeVersao)	{
 
 			//Obtem a quantidade de Versões Customizadas do DescritorDeVersao ou do DescritorDeArquivoExecutavel
-			mongoConnection.collection("DescritoresDeVersoes").count({"id_source_version" : descritorDeVersao._id}, function(err, qtyCustomizedVersion) {
+			mongoConnection.collection("DescritoresDeVersoes").count({"id_parent_version" : descritorDeVersao._id}, function(err, qtyCustomizedVersion) {
 
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -449,7 +449,7 @@ var buscarVersoesCustomizadas = function(mongoConnection, idSourceVersion, fileP
 					var obj = {};
 					obj._id = descritorDeVersao._id;
 					obj.id_root_version = descritorDeVersao.id_root_version;
-					obj.id_source_version = descritorDeVersao.id_source_version;
+					obj.id_parent_version = descritorDeVersao.id_parent_version;
 					obj.version = descritorDeVersao.version;
 					obj.languages = descritorDeVersao.languages;
 					obj.path = filePath;
@@ -553,10 +553,10 @@ var getVersion = function(mongoConnection, id, callback) {
 			var ret = {};
 			//A versão raiz e a de origem para o novo DescritorDeVersao são o próprio DescritorDeArquivoExecutavel retornado
 			ret.id_root_version = id;
-			ret.id_source_version = id;
+			ret.id_parent_version = id;
 
 			//Pesquisa os DescritoresDeVersoes cuja versão de origem seja o próprio DescritorDeArquivoExecutavel retornado
-			mongoConnection.collection("DescritoresDeVersoes").find({"id_source_version" : id}, {'version': 1}).toArray(function(err, resultDescDeVerPrimeiroNivel) {
+			mongoConnection.collection("DescritoresDeVersoes").find({"id_parent_version" : id}, {'version': 1}).toArray(function(err, resultDescDeVerPrimeiroNivel) {
 
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -580,7 +580,7 @@ var getVersion = function(mongoConnection, id, callback) {
 		} else {
 			//Não sendo encontrado um DescritorDeArquivoExecutavel com o identificador passado como parâmetro,
 			//busca-se DescritoresDeVersoes com esse id e, simultaneamente, suas Versões Customizadas
-			mongoConnection.collection("DescritoresDeVersoes").find({$or: [{"_id" : id}, {"id_source_version": id}]}, {"id_root_version": 1, "id_source_version": 1, "version": 1}).toArray(function(err, resultDescDeVers) {
+			mongoConnection.collection("DescritoresDeVersoes").find({$or: [{"_id" : id}, {"id_parent_version": id}]}, {"id_root_version": 1, "id_parent_version": 1, "version": 1}).toArray(function(err, resultDescDeVers) {
 				
 				if (err) {
 				    console.error(new Date() + " Erro ao Pesquisar DescritoresDeVersoes: " + err);
@@ -597,7 +597,7 @@ var getVersion = function(mongoConnection, id, callback) {
 					//A versão raiz do novo DescritorDeVersao é a mesma dos demais elementos na sua hierarquia
 					ret.id_root_version = resultDescDeVers[0].id_root_version;
 					//A versão de origem do novo DescritorDeVersao
-					ret.id_source_version = id;
+					ret.id_parent_version = id;
 
 					//Define a versão que o novo DescritorDeVersao deve assumir
 					var prefix = "";
@@ -702,7 +702,7 @@ var criarVersaoCustomizada = function(mongoConnection, oac, userId, degreeOfFree
 			//Preenche o novo DescritorDeVersao
 			descritorDeVersao = {
 				_id : new mongodb.ObjectID(),			
-				id_source_version : new mongodb.ObjectID(result.id_source_version),
+				id_parent_version : new mongodb.ObjectID(result.id_parent_version),
 				id_root_version : new mongodb.ObjectID(result.id_root_version),
 				version : result.version,
 				languages : languages,							
@@ -868,7 +868,7 @@ var buscarIdDescritoresDeArquivoExecutavelPorIdRaiz = function(mongoConnection, 
 var buscarDescritorDeVersao = function(mongoConnection, idDescritorDeArquivoExecutavel, versionNumber, callback) {
 
 	if (bson.ObjectID.isValid(idDescritorDeArquivoExecutavel)) {
-		mongoConnection.collection("DescritoresDeVersoes").findOne({id_root_version: new mongodb.ObjectID(idDescritorDeArquivoExecutavel), version: versionNumber}, {"id_source_version": 1, "id_root_version": 1, "version": 1}, function(err, descritorDeVersao) {
+		mongoConnection.collection("DescritoresDeVersoes").findOne({id_root_version: new mongodb.ObjectID(idDescritorDeArquivoExecutavel), version: versionNumber}, {"id_parent_version": 1, "id_root_version": 1, "version": 1}, function(err, descritorDeVersao) {
 		
 		    if(err) {
 				console.error(new Date() + " Erro ao Pesquisar DescritorDeVersao: " + err);

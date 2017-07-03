@@ -121,12 +121,12 @@ mongo.open(function(err, mongoConnection) {
 				console.log(new Date() + " Criado Índice '" + indexName + "' para o campo '_id' da Coleção DescritoresDeVersoes");			
 			}
 
-			collection.ensureIndex("id_source_version", function(err, indexName) {
+			collection.ensureIndex("id_parent_version", function(err, indexName) {
 				if (err) {
-					console.error(new Date() + " Erro ao Criar Índice para o campo 'id_source_version' da Coleção DescritoresDeVersoes: " + err);
+					console.error(new Date() + " Erro ao Criar Índice para o campo 'id_parent_version' da Coleção DescritoresDeVersoes: " + err);
 					throw err;
 				} else {
-					console.log(new Date() + " Criado Índice '" + indexName + "' para o campo 'id_source_version' da Coleção DescritoresDeVersoes");			
+					console.log(new Date() + " Criado Índice '" + indexName + "' para o campo 'id_parent_version' da Coleção DescritoresDeVersoes");			
 				}				
 
 				collection.ensureIndex("id_root_version", function(err, indexName) {
