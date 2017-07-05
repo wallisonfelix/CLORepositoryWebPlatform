@@ -31,7 +31,7 @@ var sendResponse = function(statusCode, contentType, filename, data, req, res) {
 
 //Gera um Token de Acesso com validade de uma hora. Ele inclui o login e as operações do usuário utilizado pelo cliente para a obtenção do Token
 var generateToken = function(user, req, res) {			
-	var expires = moment().add(1, 'hour').valueOf();
+	var expires = moment().add(10, 'minutes').valueOf();
 
 	var token = jwt.encode({ 
 		iss: user.login,			
